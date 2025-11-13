@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
 """
-Filter for 'intermediate outcomes', 'intermediate endpoints', or 'surrogate endpoints'
-and analyze funding by year
+Unified keyword analysis script for NIH biomarker funding data
+Usage:
+    python3 analyze_keywords.py "biomarker discovery"
+    python3 analyze_keywords.py "surrogate endpoint" "intermediate endpoint"
+    python3 analyze_keywords.py --all-biomarkers
 """
 
 import pandas as pd
+import sys
 from pathlib import Path
 
-def main():
+def analyze_keywords(keywords, output_name=None):
+    """
+    Analyze NIH projects containing specified keywords
+
+    Args:
+        keywords: List of keywords to search for
+        output_name: Optional custom name for output files
+    """
     # Load unified dataset (relative to project root)
     script_dir = Path(__file__).parent.parent
     data_file = script_dir / "data" / "oct-2024" / "nih_biomarker_unified.csv"
@@ -15,18 +26,10 @@ def main():
     df = pd.read_csv(data_file, low_memory=False)
     print(f"Total projects: {len(df):,}\n")
 
-    # Filter for surrogate/intermediate endpoint keywords
+    # Filter for keywords
     print("=" * 80)
-    print("FILTERING FOR SURROGATE/INTERMEDIATE ENDPOINTS")
+    print(f"FILTERING FOR KEYWORDS: {', '.join(keywords)}")
     print("=" * 80)
-
-    keywords = [
-        'intermediate outcomes',
-        'intermediate endpoint',
-        'surrogate endpoint'
-    ]
-
-    print(f"Searching for: {', '.join(keywords)}\n")
 
     # Search in Project Title, Project Terms, and Public Health Relevance
     text_fields = ['Project Title', 'Project Terms', 'Public Health Relevance']
@@ -36,7 +39,7 @@ def main():
         keyword_mask = pd.Series([False] * len(df), index=df.index)
         for field in text_fields:
             if field in df.columns:
-                field_mask = df[field].astype(str).str.lower().str.contains(keyword, na=False)
+                field_mask = df[field].astype(str).str.lower().str.contains(keyword.lower(), na=False)
                 keyword_mask = keyword_mask | field_mask
         print(f"  '{keyword}': {keyword_mask.sum():,} projects")
 
@@ -45,11 +48,11 @@ def main():
     for field in text_fields:
         if field in df.columns:
             for keyword in keywords:
-                field_mask = df[field].astype(str).str.lower().str.contains(keyword, na=False)
+                field_mask = df[field].astype(str).str.lower().str.contains(keyword.lower(), na=False)
                 mask = mask | field_mask
 
     filtered_df = df[mask].copy()
-    print(f"\nTotal projects with any surrogate/intermediate endpoint term: {len(filtered_df):,}")
+    print(f"\nTotal projects matching any keyword: {len(filtered_df):,}")
     print(f"Percentage of dataset: {len(filtered_df)/len(df)*100:.1f}%\n")
 
     # Summarize funding by year
@@ -57,7 +60,7 @@ def main():
     print("FUNDING BY FISCAL YEAR")
     print("=" * 80)
 
-    # Convert Total Cost to numeric, handling any non-numeric values
+    # Convert Total Cost to numeric
     filtered_df['Total Cost Numeric'] = pd.to_numeric(filtered_df['Total Cost'], errors='coerce')
 
     # Group by fiscal year
@@ -67,8 +70,6 @@ def main():
     }).reset_index()
 
     yearly_summary.columns = ['Fiscal Year', 'Number of Projects', 'Total Funding ($)']
-
-    # Format funding in millions
     yearly_summary['Total Funding (Millions)'] = yearly_summary['Total Funding ($)'] / 1_000_000
 
     # Print summary
@@ -95,7 +96,7 @@ def main():
 
     # Top institutes
     print("\n" + "=" * 80)
-    print("TOP 10 INSTITUTES FOR SURROGATE/INTERMEDIATE ENDPOINTS")
+    print("TOP 10 INSTITUTES")
     print("=" * 80)
 
     institute_summary = filtered_df.groupby('Administering IC').agg({
@@ -115,10 +116,76 @@ def main():
         print(f"{institute:<10} | {projects:>8} | ${funding_m:>10,.2f}M")
 
     # Save filtered dataset
-    output_file = script_dir / "data" / "oct-2024" / "surrogate_endpoints_filtered.csv"
+    if output_name is None:
+        # Generate filename from keywords
+        output_name = "_".join(keywords).replace(" ", "_")[:50]  # Limit length
+
+    output_file = script_dir / "data" / "oct-2024" / f"{output_name}_filtered.csv"
     filtered_df.to_csv(output_file, index=False)
     print(f"\n✓ Filtered dataset saved to: data/oct-2024/{output_file.name}")
     print(f"  Size: {output_file.stat().st_size / 1024 / 1024:.1f} MB")
+
+def print_usage():
+    """Print usage information"""
+    print("""
+Usage: python3 analyze_keywords.py [OPTIONS] KEYWORD [KEYWORD ...]
+
+Analyze NIH biomarker funding data by searching for specific keywords.
+
+Examples:
+    # Single keyword
+    python3 analyze_keywords.py "biomarker discovery"
+
+    # Multiple keywords (OR search)
+    python3 analyze_keywords.py "surrogate endpoint" "intermediate endpoint"
+
+    # All biomarker projects
+    python3 analyze_keywords.py "biomarker"
+
+    # With custom output name
+    python3 analyze_keywords.py "surrogate" -o surrogate_analysis
+
+Options:
+    -o, --output NAME    Custom name for output files (default: auto-generated from keywords)
+    -h, --help          Show this help message
+
+The script searches for keywords in:
+    - Project Title
+    - Project Terms
+    - Public Health Relevance
+""")
+
+def main():
+    """Main entry point"""
+    if len(sys.argv) < 2 or '--help' in sys.argv or '-h' in sys.argv:
+        print_usage()
+        sys.exit(0 if '--help' in sys.argv or '-h' in sys.argv else 1)
+
+    # Parse arguments
+    args = sys.argv[1:]
+    output_name = None
+    keywords = []
+
+    i = 0
+    while i < len(args):
+        if args[i] in ['-o', '--output']:
+            if i + 1 < len(args):
+                output_name = args[i + 1]
+                i += 2
+            else:
+                print("Error: -o/--output requires a value")
+                sys.exit(1)
+        else:
+            keywords.append(args[i])
+            i += 1
+
+    if not keywords:
+        print("Error: At least one keyword is required")
+        print_usage()
+        sys.exit(1)
+
+    # Run analysis
+    analyze_keywords(keywords, output_name)
 
 if __name__ == "__main__":
     main()
