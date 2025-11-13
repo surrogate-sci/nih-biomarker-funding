@@ -2,7 +2,7 @@
 
 ## Overview
 
-`filter_biomarker_projects.py` downloads and filters NIH Reporter data from SciOP/ExPORTER to identify biomarker-related research projects based on keyword mentions in project summaries, titles, and terms.
+`filter_biomarker_projects.py` downloads and filters NIH ExPORTER data to identify biomarker-related research projects based on keyword mentions in project titles, terms, and abstracts.
 
 ## Features
 
@@ -45,18 +45,20 @@ pip install requests pandas
 
 ## Data Sources
 
-### SciOP NIH Reporter Dataset
+### NIH ExPORTER (Primary Source - Recommended)
 
-SciOP provides snapshots of NIH Reporter data:
-- Website: https://sciop.net/datasets/nih-reporter
-- Contains projects, abstracts, publications, and more
-
-### NIH ExPORTER (Official Source)
-
-NIH ExPORTER is the official source for NIH funding data:
+**Download directly from NIH ExPORTER:**
 - Website: https://reporter.nih.gov/exporter
-- CSV files available by fiscal year
+- ZIP files available by fiscal year (e.g., `RePORTER_PRJ_C_FY2023.zip`)
 - Updated weekly (typically Sunday nights)
+- Official NIH source - most current and authoritative
+
+### Alternative: SciOP (Mirror/Snapshot)
+
+SciOP provides mirrors of NIH Reporter data:
+- Website: https://sciop.net/datasets/nih-reporter
+- Snapshots may lag behind official NIH ExPORTER
+- Use NIH ExPORTER for most current data
 
 ### File Structure
 
@@ -146,7 +148,7 @@ Specify which columns to search:
 ```bash
 python3 scripts/filter_biomarker_projects.py \
   --input-csv data/raw/projects.csv \
-  --columns PHR PROJECT_TITLE ABSTRACT_TEXT \
+  --columns PROJECT_TITLE PROJECT_TERMS ABSTRACT_TEXT \
   --output data/filtered/biomarkers.csv
 ```
 
@@ -189,7 +191,7 @@ python3 scripts/filter_biomarker_projects.py \
 ### Filtering Options
 
 - `--terms TERM [TERM ...]` - Custom search terms (default: 7 biomarker terms)
-- `--columns COL [COL ...]` - Columns to search (default: PHR, PROJECT_TITLE, PROJECT_TERMS)
+- `--columns COL [COL ...]` - Columns to search (default: PROJECT_TITLE, PROJECT_TERMS, ABSTRACT_TEXT)
 - `--id-column COL` - Column for deduplication (default: APPLICATION_ID)
 - `--abstracts-csv PATH` - Path to abstracts CSV (optional)
 

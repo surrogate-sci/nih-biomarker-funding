@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Download and filter NIH Reporter data from SciOP for biomarker-related projects.
+Download and filter NIH ExPORTER data for biomarker-related projects.
 
-This script downloads NIH Reporter CSV files and filters them for projects containing
-biomarker-related terminology in their project summaries/abstracts.
+This script downloads NIH ExPORTER CSV files and filters them for projects containing
+biomarker-related terminology in their project titles, terms, and abstracts.
 """
 
 import argparse
@@ -138,7 +138,7 @@ def filter_projects_csv(
         output_path: Path to output CSV
         logger: Logger instance
         search_terms: Terms to search for
-        text_columns: Columns to search (default: PHR, PROJECT_TITLE, PROJECT_TERMS)
+        text_columns: Columns to search (default: PROJECT_TITLE, PROJECT_TERMS, ABSTRACT_TEXT)
         project_id_column: Column to use for deduplication (default: APPLICATION_ID)
         fy_column: Fiscal year column for multi-year deduplication (default: FY)
 
@@ -146,7 +146,7 @@ def filter_projects_csv(
         Statistics dictionary
     """
     if text_columns is None:
-        text_columns = ["PHR", "PROJECT_TITLE", "PROJECT_TERMS"]
+        text_columns = ["PROJECT_TITLE", "PROJECT_TERMS", "ABSTRACT_TEXT"]
 
     logger.info(f"Filtering {input_path}...")
     logger.info(f"Searching columns: {', '.join(text_columns)}")

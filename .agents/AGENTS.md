@@ -38,8 +38,9 @@ This repository builds a reproducible pipeline to quantify NIH funding across bi
 - Run: `pytest -q` and measure critical-path coverage; add regressions for bugs.
 
 ## Data Sourcing Strategy
-- Primary source: SciOP NIH Reporter snapshots: https://sciop.net/datasets/nih-reporter
-- Build a targeted biomarker-focused subset by streaming CSVs, selecting only needed columns, applying permissive keyword heuristics over title/abstract, and optionally early LLM triage to drop clearly unrelated records. Retain enough context fields for downstream grading.
+- Primary source: NIH ExPORTER (https://reporter.nih.gov/exporter) - download ZIP files by fiscal year
+- Alternative: SciOP NIH Reporter snapshots (https://sciop.net/datasets/nih-reporter) - mirrors may lag
+- Build a targeted biomarker-focused subset by streaming CSVs, selecting only needed columns, applying permissive keyword heuristics over title/abstract/terms, and optionally early LLM triage to drop clearly unrelated records. Retain enough context fields for downstream grading.
 - Keep raw data out of Git; cache under `data/` with checksums and a README describing provenance and exact extraction commands.
 
 ## Data Structure & Multi-Year Funding (CRITICAL)

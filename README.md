@@ -5,13 +5,12 @@ How much money has been spent on different parts of biomarker research (technolo
 
 ## Purpose of the repository
 
-This code repository will contain skills to efficiently query the NIH exporter
-API, download csvs or utilize existing repositories such as https://sciop.net/datasets/nih-reporter to achieve the goals of the project. 
+This code repository will contain skills to efficiently download NIH ExPORTER CSV files directly from https://reporter.nih.gov/exporter to achieve the goals of the project. 
 The code should not rely on search word filters. The reliance of filters must be general and for the broadest level of whittling down the large pool of papers and mainly for the purpose of making the datasets more manageable. Finally use LLM graders to evaluate when a project meets some research specification given by the user. 
 
 
 The workflow is:
-- Ingest SciOP snapshots as the primary source and extract a targeted subset using permissive biomarker/adjacency heuristics to keep datasets small (~10 MB per year/cohort).
+- Download NIH ExPORTER data directly (https://reporter.nih.gov/exporter) and extract a targeted subset using permissive biomarker/adjacency heuristics to keep datasets small (~10-50 MB per year/cohort).
 
 - Standardize the dataset for project goals
 
@@ -26,10 +25,11 @@ The workflow is:
 - (optional) Build a dashboard that can be hosted on gradio to view existing dataset. 
 
 
-## Data 
-To start, we will extract a smaller, targeted dataset from SciOP snapshots/code focused on biomarker and biomarker‑adjacent research. We may eventually querying NIH Reporter directly. 
+## Data
+We extract a smaller, targeted dataset from NIH ExPORTER focused on biomarker and biomarker‑adjacent research.
 
-- Primary source: SciOP NIH Reporter snapshots: https://sciop.net/datasets/nih-reporter
+- Primary source: NIH ExPORTER (official): https://reporter.nih.gov/exporter
+- Alternative: SciOP NIH Reporter snapshots: https://sciop.net/datasets/nih-reporter (mirrors may lag)
 
 
 Coding agents should read .agents/AGENTS.md for further instructions
