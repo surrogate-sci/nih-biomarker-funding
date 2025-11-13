@@ -33,12 +33,13 @@ def load_nih_reporter_csv(filepath):
     return df
 
 def main():
-    # Input directory
-    data_dir = Path("/Users/mnarayan/Downloads/NIH Reporter biomarker and surrogate endpoint spending/data")
+    # Input directory (absolute path to Downloads)
+    data_dir = Path.home() / "Downloads" / "NIH Reporter biomarker and surrogate endpoint spending" / "data"
 
-    # Output directory
-    output_dir = Path("/Users/mnarayan/Documents/Coding/Cloud/nih-biomarker-funding/data")
-    output_dir.mkdir(exist_ok=True)
+    # Output directory (relative to project root)
+    script_dir = Path(__file__).parent.parent
+    output_dir = script_dir / "data" / "oct-2024"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Find all CSV files
     csv_files = sorted(data_dir.glob("*.csv"))
@@ -100,7 +101,7 @@ def main():
     output_file = output_dir / "nih_biomarker_unified.csv"
     deduplicated.to_csv(output_file, index=False)
 
-    print(f"\n✓ Saved unified dataset to: {output_file}")
+    print(f"\n✓ Saved unified dataset to: data/oct-2024/{output_file.name}")
     print(f"  Total projects: {len(deduplicated):,}")
     print(f"  File size: {output_file.stat().st_size / 1024 / 1024:.1f} MB")
 

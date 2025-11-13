@@ -37,3 +37,56 @@ The workflow is:
 
 **Top Institutes**: NCI (6,999), NIA (2,809), NIMH (2,638), NINDS (1,930), NHLBI (1,666)
 
+
+### Results from Analyzing Oct 2024 export
+
+#### Biomarker Discovery
+This is a an underestimate as we just included "biomarker discovery" as a search term. 
+
+  "Biomarker Discovery" Projects: 1,654 (6.4% of total dataset)
+  - Total Funding: $817.69M (2009-2024)
+  - Average per Project: $503,501
+  - Peak Year: FY2023 with $115.78M (232 projects)
+
+  Funding Growth Pattern:
+  - Major ramp-up started in FY2016 (~135 projects, $84M)
+  - Steady growth through FY2023
+  - FY2024 shows $49M (partial year data)
+
+  Top Funding Institutes:
+  1. NCI - $260M (596 projects) - Cancer research dominates
+  2. NIA - $179M (193 projects) - Aging research
+  3. NINDS - $90M (143 projects) - Neurological diseases
+  4. NIDDK - $72M (142 projects) - Diabetes/kidney/digestive
+
+
+#### Intermediate outcomes and Surrogate endpoints
+
+
+  Surrogate/Intermediate Endpoint Projects: 226 (0.9% of total dataset)
+  - Total Funding: $260.00M (1989-2024)
+  - Average per Project: $1,232,224 (significantly higher than biomarker discovery!)
+  - Peak Year: FY2024 with $61.55M (27 projects)
+
+  Keyword Breakdown:
+  - "surrogate endpoint": 197 projects
+  - "intermediate endpoint": 29 projects
+  - "intermediate outcomes": 0 projects
+
+  Funding Growth Pattern:
+  - Early work in late 1980s-2000s
+  - Slow growth 2007-2020 (~$0.4-10M/year)
+  - Major acceleration starting FY2021: $36M → $55M → $49M → $62M
+  - Recent years (2021-2024) account for most funding
+
+  Top Funding Institutes:
+  1. NIAID - $116M (9 projects) - Very high per-project average!
+  2. NCI - $58M (92 projects) - Most projects but lower per-project
+  3. NIA - $48M (13 projects) - Aging research
+  4. NHLBI - $10M (21 projects) - Heart/lung/blood
+
+ Observations:
+  - Much smaller than biomarker discovery (226 vs 1,654 projects)
+  - But higher average cost per project ($1.2M vs $500K)
+  - NIAID dominates funding despite having fewest projects - suggests large clinical trials
+  - Very recent acceleration (2021-2024)
