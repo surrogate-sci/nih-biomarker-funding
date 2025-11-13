@@ -1,13 +1,13 @@
 """Clean NIH Reporter exports by stripping biomarker phrases and deduplicating projects.
 
-The utility accepts either direct download URLs (SciOP snapshots remain supported) or
-paths to pre-downloaded NIH Reporter exporter archives. Each archive is expected to
-contain a CSV file; the script streams every row, removes biomarker-related phrases from
-the selected summary column, and collapses the combined dataset to one record per
-project identifier. Raw downloads are cached in ``data/raw`` (configurable), and the
-cleaned output is written as a CSV under ``data/processed`` by default. When automated
-downloads are not possible, pass ``--input-zip`` one or more times to process local
-archives directly.
+The utility accepts SciOP snapshot URLs, Figshare article identifiers, or paths to
+pre-downloaded NIH Reporter exporter archives. Each archive is expected to contain a CSV
+file; the script streams every row, removes biomarker-related phrases from the selected
+summary column, and collapses the combined dataset to one record per project
+identifier. Raw downloads are cached in ``data/raw`` (configurable), and the cleaned
+output is written as a CSV under ``data/processed`` by default. When automated downloads
+are not possible, pass ``--input-zip`` one or more times to process local archives
+directly.
 
 Example usage
 -------------
@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import csv
 import io
+import json
 import logging
 import re
 import shutil
@@ -37,6 +38,7 @@ from urllib.request import Request, urlopen
 
 LOGGER = logging.getLogger(__name__)
 DEFAULT_URL_TEMPLATE = "https://sciop.net/datasets/nih-reporter/{year}/nih-reporter-{year}.zip"
+FIGSHARE_API_BASE = "https://api.figshare.com/v2"
 DEFAULT_PROJECT_ID_COLUMNS = (
     "APPLICATION_ID",
     "PROJECT_ID",
@@ -85,6 +87,20 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--url",
         type=str,
         help="Direct URL to a SciOP NIH Reporter zip file. Overrides --year when provided.",
+    )
+    parser.add_argument(
+        "--figshare-article",
+        type=int,
+        help="Figshare article ID that contains NIH Reporter export archives to download.",
+    )
+    parser.add_argument(
+        "--figshare-include",
+        dest="figshare_includes",
+        action="append",
+        help=(
+            "Substring filter applied to Figshare filenames (case-insensitive). "
+            "Provide multiple times to accept several patterns."
+        ),
     )
     parser.add_argument(
         "--input-zip",
@@ -143,6 +159,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if args.project_ids is None:
         args.project_ids = list(DEFAULT_PROJECT_ID_COLUMNS)
+    if args.figshare_includes is not None:
+        args.figshare_includes = [fragment.lower() for fragment in args.figshare_includes]
     if args.input_zips is not None and len(args.input_zips) == 0:
         args.input_zips = None
     return args
@@ -155,9 +173,10 @@ def configure_logging(level: str) -> None:
     )
 
 
-def ensure_download(url: str, raw_dir: Path) -> Path:
+def ensure_download(url: str, raw_dir: Path, file_name: str | None = None) -> Path:
     raw_dir.mkdir(parents=True, exist_ok=True)
-    file_name = Path(urlparse(url).path).name or "sciop.zip"
+    if not file_name:
+        file_name = Path(urlparse(url).path).name or "sciop.zip"
     destination = raw_dir / file_name
     if destination.exists():
         LOGGER.info("Reusing cached download at %s", destination)
@@ -172,6 +191,73 @@ def ensure_download(url: str, raw_dir: Path) -> Path:
         raise RuntimeError(f"Failed to download {url}: {error}") from error
     LOGGER.info("Saved download to %s", destination)
     return destination
+
+
+def fetch_figshare_metadata(article_id: int) -> dict[str, object]:
+    url = f"{FIGSHARE_API_BASE}/articles/{article_id}"
+    request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+    try:
+        with urlopen(request, timeout=120) as response:
+            payload = response.read()
+    except (HTTPError, URLError) as error:
+        raise RuntimeError(f"Failed to retrieve Figshare article {article_id}: {error}") from error
+
+    try:
+        metadata = json.loads(payload.decode("utf-8"))
+    except json.JSONDecodeError as error:
+        raise RuntimeError(
+            f"Received invalid JSON when retrieving Figshare article {article_id}: {error}"
+        ) from error
+    return metadata
+
+
+def download_figshare_archives(
+    article_id: int, raw_dir: Path, includes: Sequence[str] | None = None
+) -> list[Path]:
+    metadata = fetch_figshare_metadata(article_id)
+    files = metadata.get("files") if isinstance(metadata, dict) else None
+    if not files:
+        raise ValueError(f"Figshare article {article_id} does not contain any files")
+
+    archives: list[Path] = []
+    for file_info in files:
+        if not isinstance(file_info, dict):
+            continue
+        name = str(file_info.get("name") or file_info.get("id") or "figshare-file.zip")
+        lowered_name = name.lower()
+        if not lowered_name.endswith(".zip"):
+            LOGGER.debug("Skipping Figshare file %s because it is not a .zip archive", name)
+            continue
+        if includes and not any(fragment in lowered_name for fragment in includes):
+            LOGGER.debug(
+                "Skipping Figshare file %s because it does not match filters %s",
+                name,
+                includes,
+            )
+            continue
+
+        download_url = file_info.get("download_url")
+        if not download_url:
+            file_id = file_info.get("id")
+            if not file_id:
+                LOGGER.warning(
+                    "Figshare file entry %s is missing both download_url and id; skipping", name
+                )
+                continue
+            download_url = f"{FIGSHARE_API_BASE}/file/download/{file_id}"
+
+        archive_path = ensure_download(str(download_url), raw_dir, file_name=name)
+        archives.append(archive_path)
+
+    if not archives:
+        raise ValueError(
+            "No Figshare files matched the provided filters or no .zip archives were available."
+        )
+
+    LOGGER.info(
+        "Downloaded %d archive(s) from Figshare article %s", len(archives), article_id
+    )
+    return archives
 
 
 def resolve_summary_column(columns: Sequence[str], preferred: str | None = None) -> str:
@@ -230,9 +316,9 @@ def build_ranking(row: dict[str, str | None], index: int) -> RankingKey:
 
 
 def clean_snapshot(args: argparse.Namespace) -> Path:
-    archives: list[Path]
+    archives: list[Path] = []
+
     if args.input_zips is not None:
-        archives = []
         for candidate in args.input_zips:
             archive_path = candidate.expanduser()
             if not archive_path.exists():
@@ -240,16 +326,24 @@ def clean_snapshot(args: argparse.Namespace) -> Path:
                     f"Provided --input-zip path '{archive_path}' does not exist"
                 )
             archives.append(archive_path)
-        if not archives:
-            raise ValueError("At least one --input-zip must be supplied when using local archives.")
-        LOGGER.info("Using %d pre-downloaded archive(s)", len(archives))
-    else:
+        if args.input_zips:
+            LOGGER.info("Using %d pre-downloaded archive(s)", len(args.input_zips))
+
+    if args.figshare_article is not None:
+        figshare_archives = download_figshare_archives(
+            args.figshare_article, args.raw_dir, args.figshare_includes
+        )
+        archives.extend(figshare_archives)
+
+    if not archives:
         if args.url:
             url = args.url
         elif args.year is not None:
             url = DEFAULT_URL_TEMPLATE.format(year=args.year)
         else:
-            raise ValueError("You must provide either --input-zip, --year, or --url.")
+            raise ValueError(
+                "You must provide --input-zip, --figshare-article, --year, or --url to supply data."
+            )
         csv_zip_path = ensure_download(url, args.raw_dir)
         archives = [csv_zip_path]
 
