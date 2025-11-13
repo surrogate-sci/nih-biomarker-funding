@@ -7,7 +7,7 @@
 ## Features
 
 - **Flexible input**: Filter local CSV files or download directly from URLs
-- **Biomarker term detection**: Searches for 7 biomarker-related terms by default
+- **Biomarker term detection**: Searches for 11 biomarker-related terms by default
 - **Deduplication**: Keeps one row per unique project (by APPLICATION_ID)
 - **Progress reporting**: Real-time progress updates for large datasets
 - **Retry logic**: Automatic retry with exponential backoff for network issues
@@ -24,6 +24,10 @@ The script searches for these terms (case-insensitive) by default:
 5. **endpoints**
 6. **endophenotype**
 7. **genetic marker**
+8. **genomics**
+9. **omics** (matches proteomics, metabolomics, lipidomics, transcriptomics, etc.)
+10. **imaging**
+11. **imaging marker**
 
 ## Installation
 
@@ -211,8 +215,61 @@ The output CSV maintains the same structure as the input, with all original colu
 - **CORE_PROJECT_NUM** - Core project number (for linking related records)
 - **FY** - Fiscal year
 - **ORG_NAME** - Organization name
-- **TOTAL_COST** - Total project cost
+- **TOTAL_COST** - Total project cost **for that fiscal year only**
 - And all other original columns...
+
+## Multi-Year Project Funding
+
+**Important**: NIH projects often span multiple years, and funding tracking requires careful attention:
+
+### How NIH Funding Works
+
+- **Multi-year projects**: Most projects run 3-5 years
+- **Annual awards**: Each fiscal year has a separate entry in the FY-specific CSV file
+- **TOTAL_COST**: Contains funding for **that fiscal year only**, not cumulative total
+- **APPLICATION_ID**: Different for each year/amendment
+- **CORE_PROJECT_NUM**: Same across all years of a project (use this to link years)
+
+### Recommended Workflow
+
+**Option 1: Process each year separately** (Recommended)
+```bash
+# Filter each fiscal year independently
+python3 scripts/filter_biomarker_projects.py \
+  --input-csv data/raw/RePORTER_PRJ_C_FY2023.csv \
+  --output data/filtered/biomarker_2023.csv
+
+python3 scripts/filter_biomarker_projects.py \
+  --input-csv data/raw/RePORTER_PRJ_C_FY2024.csv \
+  --output data/filtered/biomarker_2024.csv
+
+# Aggregate later using CORE_PROJECT_NUM + FY
+```
+
+**Option 2: Aggregate multi-year funding** (Post-processing)
+
+After filtering individual years, use `CORE_PROJECT_NUM` to aggregate:
+```python
+import pandas as pd
+
+# Load filtered data from multiple years
+df_2023 = pd.read_csv('data/filtered/biomarker_2023.csv')
+df_2024 = pd.read_csv('data/filtered/biomarker_2024.csv')
+df_all = pd.concat([df_2023, df_2024])
+
+# Calculate total funding per project across all years
+project_totals = df_all.groupby('CORE_PROJECT_NUM').agg({
+    'TOTAL_COST': 'sum',
+    'PROJECT_TITLE': 'first',
+    'ORG_NAME': 'first',
+    # ... other columns
+}).reset_index()
+```
+
+**Why the current script deduplicates by APPLICATION_ID:**
+- Within a single fiscal year file, APPLICATION_ID is unique per project
+- Deduplication prevents counting the same project twice if it appears multiple times in one year's file
+- For multi-year analysis, combine files first, then deduplicate by `(CORE_PROJECT_NUM, FY)`
 
 ## Data Size Expectations
 

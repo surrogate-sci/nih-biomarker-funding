@@ -27,6 +27,10 @@ BIOMARKER_TERMS = [
     "endpoints",
     "endophenotype",
     "genetic marker",
+    "genomics",
+    "omics",  # Matches proteomics, metabolomics, lipidomics, transcriptomics, etc.
+    "imaging",
+    "imaging marker",
 ]
 
 

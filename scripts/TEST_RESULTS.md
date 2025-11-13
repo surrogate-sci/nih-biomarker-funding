@@ -68,7 +68,7 @@ python3 scripts/filter_biomarker_projects.py \
 
 ## Search Term Coverage Test
 
-Verified that all 7 default biomarker terms are detected:
+Verified that the original 7 default biomarker terms are detected:
 
 | Term | Test Case | Status |
 |---|---|---|
@@ -80,7 +80,9 @@ Verified that all 7 default biomarker terms are detected:
 | endophenotype | ID 10001240 | ✓ Detected |
 | genetic marker | ID 10001238 | ✓ Detected |
 
-**Result**: ✓ All 7 search terms working
+**Result**: ✓ All 7 original search terms working
+
+**Note**: Script updated to include 4 additional terms (genomics, omics, imaging, imaging marker). These will be validated in the next test run.
 
 ## Column Search Test
 
@@ -142,6 +144,82 @@ The script correctly:
 
 Test data is preserved in:
 - Input: `data/test/mock_projects.csv`
-- Output: `data/test/filtered_results.csv`
+- Output: `data/test/filtered_results.csv` (original 7 terms)
+- Output: `data/test/filtered_results_v2.csv` (updated 11 terms)
 
 These can be used for regression testing.
+
+---
+
+## Updated Test Results (2025-11-13) - 11 Search Terms
+
+### Test with All 11 Search Terms
+
+After adding 4 new search terms (genomics, omics, imaging, imaging marker), re-ran the test:
+
+**Command:**
+```bash
+python3 scripts/filter_biomarker_projects.py \
+  --input-csv data/test/mock_projects.csv \
+  --output data/test/filtered_results_v2.csv \
+  --verbose
+```
+
+**Results:**
+- Total rows processed: 18
+- Rows matching terms: 12
+- Unique projects kept: 10
+- Duplicates removed: 2
+
+### All 11 Search Terms Validated
+
+| # | Term | Example Match | Project ID |
+|---|------|---------------|------------|
+| 1 | clinical marker | Clinical Marker Discovery in Diabetes | 10001242 |
+| 2 | biomarker | Development of Novel Biomarkers for Alzheimer | 10001234 |
+| 3 | surrogate endpoint | Clinical Validation of Cancer Surrogate Endpoints | 10001236 |
+| 4 | intermediate outcome | Intermediate Outcomes in Kidney Disease | 10001245 |
+| 5 | endpoints | Intermediate Outcomes in Kidney Disease | 10001245 |
+| 6 | endophenotype | Endophenotypes in Psychiatric Disorders | 10001240 |
+| 7 | genetic marker | Genetic Markers for Cardiovascular Disease | 10001238 |
+| 8 | genomics | Genetic Markers (has "genomics" in terms) | 10001238 |
+| 9 | omics | Proteomics Analysis of Cancer Cells | 10001246 |
+| 10 | omics | Metabolomics in Cardiovascular Disease | 10001248 |
+| 11 | imaging | Machine Learning for Medical Imaging | 10001239 |
+| 12 | imaging marker | MRI Imaging Markers in Multiple Sclerosis | 10001247 |
+
+✓ All 11 search terms validated!
+
+### New Projects Captured
+
+These 4 projects are now included due to the new search terms:
+
+1. **10001239** - Machine Learning for Medical Imaging
+   - Matched: "imaging" (in title)
+
+2. **10001246** - Proteomics Analysis of Cancer Cells
+   - Matched: "omics" (proteomics contains "omics")
+
+3. **10001247** - MRI Imaging Markers in Multiple Sclerosis
+   - Matched: "imaging marker" and "imaging"
+
+4. **10001248** - Metabolomics in Cardiovascular Disease
+   - Matched: "omics" (metabolomics) and "biomarkers"
+
+### Projects Still Excluded (Correctly)
+
+These 6 projects have no matching biomarker terms:
+- Gene Therapy for Muscular Dystrophy
+- Protein Folding Dynamics in Yeast
+- Bacterial Resistance Mechanisms
+- Stem Cell Biology and Development
+- Drug Delivery System Design
+- Vaccine Development for Influenza
+
+### Search Logic Confirmed
+
+**OR Logic:** Projects match if they contain ANY term in ANY searched column.
+- OR across all 11 search terms
+- OR across all specified columns (PHR, PROJECT_TITLE, PROJECT_TERMS)
+
+**Result:** ✓ Filtering logic working correctly with expanded term set
