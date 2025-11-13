@@ -128,6 +128,7 @@ def filter_projects_csv(
     search_terms: List[str],
     text_columns: List[str] = None,
     project_id_column: str = "APPLICATION_ID",
+    fy_column: str = "FY",
 ) -> Dict[str, int]:
     """
     Filter a projects CSV file for biomarker-related terms.
@@ -138,7 +139,8 @@ def filter_projects_csv(
         logger: Logger instance
         search_terms: Terms to search for
         text_columns: Columns to search (default: PHR, PROJECT_TITLE, PROJECT_TERMS)
-        project_id_column: Column to use for deduplication
+        project_id_column: Column to use for deduplication (default: APPLICATION_ID)
+        fy_column: Fiscal year column for multi-year deduplication (default: FY)
 
     Returns:
         Statistics dictionary
@@ -149,6 +151,7 @@ def filter_projects_csv(
     logger.info(f"Filtering {input_path}...")
     logger.info(f"Searching columns: {', '.join(text_columns)}")
     logger.info(f"Search terms: {', '.join(search_terms)}")
+    logger.info(f"Deduplication key: ({project_id_column}, {fy_column})")
 
     stats = {
         "total_rows": 0,
@@ -157,7 +160,8 @@ def filter_projects_csv(
         "duplicates_removed": 0,
     }
 
-    seen_projects: Set[str] = set()
+    # Track unique (APPLICATION_ID, FY) combinations to preserve yearly funding
+    seen_records: Set = set()
 
     try:
         with open(input_path, 'r', encoding='utf-8', errors='ignore') as infile:
@@ -199,10 +203,15 @@ def filter_projects_csv(
                     if has_match:
                         stats["matched_rows"] += 1
 
-                        # Deduplicate by project ID
+                        # Deduplicate by (APPLICATION_ID, FY) to preserve yearly funding records
                         project_id = row.get(project_id_column, "")
-                        if project_id and project_id not in seen_projects:
-                            seen_projects.add(project_id)
+                        fiscal_year = row.get(fy_column, "")
+
+                        # Create composite key to track unique project-year combinations
+                        unique_key = (project_id, fiscal_year) if fiscal_year else project_id
+
+                        if project_id and unique_key not in seen_records:
+                            seen_records.add(unique_key)
                             writer.writerow(row)
                             stats["unique_projects"] += 1
                         elif project_id:
@@ -215,7 +224,7 @@ def filter_projects_csv(
         logger.info(f"Filtering complete:")
         logger.info(f"  Total rows processed: {stats['total_rows']:,}")
         logger.info(f"  Rows matching terms: {stats['matched_rows']:,}")
-        logger.info(f"  Unique projects kept: {stats['unique_projects']:,}")
+        logger.info(f"  Unique project-year records kept: {stats['unique_projects']:,}")
         logger.info(f"  Duplicates removed: {stats['duplicates_removed']:,}")
         logger.info(f"  Output saved to: {output_path}")
 
@@ -474,7 +483,7 @@ Examples:
                 )
 
         if stats["unique_projects"] > 0:
-            logger.info(f"✓ Success! Filtered {stats['unique_projects']:,} unique biomarker projects")
+            logger.info(f"✓ Success! Filtered {stats['unique_projects']:,} unique biomarker project-year records")
         else:
             logger.warning("No matching projects found. Check your search terms and input data.")
 

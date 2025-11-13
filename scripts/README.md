@@ -72,6 +72,40 @@ NIH ExPORTER provides several CSV files:
 - **RePORTER_LINK_{YEAR}.csv** - Project-Publication links
 - And others...
 
+### Multi-Year Funding (IMPORTANT)
+
+**Understanding NIH Project Funding:**
+
+Multi-year NIH projects appear in multiple fiscal year files:
+- **Example**: Alzheimer biomarker project (CORE_PROJECT_NUM: R01AG123456) running 2021-2023
+  - FY2021 file: APPLICATION_ID `10001234`, TOTAL_COST `$450,000`
+  - FY2022 file: APPLICATION_ID `10001234-A1`, TOTAL_COST `$480,000`
+  - FY2023 file: APPLICATION_ID `10001234-A2`, TOTAL_COST `$500,000`
+
+**Key Points:**
+- **TOTAL_COST** = funding for that specific fiscal year (NOT cumulative)
+- **APPLICATION_ID** = changes each year for the same project
+- **CORE_PROJECT_NUM** = stays constant across all years
+- **To get total project funding**: Sum TOTAL_COST across all FY, grouped by CORE_PROJECT_NUM
+
+**Deduplication Strategy:**
+
+This script uses `(APPLICATION_ID, FY)` as the unique key to preserve all yearly funding records:
+- ✓ Keeps one record per project per fiscal year
+- ✓ Preserves granular funding data for accurate aggregation
+- ✓ Enables calculation of total multi-year project costs
+- ❌ Does NOT collapse multi-year projects into a single record
+
+**Example Output:**
+```
+APPLICATION_ID,CORE_PROJECT_NUM,FY,TOTAL_COST
+10001234,R01AG123456,2021,450000
+10001234-A1,R01AG123456,2022,480000
+10001234-A2,R01AG123456,2023,500000
+```
+
+Total project funding = $1,430,000 (sum across 3 years)
+
 ## Usage
 
 ### Basic Usage - Filter Local File
@@ -281,7 +315,8 @@ Based on the project guidelines:
 ## Notes
 
 - **Case-insensitive search**: All searches are case-insensitive
-- **Deduplication**: Uses APPLICATION_ID by default; change with `--id-column`
+- **Deduplication**: Uses `(APPLICATION_ID, FY)` composite key to preserve yearly funding records
+- **Multi-year projects**: Each fiscal year's funding is kept as a separate record
 - **Missing columns**: Script will use all available columns if specified columns don't exist
 - **ZIP files**: Currently requires manual extraction; automatic unzip support coming soon
 - **Network retry**: Automatic retry with exponential backoff (2s, 4s, 8s, 16s)
