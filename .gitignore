@@ -1,0 +1,41 @@
+# Data files
+data/
+*.csv
+*.zip
+*.torrent
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Visualizations
+visualizations/
+*.html
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Environment
+venv/
+env/
+.env
+
+# Results
+results_summary.md
