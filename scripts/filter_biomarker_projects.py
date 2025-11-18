@@ -214,7 +214,9 @@ def filter_projects_csv(
             # Write filtered output
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, 'w', newline='', encoding='utf-8') as outfile:
-                writer = csv.DictWriter(outfile, fieldnames=reader.fieldnames)
+                # Add EXPLICIT_BIOMARKER column to flag core term matches
+                output_fieldnames = list(reader.fieldnames) + ['EXPLICIT_BIOMARKER']
+                writer = csv.DictWriter(outfile, fieldnames=output_fieldnames)
                 writer.writeheader()
 
                 for row in reader:
@@ -229,6 +231,16 @@ def filter_projects_csv(
 
                     if has_match:
                         stats["matched_rows"] += 1
+
+                        # Check if this also matches core/explicit biomarker terms
+                        is_explicit = False
+                        for col in available_text_cols:
+                            if contains_biomarker_terms(row.get(col, ""), CORE_BIOMARKER_TERMS):
+                                is_explicit = True
+                                break
+
+                        # Add explicit biomarker flag to row
+                        row['EXPLICIT_BIOMARKER'] = 'TRUE' if is_explicit else 'FALSE'
 
                         # Deduplicate by (APPLICATION_ID, FY) to preserve yearly funding records
                         project_id = row.get(project_id_column, "")
