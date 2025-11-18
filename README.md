@@ -26,11 +26,11 @@ The workflow is:
 
 ## Scripts
 
-### Automated NIH ExPORTER Analysis
+### Core Workflow Scripts
 
 **1. Filter NIH ExPORTER Data** (`scripts/filter_biomarker_projects.py`)
 
-Filter individual fiscal year data for biomarker-related projects:
+Filter individual fiscal year data for biomarker-related projects. This is the core filtering script that searches for biomarker terms in project titles and terms.
 
 ```bash
 # Filter a single year
@@ -44,24 +44,24 @@ python3 scripts/filter_biomarker_projects.py \
 - `--term-set core`: 4 explicit biomarker terms (biomarker, clinical marker, surrogate endpoint, imaging marker)
 - `--term-set expanded`: 10 terms including digital biomarker, endophenotype, genetic marker, clinical+omics, clinical+imaging
 
-**Output:** Adds `EXPLICIT_BIOMARKER` column (TRUE/FALSE) to flag projects matching core terms.
+**Output:** Adds `EXPLICIT_BIOMARKER` column (TRUE/FALSE) to flag projects matching core terms. Deduplicates by (APPLICATION_ID, FY) to preserve yearly funding records.
 
 **2. Batch Process Multiple Years** (`scripts/process_all_years.py`)
 
-Process multiple fiscal years from NIH ExPORTER data:
+Automates downloading, extracting, and filtering multiple fiscal years from NIH ExPORTER:
 
 ```bash
-# Process years 2020-2024 with existing downloads
+# Process years 2004-2024 with existing downloads
 python3 scripts/process_all_years.py \
-  --start-year 2020 \
+  --start-year 2004 \
   --end-year 2024 \
   --skip-download \
   --raw-dir ~/Downloads \
   --term-set expanded
 
-# Download and process years 2020-2024 automatically
+# Download and process years automatically
 python3 scripts/process_all_years.py \
-  --start-year 2020 \
+  --start-year 2004 \
   --end-year 2024 \
   --term-set expanded
 ```
@@ -83,77 +83,118 @@ python3 scripts/generate_summary.py --filtered-dir path/to/filtered/
 **Output:** `data/filtered/SUMMARY.md` with:
 - Per-year funding and project counts
 - Biomarker relevant spending vs explicit biomarker spending
-- Data quality notes (e.g., FY2005-2006 PROJECT_TERMS issues)
+- Overall statistics and data quality notes
+
+**4. Create Unified Dataset** (`scripts/create_unified_dataset.py`)
+
+Combines all filtered year files into a single unified dataset with selected columns (removes large text fields to reduce file size):
+
+```bash
+python3 scripts/create_unified_dataset.py
+```
+
+**Output:** `data/nih_biomarker_unified_2004-2024.csv` - single CSV with all years, keeping only analytically useful columns.
+
+### Analysis & Visualization Scripts
+
+**5. Create HTML Visualizations** (`scripts/create_html_charts.py`)
+
+Generates interactive HTML charts using Chart.js for biomarker funding trends:
+
+```bash
+python3 scripts/create_html_charts.py
+```
+
+**Output:** Standalone HTML files in `visualizations/` directory showing funding by year and by institute for different biomarker categories.
+
+**6. Analyze Keywords** (`scripts/analyze_keywords.py`)
+
+Search the unified dataset for specific keywords and generate statistics:
+
+```bash
+# Single keyword
+python3 scripts/analyze_keywords.py "biomarker discovery"
+
+# Multiple keywords (OR search)
+python3 scripts/analyze_keywords.py "surrogate endpoint" "intermediate endpoint"
+```
+
+**Output:** Statistics (funding by year, top institutes) and filtered CSV file.
+
+**Note on Legacy Scripts**: 
+- `scripts/nih_bulk_downloader.py` - Outdated bulk downloader. Use `process_all_years.py` for current workflow.
+
+**Note on Oct-2024 Dataset Scripts**:
+- `scripts/dedupe_and_union.py` - Used for processing the October 2024 dataset (`data/oct-2024/`). For the current FY2004-2024 workflow, use `create_unified_dataset.py` instead.
 
 ### Workflow
 
-1. **Heavy processing** (once): `process_all_years.py` - filters raw NIH ExPORTER data
-2. **Light reporting** (anytime): `generate_summary.py` - creates reports from filtered CSVs
+**Standard workflow:**
+
+1. **Download & Filter** (heavy processing, run once): 
+   ```bash
+   python3 scripts/process_all_years.py --start-year 2004 --end-year 2024
+   ```
+   Downloads NIH ExPORTER ZIP files, extracts CSVs, and filters for biomarker projects. Outputs individual year files to `data/filtered/`.
+
+2. **Generate Summary** (lightweight reporting, run anytime):
+   ```bash
+   python3 scripts/generate_summary.py
+   ```
+   Creates `data/filtered/SUMMARY.md` with funding statistics and project counts.
+
+3. **Create Unified Dataset** (combine years):
+   ```bash
+   python3 scripts/create_unified_dataset.py
+   ```
+   Combines all filtered years into `data/nih_biomarker_unified_2004-2024.csv` for analysis.
+
+4. **Visualize & Analyze** (optional):
+   ```bash
+   python3 scripts/create_html_charts.py  # Generate charts
+   python3 scripts/analyze_keywords.py "keyword"  # Search dataset
+   ```
 
 
 ## Data
 
-**Current Dataset**: `data/nih_biomarker_unified.csv`
-- 24,837 unique projects (Application ID + Fiscal Year combinations)
-- Spans FY1988 - FY2024
-- 60.6 MB CSV file
-- Sourced from NIH Reporter searches using biomarker-related keywords:
-  - "biomarker validation"
-  - "surrogate marker", "intermediate endpoint", "endophenotype", "surrogate biomarker"
-  - Includes full project abstracts, public health relevance statements, and funding metadata
+**Current Dataset**: `data/nih_biomarker_unified_2004-2024.csv`
+- 269,630 unique project-year records (Application ID + Fiscal Year combinations)
+- Spans FY2004 - FY2024 (21 years)
+- Unified dataset with selected columns (removes large text fields like PROJECT_TERMS)
+- Sourced from NIH ExPORTER bulk data filtered by biomarker-related keywords
 
-**Top Institutes**: NCI (6,999), NIA (2,809), NIMH (2,638), NINDS (1,930), NHLBI (1,666)
+**Individual Year Files**: `data/filtered/biomarker_FY{year}.csv`
+- One CSV per fiscal year (2004-2024)
+- Each includes `EXPLICIT_BIOMARKER` column flagging core term matches
+- Full project data including abstracts and metadata
 
+**Summary Statistics** (from `data/filtered/SUMMARY.md`):
+- **Total Matched Projects**: 269,630 (16.9% of scanned projects)
+- **Explicit Biomarker Projects**: 75,849 (4.8% of scanned projects)
+- **Total Biomarker Relevant Spending**: $134.49B
+- **Explicit Biomarker Spending**: $35.77B (26.6% of total)
 
-### Results from Analyzing Oct 2024 export
+**Search Terms Used**:
+- **Core terms (4)**: biomarker, clinical marker, surrogate endpoint, imaging marker
+- **Expanded terms (10)**: core + digital biomarker, intermediate outcome, endophenotype, genetic marker, clinical+omics, clinical+imaging
 
-#### Biomarker Discovery
-This is a an underestimate as we just included "biomarker discovery" as a search term. 
-
-  "Biomarker Discovery" Projects: 1,654 (6.4% of total dataset)
-  - Total Funding: $817.69M (2009-2024)
-  - Average per Project: $503,501
-  - Peak Year: FY2023 with $115.78M (232 projects)
-
-  Funding Growth Pattern:
-  - Major ramp-up started in FY2016 (~135 projects, $84M)
-  - Steady growth through FY2023
-  - FY2024 shows $49M (partial year data)
-
-  Top Funding Institutes:
-  1. NCI - $260M (596 projects) - Cancer research dominates
-  2. NIA - $179M (193 projects) - Aging research
-  3. NINDS - $90M (143 projects) - Neurological diseases
-  4. NIDDK - $72M (142 projects) - Diabetes/kidney/digestive
+**Data Quality Notes**:
+- FY2005: PROJECT_TERMS field only 68% populated (vs 89% in FY2004)
+- FY2006: PROJECT_TERMS field completely empty (0% populated)
+- These years show artificially low match counts since filtering relies heavily on PROJECT_TERMS keywords
 
 
-#### Intermediate outcomes and Surrogate endpoints
+## Results
 
+For current summary statistics and per-year funding breakdowns, see `data/filtered/SUMMARY.md`.
 
-  Surrogate/Intermediate Endpoint Projects: 226 (0.9% of total dataset)
-  - Total Funding: $260.00M (1989-2024)
-  - Average per Project: $1,232,224 (significantly higher than biomarker discovery!)
-  - Peak Year: FY2024 with $61.55M (27 projects)
+**Key Findings** (FY2004-2024):
+- Biomarker-related research represents 16.9% of all NIH projects scanned
+- Total biomarker relevant spending: $134.49B over 21 years
+- Explicit biomarker projects (core terms) account for 4.8% of projects and $35.77B in funding
+- Strong growth trend: funding increased from $1.71B (FY2004) to $13.55B (FY2024)
+- Peak year: FY2024 with 23,252 matched projects and $13.55B in biomarker relevant spending
 
-  Keyword Breakdown:
-  - "surrogate endpoint": 197 projects
-  - "intermediate endpoint": 29 projects
-  - "intermediate outcomes": 0 projects
-
-  Funding Growth Pattern:
-  - Early work in late 1980s-2000s
-  - Slow growth 2007-2020 (~$0.4-10M/year)
-  - Major acceleration starting FY2021: $36M → $55M → $49M → $62M
-  - Recent years (2021-2024) account for most funding
-
-  Top Funding Institutes:
-  1. NIAID - $116M (9 projects) - Very high per-project average!
-  2. NCI - $58M (92 projects) - Most projects but lower per-project
-  3. NIA - $48M (13 projects) - Aging research
-  4. NHLBI - $10M (21 projects) - Heart/lung/blood
-
- Observations:
-  - Much smaller than biomarker discovery (226 vs 1,654 projects)
-  - But higher average cost per project ($1.2M vs $500K)
-  - NIAID dominates funding despite having fewest projects - suggests large clinical trials
-  - Very recent acceleration (2021-2024)
+**Oct-2024 Dataset**: 
+The `data/oct-2024/` directory contains analysis results from October 2024 using different search strategies and keyword filters. This is a separate analysis from the current FY2004-2024 workflow which uses the expanded term set.
