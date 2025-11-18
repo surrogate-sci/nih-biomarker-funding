@@ -21,7 +21,74 @@ The workflow is:
 
 - Export analysis tables and small artifacts for review.
 
-- (optional) Build a dashboard that can be hosted on gradio to view existing dataset. 
+- (optional) Build a dashboard that can be hosted on gradio to view existing dataset.
+
+
+## Scripts
+
+### Automated NIH ExPORTER Analysis
+
+**1. Filter NIH ExPORTER Data** (`scripts/filter_biomarker_projects.py`)
+
+Filter individual fiscal year data for biomarker-related projects:
+
+```bash
+# Filter a single year
+python3 scripts/filter_biomarker_projects.py \
+  --input-csv ~/Downloads/RePORTER_PRJ_C_FY2024.csv \
+  --output data/filtered/biomarker_FY2024.csv \
+  --term-set expanded
+```
+
+**Search term sets:**
+- `--term-set core`: 4 explicit biomarker terms (biomarker, clinical marker, surrogate endpoint, imaging marker)
+- `--term-set expanded`: 10 terms including digital biomarker, endophenotype, genetic marker, clinical+omics, clinical+imaging
+
+**Output:** Adds `EXPLICIT_BIOMARKER` column (TRUE/FALSE) to flag projects matching core terms.
+
+**2. Batch Process Multiple Years** (`scripts/process_all_years.py`)
+
+Process multiple fiscal years from NIH ExPORTER data:
+
+```bash
+# Process years 2020-2024 with existing downloads
+python3 scripts/process_all_years.py \
+  --start-year 2020 \
+  --end-year 2024 \
+  --skip-download \
+  --raw-dir ~/Downloads \
+  --term-set expanded
+
+# Download and process years 2020-2024 automatically
+python3 scripts/process_all_years.py \
+  --start-year 2020 \
+  --end-year 2024 \
+  --term-set expanded
+```
+
+**Output:** Individual year CSVs in `data/filtered/biomarker_FY{year}.csv`
+
+**3. Generate Summary Report** (`scripts/generate_summary.py`)
+
+Create summary report from already-filtered data (lightweight - no reprocessing):
+
+```bash
+# Generate summary from data/filtered/
+python3 scripts/generate_summary.py
+
+# Use custom directory
+python3 scripts/generate_summary.py --filtered-dir path/to/filtered/
+```
+
+**Output:** `data/filtered/SUMMARY.md` with:
+- Per-year funding and project counts
+- Biomarker relevant spending vs explicit biomarker spending
+- Data quality notes (e.g., FY2005-2006 PROJECT_TERMS issues)
+
+### Workflow
+
+1. **Heavy processing** (once): `process_all_years.py` - filters raw NIH ExPORTER data
+2. **Light reporting** (anytime): `generate_summary.py` - creates reports from filtered CSVs
 
 
 ## Data
