@@ -20,7 +20,17 @@ import requests
 
 # Biomarker-related search terms (case-insensitive)
 # Use '+' for AND conditions (e.g., "clinical+omics" requires both words present)
-BIOMARKER_TERMS = [
+
+# Core biomarker terms - high confidence, explicit biomarker language
+CORE_BIOMARKER_TERMS = [
+    "biomarker",
+    "clinical marker",
+    "surrogate endpoint",
+    "imaging marker",
+]
+
+# Expanded biomarker terms - broader coverage including omics and phenotypes
+EXPANDED_BIOMARKER_TERMS = [
     "clinical marker",
     "biomarker",
     "digital biomarker",
@@ -32,6 +42,9 @@ BIOMARKER_TERMS = [
     "clinical+imaging",  # Requires both "clinical" AND "imaging"
     "imaging marker",
 ]
+
+# Default term set
+BIOMARKER_TERMS = EXPANDED_BIOMARKER_TERMS
 
 
 # NIH ExPORTER CSV download base URL
@@ -385,10 +398,17 @@ Examples:
 
     # Filtering options
     parser.add_argument(
+        "--term-set",
+        choices=["core", "expanded"],
+        default="expanded",
+        help="Predefined term set: 'core' (4 terms, high confidence) or 'expanded' (10 terms, broader coverage) (default: expanded)",
+    )
+
+    parser.add_argument(
         "--terms",
         nargs="+",
-        default=BIOMARKER_TERMS,
-        help=f"Search terms (default: {', '.join(BIOMARKER_TERMS)})",
+        default=None,
+        help="Custom search terms (overrides --term-set if provided)",
     )
 
     parser.add_argument(
@@ -469,13 +489,25 @@ Examples:
         logger.info(f"Then run: {sys.argv[0]} --input-csv <downloaded-file> --output {args.output}")
         sys.exit(1)
 
+    # Select search terms
+    if args.terms:
+        # Custom terms provided
+        search_terms = args.terms
+    elif args.term_set == "core":
+        search_terms = CORE_BIOMARKER_TERMS
+    else:  # expanded
+        search_terms = EXPANDED_BIOMARKER_TERMS
+
+    logger.info(f"Using term set: {'custom' if args.terms else args.term_set}")
+    logger.info(f"Search terms: {', '.join(search_terms)}")
+
     # Filter projects
     if input_csv_path:
         stats = filter_projects_csv(
             input_csv_path,
             args.output,
             logger,
-            args.terms,
+            search_terms,
             args.columns,
             args.id_column,
         )
