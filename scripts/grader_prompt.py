@@ -42,7 +42,7 @@ OUTPUT_SCHEMA = {
                         "observational_cohort", "observational_longitudinal",
                         "observational_case_cohort", "observational_quasi",
                         "experimental_singlearm", "experimental_rct", "experimental_perturbation",
-                        "methods_statistical"
+                        "methods_secondary_analysis"
                     ]
                 },
                 "secondary": {"type": ["string", "null"]},
