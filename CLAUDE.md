@@ -20,15 +20,11 @@ Analyze NIH biomarker funding (2004-2024) to quantify funding for correlative/pr
 
 ## Current Status
 
-**Blocking issue**: LLM grader needs improvement. Previous Kosmos analysis had ~50% ambiguous classifications due to:
-1. Binary "Causal vs Correlational" was too simplistic
-2. Zero-shot classification had poor reliability
-3. Grader prompts lacked scientific rigor
+**RUBRIC.md** (v2, 2026-03-02): Rewritten with operationalizable "Assign when..." definitions for all 32 codes (17 Dim1, 10 Dim2, 5 Dim3). Source of truth for classification.
 
-**RUBRIC.md status**: Has basic category structure but marked with `[EXAMPLE NEEDED]`, `[NUANCE]`, `[MATURE JUDGMENT NEEDED]` tags awaiting expert input on:
-- Predictive vs Prognostic distinctions
-- Correlate vs Surrogate (Fleming's "a correlate does not a surrogate make")
-- Level 0 (individual prognosis) vs surrogate endpoint research
+**grader_prompt.py**: Refactored to load RUBRIC.md at runtime. Old hardcoded prompt preserved as `_LEGACY_SYSTEM_PROMPT`.
+
+**Pipeline design doc**: `docs/plans/2026-03-02-rubric-grader-pipeline-design.md`
 
 ## Calibration Examples
 
@@ -46,8 +42,15 @@ These are "easy cases" - need "hard cases" (grants doing biomarker work without 
 
 ## Next Steps
 
-1. Fill in RUBRIC.md with concrete examples and decision rules
-2. Pull "hard cases" for grader testing
-3. Design improved grader prompt with few-shot examples
-4. Test on calibration examples
-5. Re-run classification on full dataset
+1. ~~Rewrite RUBRIC.md definitions~~ (done)
+2. ~~Refactor grader_prompt.py to load RUBRIC.md at runtime~~ (done)
+3. Calibration testing on 25 easy cases
+4. Sample and label hard cases (grants without explicit biomarker terms)
+5. Full dataset classification (~270K grants)
+
+## Gotchas
+
+- `data/` is gitignored — use `git add -f` for files that need tracking (RUBRIC.md, calibration CSVs)
+- Old skill dirs archived to `_archive/` — do not use
+- RUBRIC.md is a scientific document — do not modify classification definitions without Manjari's direction
+- `grader_prompt.py` legacy prompt preserved as `_LEGACY_SYSTEM_PROMPT` for reference only

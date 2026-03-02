@@ -5,6 +5,7 @@ Uses OpenRouter API to compare Gemini 1.5 Flash vs GPT-4o-mini
 """
 
 import json
+from pathlib import Path
 
 # JSON Schema for validation
 OUTPUT_SCHEMA = {
@@ -18,9 +19,11 @@ OUTPUT_SCHEMA = {
                 "primary": {
                     "type": "string",
                     "enum": [
-                        "susceptibility_risk", "diagnostic", "monitoring", "prognostic", "risk",
-                        "predictive", "predictive_nonspecific", "pharmacodynamic", "safety",
-                        "surrogate_endpoint", "stratification_treatment", "stratification_diagnostic",
+                        "susceptibility_risk", "diagnostic", "monitoring",
+                        "prognostic_risk", "prognostic_efficacy", "prognostic_enrichment",
+                        "predictive_optimal", "predictive_enrichment", "predictive_ambiguous",
+                        "pharmacodynamic", "safety", "surrogate_endpoint",
+                        "stratification_treatment", "stratification_diagnostic",
                         "stratification_ambiguous", "methods_causal", "methods_correlational"
                     ]
                 },
@@ -70,7 +73,95 @@ OUTPUT_SCHEMA = {
     }
 }
 
-SYSTEM_PROMPT = """You are an expert biomedical research methodologist classifying NIH-funded biomarker research projects.
+
+# ---------------------------------------------------------------------------
+# Rubric loading and system prompt construction
+# ---------------------------------------------------------------------------
+
+_SYSTEM_PROMPT_PREAMBLE = (
+    "You are an expert biomedical research methodologist classifying "
+    "NIH-funded biomarker research projects.\n\n"
+    "Your task is to classify each project on THREE dimensions based on "
+    "the title and abstract."
+)
+
+_SYSTEM_PROMPT_OUTPUT_FORMAT = """
+## Output Format
+
+You MUST respond with valid JSON matching this exact schema:
+
+```json
+{
+  "biomarker_use": {
+    "primary": "<code from Dimension 1>",
+    "secondary": "<code from Dimension 1 or null>",
+    "confidence": "<high|medium|low>"
+  },
+  "research_design": {
+    "primary": "<code from Dimension 2>",
+    "secondary": "<code from Dimension 2 or null>",
+    "confidence": "<high|medium|low>"
+  },
+  "evidence_strength": {
+    "code": "<code from Dimension 3>",
+    "confidence": "<high|medium|low>"
+  },
+  "key_phrases": [
+    "<exact quote from abstract supporting biomarker_use classification>",
+    "<exact quote from abstract supporting research_design classification>",
+    "<exact quote from abstract supporting evidence_strength classification>"
+  ],
+  "reasoning": "<1-2 sentences explaining the classification>"
+}
+```
+
+IMPORTANT:
+- Use ONLY codes defined in the rubric above
+- key_phrases must be EXACT quotes from the abstract
+- If uncertain between categories, use the more conservative code (correlational > causal, prognostic_risk > prognostic_efficacy, predictive_ambiguous > predictive_enrichment > predictive_optimal)
+"""
+
+
+def load_rubric(path: Path | None = None) -> str:
+    """Read the classification rubric from data/RUBRIC.md.
+
+    Parameters
+    ----------
+    path : Path or None
+        Explicit path to the rubric file. When *None* (the default), the path
+        is resolved relative to this script's location:
+        ``<repo>/data/RUBRIC.md``.
+
+    Returns
+    -------
+    str
+        The full text content of the rubric file.
+    """
+    if path is None:
+        path = Path(__file__).resolve().parent.parent / "data" / "RUBRIC.md"
+    return Path(path).read_text(encoding="utf-8")
+
+
+def build_system_prompt(rubric_text: str) -> str:
+    """Construct the full system prompt from rubric text.
+
+    The prompt is assembled from three pieces:
+    1. A preamble describing the classifier's role.
+    2. The rubric text (loaded from ``data/RUBRIC.md``).
+    3. Output-format instructions and classification rules.
+    """
+    return (
+        f"{_SYSTEM_PROMPT_PREAMBLE}\n\n"
+        f"{rubric_text}\n"
+        f"{_SYSTEM_PROMPT_OUTPUT_FORMAT}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Legacy system prompt -- kept for reference only.  Do NOT use in production.
+# ---------------------------------------------------------------------------
+
+_LEGACY_SYSTEM_PROMPT = """You are an expert biomedical research methodologist classifying NIH-funded biomarker research projects.
 
 Your task is to classify each project on THREE dimensions based on the title and abstract.
 
@@ -178,6 +269,11 @@ IMPORTANT:
 - If uncertain between categories, use the more conservative (correlational > causal, prognostic > predictive)
 """
 
+
+# ---------------------------------------------------------------------------
+# Prompt templates and construction
+# ---------------------------------------------------------------------------
+
 USER_PROMPT_TEMPLATE = """Classify this NIH biomarker research project:
 
 **Title:** {title}
@@ -189,8 +285,9 @@ Return ONLY the JSON classification."""
 
 def create_grading_prompt(title: str, abstract: str) -> list:
     """Create the messages for the grading API call"""
+    system_prompt = build_system_prompt(load_rubric())
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": USER_PROMPT_TEMPLATE.format(title=title, abstract=abstract)}
     ]
 
@@ -225,7 +322,7 @@ def test_grader():
             prostate cancer. It is our hypothesis that quantification and characterization of CTC can determine
             prognosis and predict response to therapy early in the course of the therapeutic regimen.""",
             "expected": {
-                "biomarker_use": {"primary": "predictive_nonspecific"},
+                "biomarker_use": {"primary": "predictive_ambiguous"},
                 "research_design": {"primary": "observational_cohort"},
                 "evidence_strength": {"code": "correlational"}
             }

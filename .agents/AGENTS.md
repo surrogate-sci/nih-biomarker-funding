@@ -3,14 +3,15 @@
 This repository builds a reproducible pipeline to quantify NIH funding across biomarker research phases while minimizing brittle UI search filters. We will extract a smaller, targeted dataset from SciOP snapshots/code focused on biomarker and biomarker‑adjacent research (instead of querying NIH Reporter directly). The workflow is:
 - Ingest SciOP snapshots as the primary source and extract a targeted subset using permissive biomarker/adjacency heuristics to keep datasets small (~50–150 MB per year/cohort).
 - Normalize and deduplicate projects; preserve stable identifiers for reproducibility.
-- Classify each project into biomarker phases: technology development, clinical discovery, development/analytical validation, and clinical validation (including regulatory and non‑regulatory decision support). Favor transparent LLM graders with a documented rubric and seeded prompts; augment with lightweight heuristics.
+- Classify each project on three dimensions per `data/RUBRIC.md`: (1) intended biomarker use (17 codes), (2) research design (10 codes), (3) evidence strength for biomarker validity (5 codes). LLM grader loads rubric at runtime from RUBRIC.md.
 - Aggregate spend by phase, institute, mechanism, and year; export analysis tables and small artifacts for review.
 
 
 ## Project Structure & Module Organization
 - Root: coordination and docs.
 - `scripts/`: operational utilities (e.g., `scripts/nih_bulk_downloader.py` — experimental).
-- `nih-reporter-skill/`: NIH Reporter usage docs/examples (`SKILL.md`).
+- `_archive/`: Old skill directories (do not use).
+- `docs/plans/`: Design documents and implementation plans.
 - Proposed layout as the project grows:
   - `src/`: reusable Python packages (`fetch/`, `parse/`, `grade/`, `agg/`).
   - `tests/`: pytest suite mirroring `src/`.
