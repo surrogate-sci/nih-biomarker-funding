@@ -19,9 +19,12 @@ with ~50% ambiguous classifications. This repo replaces that with a hand-designe
 
 - **RUBRIC.md is scientific content** — do not modify definitions without Manjari's explicit direction
 - **"I draft, you correct" workflow** — Manjari dictates scientific substance; Claude organizes/formats
+- **Manjari edits concurrently in Cursor** — check for file modifications before overwriting; preserve her changes
+- **Refactoring/cleanup → PR** (not direct commit to main). Doc updates → direct commit is fine.
 - **`data/` is gitignored** — use `git add -f` for tracked files (RUBRIC.md, calibration CSVs, results)
 - **Commit style**: imperative, scoped prefix: `grade: calibrate rubric`, `fetch: add sharder`
 - **Don't use**: `_archive/`, `../edison-benchmarks/`, old skill dirs
+- **Don't invent scientific positions** — never paraphrase domain claims or add causal language Manjari didn't provide
 
 ## Pipeline
 
