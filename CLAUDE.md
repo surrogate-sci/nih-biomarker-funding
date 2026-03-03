@@ -1,56 +1,94 @@
 # NIH Biomarker Funding Analysis
 
 ## Project Goal
-Analyze NIH biomarker funding (2004-2024) to quantify funding for correlative/prognostic biomarkers (Level 0) vs mechanistically valid/surrogate endpoint research (higher causal levels), broken down by institute, grant type, and time.
 
-## Key Data Locations
+Produce data for a policy-level blog post (target venues: Good Science Project, IFP,
+Clinical Trial Abundance) supporting or refuting the hypothesis that most NIH biomarker
+funding operates without a clear estimand (causal or decision-theoretic), and that
+surrogacy/mechanistic validation is an afterthought rather than a design consideration.
 
-| What | Where | Notes |
-|------|-------|-------|
-| Main dataset | `data/nih_biomarker_unified_2004-2024.csv` | 269,630 grants, NO abstracts |
-| Project abstracts | `~/Downloads/RePORTER_PRJABS_C_FY*.zip` | NOT in repo; **FY2016 missing**, all others present |
-| Calibration examples | `data/grader_calibration_examples.csv` | 25 examples from 2012 & 2022 |
-| 2012 examples | `data/grader_examples_2012.csv` | Larger set of 2012 examples |
-| Rubric | `data/RUBRIC.md` | Classification rubric, needs expert input |
+The pipeline: keyword-filter 20 years of NIH ExPORTER data into ~270K biomarker grants,
+then LLM-grade each on 3 dimensions (biomarker use, research design, evidence strength)
+using a custom rubric that extends FDA-NIH BEST to capture the gradient of specificity
+in how researchers invoke biomarker concepts.
 
-## Previous Work (OUTDATED - Do Not Use)
+**Prior art**: The Edison analysis agent (`../edison-benchmarks/`) produced a poor rubric
+with ~50% ambiguous classifications. This repo replaces that with a hand-designed rubric.
 
-- `../edison-benchmarks/data/nih_funding/` - Kosmos analysis with ~50% "ambiguous" classifications
-- `nih-reporter-skill/` and `nih-reporter-skill-v2/` - Old skill directories, ignore
+## Rules
 
-## Current Status
+- **RUBRIC.md is scientific content** — do not modify definitions without Manjari's explicit direction
+- **"I draft, you correct" workflow** — Manjari dictates scientific substance; Claude organizes/formats
+- **`data/` is gitignored** — use `git add -f` for tracked files (RUBRIC.md, calibration CSVs, results)
+- **Commit style**: imperative, scoped prefix: `grade: calibrate rubric`, `fetch: add sharder`
+- **Don't use**: `_archive/`, `../edison-benchmarks/`, old skill dirs
 
-**RUBRIC.md** (v2, 2026-03-02): Rewritten with operationalizable "Assign when..." definitions for all 32 codes (17 Dim1, 10 Dim2, 5 Dim3). Source of truth for classification.
+## Pipeline
 
-**grader_prompt.py**: Refactored to load RUBRIC.md at runtime. Old hardcoded prompt preserved as `_LEGACY_SYSTEM_PROMPT`.
+### Phase 1: Dataset Curation (complete)
 
-**Pipeline design doc**: `docs/plans/2026-03-02-rubric-grader-pipeline-design.md`
+NIH ExPORTER bulk downloads → keyword filtering → unified dataset.
 
-## Calibration Examples
+```
+process_all_years.py  →  filter_biomarker_projects.py  →  data/filtered/biomarker_FY*.csv
+                                                              ↓
+                                                       create_unified_dataset.py
+                                                              ↓
+                                                       nih_biomarker_unified_2004-2024.csv (269,630 grants)
+```
 
-25 examples in `data/grader_calibration_examples.csv` with explicit biomarker terminology:
-- surrogate biomarker (9), pharmacodynamic biomarker (4), intermediate biomarker (4)
-- surrogate endpoint (4), intermediate endpoint (3), prognostic biomarker (1)
+- **Term sets**: core (4 terms: biomarker, clinical marker, surrogate endpoint, imaging marker) and expanded (10 terms, adds digital biomarker, endophenotype, genetic marker, etc.)
+- `EXPLICIT_BIOMARKER` column flags core-term matches (75,849 grants, $35.77B)
+- Data quality: FY2005 PROJECT_TERMS 68% populated; FY2006 PROJECT_TERMS empty
+- See `README.md` for full script docs and commands
 
-These are "easy cases" - need "hard cases" (grants doing biomarker work without explicit terms) to test grader robustness.
+### Phase 2: LLM Classification (current focus)
 
-## Key Literature for Rubric
+3-dimension rubric grading via LLM ensemble.
 
-- Fleming & Powers 2012 - 4-level endpoint hierarchy for surrogate endpoints
-- Altar et al. 2008 - Evidence map (Grade D→A, higher = more causal)
-- IOM/NASEM 2010 - 3-step evaluation framework
+```
+RUBRIC.md → grader_prompt.py (build_system_prompt) → OpenRouter API
+                                                      ↓
+calibration_examples.csv → run_calibration.py → calibration_results_*.json
+```
 
-## Next Steps
+- **Models**: Gemini 2.5 Flash Lite + GPT-4o-mini (primary), Sonnet 4.6 Batch API (tiebreaker on ~28% disagreements). ~$700-900 for 270K grants.
+- **Rubric**: 17 Dim1 (biomarker use) + 10 Dim2 (research design) + 5 Dim3 (evidence strength) codes
+- Abstracts from `~/Downloads/RePORTER_PRJABS_C_FY*.zip` (FY2016 missing)
 
-1. ~~Rewrite RUBRIC.md definitions~~ (done)
-2. ~~Refactor grader_prompt.py to load RUBRIC.md at runtime~~ (done)
-3. Calibration testing on 25 easy cases
-4. Sample and label hard cases (grants without explicit biomarker terms)
-5. Full dataset classification (~270K grants)
+## Key Files
 
-## Gotchas
+| File | Role |
+|------|------|
+| `data/RUBRIC.md` | Source of truth: classification rubric with "Assign when..." definitions |
+| `scripts/grader_prompt.py` | Loads RUBRIC.md at runtime, constructs system prompt, calls OpenRouter |
+| `scripts/run_calibration.py` | Runs grader on calibration examples (`--model`, `--limit`, `--delay`) |
+| `scripts/filter_biomarker_projects.py` | Filters NIH ExPORTER CSVs by keyword term sets |
+| `scripts/process_all_years.py` | Batch download + filter FY2004-2024 |
+| `scripts/create_unified_dataset.py` | Merges filtered year CSVs into single dataset |
+| `scripts/generate_summary.py` | Produces `data/filtered/SUMMARY.md` |
+| `data/grader_calibration_examples.csv` | 25 easy cases (explicit biomarker terms from 2012 & 2022) |
+| `data/nih_biomarker_unified_2004-2024.csv` | 269,630 grants, NO abstracts |
 
-- `data/` is gitignored — use `git add -f` for files that need tracking (RUBRIC.md, calibration CSVs)
-- Old skill dirs archived to `_archive/` — do not use
-- RUBRIC.md is a scientific document — do not modify classification definitions without Manjari's direction
-- `grader_prompt.py` legacy prompt preserved as `_LEGACY_SYSTEM_PROMPT` for reference only
+## Commands
+
+```bash
+# Phase 1: Data curation
+python3 scripts/process_all_years.py --start-year 2004 --end-year 2024 --skip-download --raw-dir ~/Downloads
+python3 scripts/create_unified_dataset.py
+python3 scripts/generate_summary.py
+
+# Phase 2: LLM grading
+python3 scripts/run_calibration.py --model google/gemini-2.5-flash-lite --limit 5
+python3 scripts/run_calibration.py --model openai/gpt-4o-mini
+
+# Utilities
+ruff check . && ruff format .
+python3 scripts/analyze_keywords.py "surrogate endpoint" "intermediate endpoint"
+```
+
+## Status
+
+Calibration done (3 models, 25/25 success, 28% Dim1 disagreement).
+Next: cleanup PR → batch classifier → hard cases → full run.
+See `docs/plans/2026-03-02-calibration-cleanup-scale.md` for detailed plan.

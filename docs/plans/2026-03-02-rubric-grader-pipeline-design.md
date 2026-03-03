@@ -1,7 +1,7 @@
 # Design: Rubric-Driven Grader Pipeline
 
 **Date:** 2026-03-02
-**Status:** In progress
+**Status:** Calibration complete; scale-up planned
 
 ## Problem
 
@@ -66,8 +66,32 @@ Target state:
 - **Old hardcoded prompt preserved as `_LEGACY`** — reference only, not used in classification
 - **Calibration before hard cases before full run** — fail fast on easy cases first
 
-## Open Questions
+## Model Selection (Resolved 2026-03-02)
 
-- Which LLM(s) to use for the full run (cost vs accuracy tradeoff at 270K scale)
+**3-model ensemble strategy:**
+
+| Model | Role | Cost (270K grants) | Via |
+|-------|------|--------------------|----|
+| Gemini 2.5 Flash Lite | Primary grader #1 | ~$183 | OpenRouter |
+| GPT-4o-mini | Primary grader #2 | ~$275 | OpenRouter |
+| Claude Sonnet 4.6 | Tiebreaker (disagreements only) | ~$200-500 | Anthropic Batch API |
+
+**Total estimated cost: $700-900** for full classification.
+
+Where the two cheap models disagree (~28% based on calibration), Sonnet adjudicates. This gives a natural reliability measure and surfaces hard cases.
+
+**Why not Opus/Sonnet as primary?** Sonnet at $3/$15 per M tokens = ~$5,670 for one pass. Haiku 3.5 at $0.80/$4.00 = ~$1,300. Neither is competitive for structured classification where cheaper models perform adequately.
+
+## Calibration Results (2026-03-02)
+
+All 3 models tested on 25 easy cases (grants with explicit biomarker terms):
+
+- **25/25 success** on all models (no parse errors, no API failures)
+- **28% disagreement** on Dimension 1 (biomarker_use) between models
+- Disagreements cluster on: pharmacodynamic vs surrogate_endpoint, stratification_treatment vs predictive_optimal, prognostic_risk vs prognostic_efficacy — exactly the rubric's harder distinctions
+- Gemini models agree more with each other than with GPT-4o-mini
+
+## Remaining Open Questions
+
 - Whether FY2016 missing abstracts are acceptable or need alternative sourcing
 - Ground truth labeling process for hard cases (Manjari manual review?)
