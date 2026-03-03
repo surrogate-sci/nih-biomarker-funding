@@ -1,0 +1,727 @@
+[
+  {
+    "application_id": "8303985",
+    "year": "2012",
+    "title": "Genome-wide Identification of DNA Methylation Biomarkers in AML",
+    "matched_terms": "pharmacodynamic biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "pharmacodynamic",
+        "secondary": "monitoring",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_retrospective",
+        "secondary": "experimental_perturbation",
+        "confidence": "medium"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "identify DNA methylation biomarkers that can be used to assess the activity of HMAs in AML leukemia stem/progenitor cells (LSPCs)",
+        "use previously collected, matched blood and bone marrow specimens obtained from patients with AML prior to and immediately following, several different decitabine administration schedules",
+        "identify DNA methylation biomarkers of AML"
+      ],
+      "reasoning": "The project aims to identify DNA methylation biomarkers to assess the activity of hypomethylating agents (HMAs) in AML, which is a pharmacodynamic use. The research design involves analyzing existing patient samples and using genome-wide analyses, suggesting a retrospective observational approach, with potential for experimental perturbation in cell lines or animal models. The evidence strength is considered preclinical causal as the focus is on understanding the biological activity of HMAs in specific cell types within AML, laying groundwork for future clinical validation."
+    }
+  },
+  {
+    "application_id": "8260536",
+    "year": "2012",
+    "title": "Prospective Neuroimaging in Huntington's Disease",
+    "matched_terms": "pharmacodynamic biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "pharmacodynamic",
+        "secondary": "prognostic_enrichment",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_rct",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "experimental_weak",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "We also used these tools as a pharmacodynamic biomarker in a pilot study of high-dose Creatine, a leading candidate neuroprotective agent, in HD subjects.",
+        "We are seeking to validate our neuro-imaging tools in a funded placebo-controlled, double-blind Phase III clinical trial of high-dose creatine as a biomarker of disease progression.",
+        "Should Creatine slow progression and slow brain atrophy, it will be a crucial step in demonstrating the value of neuro-imaging as a pharmacodynamic biomarker of disease modification."
+      ],
+      "reasoning": "The project uses neuro-imaging as a pharmacodynamic biomarker to assess the biological effect of creatine and aims to validate it in a Phase III RCT, which also serves as an enrichment strategy for a disease-modifying therapy. The evidence strength is weak as the biomarker's causal validity is being tested within this trial, not pre-established."
+    }
+  },
+  {
+    "application_id": "10314024",
+    "year": "2022",
+    "title": "Biomarkers of Sulforaphane/Broccoli Sprout Extract in Prostate Cancer",
+    "matched_terms": "pharmacodynamic biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "pharmacodynamic",
+        "secondary": "susceptibility_risk",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_rct",
+        "secondary": "experimental_perturbation",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "identification of pharmacodynamic biomarker(s) using cellular and preclinical rodent models of prostate cancer",
+        "A pilot double-blind, randomized, and placebo-controlled window of opportunity clinical trial in men scheduled for prostatectomy",
+        "The preclinical studies are conceived to test the hypothesis that prostate cancer chemoprevention by SFN and BSE in a clinically-relevant transgenic mouse model (Hi-Myc) is associated with suppression of synthesis as well as \u00ce\u00b2-oxidation of fatty acids leading to inhibition of cancer cell proliferation."
+      ],
+      "reasoning": "The primary aim is to identify pharmacodynamic biomarkers of sulforaphane/broccoli sprout extract in prostate cancer, with a pilot RCT in humans and preclinical studies in mice. The preclinical studies provide causal evidence in animal models, while the human trial is a randomized controlled trial measuring biomarker changes."
+    }
+  },
+  {
+    "application_id": "10376769",
+    "year": "2022",
+    "title": "The role of oxidative stress and inflammation in epileptogenesis",
+    "matched_terms": "pharmacodynamic biomarker, prognostic biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "prognostic_risk",
+        "secondary": "pharmacodynamic",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_perturbation",
+        "secondary": "observational_cohort",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "select systemic biomarkers of oxidative stress and inflammation are able to predict the development of epilepsy and epilepsy-associated co-morbidities (prognostic biomarkers)",
+        "determine whether dimethyl fumarate (DMF), a Nrf2 inducer that uniquely reduces oxidative stress and inflammation and is approved for other clinical indications, can prevent epilepsy in two distinct mouse models of epileptogenesis",
+        "Using immunohistochemical and biochemical methods, Aim 2 will assess changes in proteins associated with redox modulation, inflammation and cytokine signaling in the brain and plasma following DMF treatment in the same model"
+      ],
+      "reasoning": "The project aims to identify biomarkers that predict epilepsy development (prognostic_risk) and monitor treatment response (pharmacodynamic) in mouse models. The research design involves experimental perturbation (drug administration in mouse models) and observational cohort elements (measuring biomarkers in plasma). The evidence strength is causal_preclinical as the validation is conducted in animal models."
+    }
+  },
+  {
+    "application_id": "10362519",
+    "year": "2022",
+    "title": "Phase one clinical trial of a novel small molecule EBNA1 inhibitor, VK-2019, in patients with Epstein- Barr positive nasopharyngeal cancer, with pharmacokinetic and pharmacodynamic correlative studies",
+    "matched_terms": "efficacy biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "pharmacodynamic",
+        "secondary": "prognostic_risk",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_singlearm",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "pharmacokinetic and pharmacodynamic correlative studies",
+        "The phase I study will enroll patients with metastatic or recurrent nasopharyngeal carcinoma (NPC)",
+        "VK-2019 inhibits EBNA1 in biochemical assays with nanomolar potency and disrupts EBNA1 binding in vivo in several cell-based assays. VK-2019 causes significant tumor growth protection in 4 different xenograft models of EBV-driven tumor progression"
+      ],
+      "reasoning": "The primary biomarker use is pharmacodynamic, measuring the biological response to VK-2019. The study is a single-arm experimental trial. Causal preclinical evidence for VK-2019's efficacy in xenograft models is strong."
+    }
+  },
+  {
+    "application_id": "8228086",
+    "year": "2012",
+    "title": "Molecular Mechanisms of Chemoprevention:  NRF2 Signaling",
+    "matched_terms": "intermediate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "prognostic_risk",
+        "secondary": "pharmacodynamic",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_perturbation",
+        "secondary": "observational_cohort",
+        "confidence": "medium"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "The predictive value of these biomarkers for individual risk of liver cancer will be assessed.",
+        "We will use both pharmacologic and genetic approaches to further probe the molecular mechanisms of action of these chemopreventive agents, assess their efficacy in animal models with close relevance to human carcinogenesis",
+        "We have identified the Keap1-Nrf2-ARE signaling pathway as a target for chemoprevention."
+      ],
+      "reasoning": "The project aims to understand the mechanisms of chemopreventive agents and validate biomarkers for predicting individual risk of liver cancer, particularly in animal models, fitting 'prognostic_risk' and 'causal_preclinical'. The research involves pharmacologic and genetic interventions in animal models, aligning with 'experimental_perturbation' and 'causal_preclinical' evidence strength."
+    }
+  },
+  {
+    "application_id": "10424498",
+    "year": "2022",
+    "title": "Phase II Clinical trial of GTC in Men on Active Surveillance",
+    "matched_terms": "intermediate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "pharmacodynamic",
+        "secondary": "predictive_enrichment",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_rct",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "experimental_weak",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "reduces several intermediate biomarkers implicated in PCa progression",
+        "phase II, randomized clinical trial",
+        "reduces several intermediate biomarkers implicated in PCa progression and without toxicities at these doses."
+      ],
+      "reasoning": "The study is a Phase II randomized clinical trial investigating green tea catechins (GTC) for chemoprevention in men on active surveillance for prostate cancer. The primary biomarker use is pharmacodynamic, measuring intermediate biomarkers implicated in PCa progression to understand the mechanism of GTC. It also functions as predictive enrichment by aiming to identify men who will have a decreased rate of clinical progression, potentially informing a Phase III trial. The research design is a randomized controlled trial. The evidence strength for the biomarker itself is weak, as it's being measured within the trial to understand the drug's effect, not validated as a surrogate or predictive marker in a causal sense."
+    }
+  },
+  {
+    "application_id": "10591306",
+    "year": "2022",
+    "title": "Air Pollution, Metabolome, and Alzheimer disease in Mexican Americans",
+    "matched_terms": "intermediate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "susceptibility_risk",
+        "secondary": "monitoring",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_cohort",
+        "secondary": "observational_longitudinal",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "air pollution is increasingly recognized as an important risk factor for cognitive impairment (CI) and Alzheimer\u00e2\u20ac\u2122s and related dementias (ADRD)",
+        "an integrative longitudinal metabolomics approach in a large population-based cohort of Mexican-Americans relying on real-life, long-term air pollution exposures for which we established links with ADRD.",
+        "We have already observed strong associations for air pollution exposure with incident ADRD."
+      ],
+      "reasoning": "The project aims to identify risk factors for Alzheimer's disease in a population-free of clinically apparent disease, and also monitors changes in the metabolome over time as cognition declines. The research design is a longitudinal cohort study using existing samples and data, and the evidence strength is correlational as it focuses on associations between air pollution, metabolome, and ADRD."
+    }
+  },
+  {
+    "application_id": "10432062",
+    "year": "2022",
+    "title": "Mechanisms of the signaling metabolite \u03b2-hydroxybutyrate in Alzheimer's disease and the aging brain",
+    "matched_terms": "intermediate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "susceptibility_risk",
+        "secondary": null,
+        "confidence": "medium"
+      },
+      "research_design": {
+        "primary": "experimental_perturbation",
+        "secondary": "observational_cohort",
+        "confidence": "medium"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "The ketone body \u00ce\u00b2-hydroxybutyrate (BHB) is a new signaling metabolite.",
+        "We will use these tools to uncover the specific mechanisms by which BHB improves memory in normal aging and in AD mice (Aim 1), and reduces epileptiform discharges in AD mice (Aim 2).",
+        "We will characterize key molecular changes that BHB causes in the proteomic landscape of the brain, including mapping the acetylome and new BHBylome (Aim 3)."
+      ],
+      "reasoning": "The project investigates BHB as a signaling metabolite that links nutrition to aging and Alzheimer's disease, suggesting it could be a biomarker for susceptibility or risk. The research design involves experimental perturbations in mouse models and characterization of molecular changes, fitting `experimental_perturbation` and `causal_preclinical` evidence strength. The abstract also mentions using aging and AD models, implying observational cohort elements."
+    }
+  },
+  {
+    "application_id": "8232114",
+    "year": "2012",
+    "title": "Molecular Approaches to Early Detection of Lung Cancer",
+    "matched_terms": "intermediate endpoint",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "susceptibility_risk",
+        "secondary": "prognostic_efficacy",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_cohort",
+        "secondary": "observational_retrospective",
+        "confidence": "medium"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "derivation of a signature composed of these functionally significant alterations in at-risk individuals will represent a powerful biomarker for risk",
+        "integrating data from state of the art genomic and proteomic analyses in specimens obtained from the same individuals",
+        "a subset of specific molecular changes contribute to those aberrations and puts the entire airway epithelium of smokers at a greater risk for lung cancer"
+      ],
+      "reasoning": "The project aims to identify molecular aberrations in high-risk individuals for lung cancer risk assessment (susceptibility_risk) and as intermediate endpoint biomarkers of response to chemoprevention therapy (prognostic_efficacy). The research design involves analyzing specimens from individuals, suggesting a cohort or retrospective approach. The evidence strength is correlational as it focuses on identifying associations and signatures rather than establishing causal roles in humans."
+    }
+  },
+  {
+    "application_id": "10335200",
+    "year": "2022",
+    "title": "Designing a transcriptome-based, targeted theranostic platform for prostate cancer",
+    "matched_terms": "intermediate endpoint",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "stratification_treatment",
+        "secondary": "monitoring",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_perturbation",
+        "secondary": "observational_retrospective",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "The integration of transcriptional profiling, prostate cancer cell targeting and molecular-genetic imaging within a single platform will potentially allow for the monitoring of progression and response to therapy in pathologically indistinguishable, yet biologically diverse patient cohorts with different disease outcomes.",
+        "In Aim 1, we will validate GRP78 and IL11R, in addition to promoters of other genes identified by transcriptome analysis of prostate cancer patient-derived samples. These promoters will be cloned into reporter plasmids to initially assess their properties relative to a standard CMV promoter in prostate cancer cells and 3-dimensional patient-derived osteogenic prostate cancer cultures in vitro. In Aim 2, the constructs will be evaluated in animal models.",
+        "Given that the previous body of work has established GRP78 and IL11R as bona fide molecular targets in human prostate cancer, our methodological approach and findings bear mechanistic and translational significance."
+      ],
+      "reasoning": "The project aims to develop a platform that uses transcriptome analysis to identify distinct patient cohorts with different disease outcomes, suggesting stratification for treatment. It also aims to monitor progression and response to therapy. The research involves experimental manipulation in cell cultures and animal models, building on prior preclinical validation of targets."
+    }
+  },
+  {
+    "application_id": "10374117",
+    "year": "2022",
+    "title": "Novel integrative approaches for disease phenotyping, utilizing radiomics in Sarcoidosis",
+    "matched_terms": "intermediate endpoint",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "stratification_diagnostic",
+        "secondary": "prognostic_risk",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_retrospective",
+        "secondary": "observational_cohort",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "redefining sarcoidosis biomarkers",
+        "Develop a radiomic and comprehensive radiographic characterization of lung abnormalities in a large cohort of sarcoidosis patients",
+        "identify new, more refined, phenotypes of lung disease and that combined with clinical and transcriptomic information, will identify novel integrative disease phenotypes that can be shown, in future longitudinal studies, to predict pulmonary disease resolution or progression."
+      ],
+      "reasoning": "The project aims to redefine biomarkers by developing refined phenotypes through radiomic, clinical, and genetic integration, primarily for understanding disease heterogeneity and potentially predicting progression, fitting `stratification_diagnostic` and `prognostic_risk`. The research design involves analyzing existing patient data and cohorts, indicating `observational_retrospective` and `observational_cohort`. The evidence strength is `correlational` as the study focuses on identifying associations and phenotypes, with future longitudinal studies proposed for prediction."
+    }
+  },
+  {
+    "application_id": "8256488",
+    "year": "2012",
+    "title": "Mechanistic Studies of MUC4 and NGAL in Pancreatic Adenocarcinoma",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "diagnostic",
+        "secondary": "prognostic_risk",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_cohort",
+        "secondary": "experimental_perturbation",
+        "confidence": "medium"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "NGAL is a potential diagnostic biomarker and its expression is upregulated as early as the preneoplastic PanIN-2 stage.",
+        "I will use an immunocompetent murine model genetically manipulated to spontaneously produce pancreatic cancer that has been developed in our lab to assess the correlation between tissue and plasma NGAL and tissue MUC4 levels throughout the development of and advancement of pancreatic cancer.",
+        "NGAL correlated with MUC4 expression in these tissues."
+      ],
+      "reasoning": "The project aims to investigate the link between MUC4 and NGAL, with NGAL being explored as a diagnostic and prognostic biomarker for pancreatic cancer. The research design involves both observational studies in human and murine tissues and experimental manipulations in cell lines and murine models. The evidence strength is correlational as the study focuses on associations and mechanistic links rather than direct causal validation of the biomarker's role in clinical outcomes."
+    }
+  },
+  {
+    "application_id": "8269851",
+    "year": "2012",
+    "title": "Regulatory Mechanisms of Oxidative Stress in Hypertensive Heart Disease",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "susceptibility_risk",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_perturbation",
+        "secondary": "observational_cohort",
+        "confidence": "medium"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "availability of biomarkers predictive of necrosis and obtained noninvasively from peripheral blood mononuclear cells (PBMC) will aid in identification of risk",
+        "we use our established model of HHD provoked by aldosterone/salt treatment (ALDOST) and exploit its preclinical (wk 1) and pathologic (wk 4) stages",
+        "We use mitochondria-targeted reagents: to b lock the 2+Cau niporter; t o serve as antioxidant; and to inhibit mPTP."
+      ],
+      "reasoning": "The project aims to identify biomarkers in PBMCs that predict risk of hypertensive heart disease (HHD) in a preclinical model, aligning with susceptibility risk. The research design involves experimental perturbations in an animal model and analysis of PBMC data, suggesting a combination of experimental and observational cohort approaches. The use of targeted reagents and mechanistic investigation in an animal model points to preclinical causal validation of the underlying pathways."
+    }
+  },
+  {
+    "application_id": "8252547",
+    "year": "2012",
+    "title": "Computational Tools for Research in Neuroscience, Behavioral Science and Mental H",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "predictive_enrichment",
+        "secondary": "diagnostic",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "methods_secondary_analysis",
+        "secondary": "observational_retrospective",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "new therapies can be objectively and quantitatively evaluated for their efficacy in preventing or removing beta amyloid for each patient, on a personalized individual basis.",
+        "We propose to develop an automated package for analysis of beta-amyloid accumulation in Alzheimer's patients' brains which can be easily implemented by pharmaceutical companies for therapeutic drug discovery, as well as in a clinical setting, for high quality quantitative PET (and SPECT) imaging assessments.",
+        "Our validated image processing package is highly relevant to the ongoing search for new diagnostics and treatments since it will serve as a new medical device (as defined by the FDA), which will improve the way in which medical care is delivered to Alzheimer's patients."
+      ],
+      "reasoning": "The project aims to develop a computational tool for analyzing PET scans to evaluate new therapies for Alzheimer's disease, indicating a predictive use case. The research design focuses on developing and testing software, making it a secondary analysis method, and the evidence strength is correlational as it focuses on association rather than causal validation of the biomarker itself."
+    }
+  },
+  {
+    "application_id": "8291213",
+    "year": "2012",
+    "title": "Center for Novel Therapeutics for HIV-Associated Cognitive Disorders",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "surrogate_endpoint",
+        "secondary": "susceptibility_risk",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_cohort",
+        "secondary": "experimental_perturbation",
+        "confidence": "medium"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "There is also an unfilled need to develop surrogate markers and more robust and simpler screening instruments for HAND, to allow for earlier detection, for tracking of the course of HAND, and improving the efficiency of clinical trials.",
+        "The goals of the renewal application of the JHU NIMH Center are to: 1. To facilitate collaborative research in HIV-related neuroscience with the goal of developing a definitive therapy for HIV associated cognitive disorders based on targeting sustained CNS inflammation.",
+        "To identify and validate surrogate biomarkers based on proteomics and lipomics."
+      ],
+      "reasoning": "The project aims to develop surrogate markers for HAND, which directly aligns with the 'surrogate_endpoint' classification. It also mentions identifying novel compounds and targeting CNS inflammation, suggesting an experimental component, and the need for screening instruments implies a susceptibility/risk context for early detection. The research design is likely observational cohort for tracking HAND progression and experimental for compound screening, with evidence strength being correlational as the validation of these biomarkers is the goal, not yet established."
+    }
+  },
+  {
+    "application_id": "8305521",
+    "year": "2012",
+    "title": "Early Diagnosis of Human Prion Disease",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "diagnostic",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_cohort",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "We will prospectively evaluate 100 patients with sCJD, 20 patients with symptomatic gCJD, and 40 patients with asymptomatic (presymptomatic gCJD) and 80 with other forms of rapidly progressive dementia (RPDs) over five years.",
+        "We will prospectively evaluate 100 patients with sCJD, 20 patients with symptomatic gCJD, and 40 patients with asymptomatic (presymptomatic gCJD) and 80 with other forms of rapidly progressive dementia (RPDs) over five years.",
+        "We will evaluate our gCJD at an age close to their predicted age of onset which will help us to identify the earliest signs of prion disease."
+      ],
+      "reasoning": "The project aims to develop a diagnostic scheme for early diagnosis of prion disease using MRI and other markers in a prospective cohort. While the study involves patients with established disease, the primary goal is to detect the disease early and differentiate it from other conditions, fitting the 'diagnostic' use. The design is a prospective cohort study, and the evidence strength is correlational as it focuses on association and diagnostic accuracy rather than causal validation of the biomarker."
+    }
+  },
+  {
+    "application_id": "10362606",
+    "year": "2022",
+    "title": "Epigenetic Drug Regimens for Homologous Recombination Proficient Ovarian Cancer",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "predictive_enrichment",
+        "secondary": "pharmacodynamic",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_perturbation",
+        "secondary": "observational_retrospective",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "determine if the extraordinary benefits of PARPi therapy can be extended through rational PARPi-epigenetic drug combinations for a new indication in BRCA wild-type HR proficient, poor prognostic ovarian cancer.",
+        "we will apply a translational research approach that takes full advantage of our collective expertise including: unique primary cell lines and patient-derived xenograft (PDX) preclinical models, clinical patient biosamples associated with an approved phase 1/2 trial, and state-of-the-art genome-wide strategies.",
+        "The PI has shown epigenetic drugs, histone deacetylase inhibitors (HDACi), bromodomain extra-terminal inhibitors (BETi), and DNA methyltransferase inhibitors (DNMTi), enhance PARPi efficacy in preclinical models of HR proficient ovarian cancer."
+      ],
+      "reasoning": "The project aims to extend PARPi therapy benefits to a new patient population (BRCA wild-type HR proficient ovarian cancer) by combining PARPi with epigenetic drugs, suggesting a predictive role for HR proficiency in response to this combination. The research utilizes preclinical models (cell lines, PDX) and clinical biosamples, indicating experimental perturbation and retrospective observational components. The validation of epigenetic drugs enhancing PARPi efficacy in preclinical models points to causal preclinical evidence for the biomarker's role."
+    }
+  },
+  {
+    "application_id": "10374005",
+    "year": "2022",
+    "title": "Structural Determinants of Disease Progression in COPD",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "prognostic_risk",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_cohort",
+        "secondary": "methods_secondary_analysis",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "reliable surrogate biomarkers to predict clinical progression in individual subjects are lacking.",
+        "analyze data from two large well-characterized cohorts (Genetic Epidemiology of COPD, COPDGene, and Subpopulations and Intermediate Outcome Measures in COPD Study, SPIROMICS) with 5-year follow-up",
+        "Disease progression is not reflected entirely by FEV1 changes and progression of structural disease is an important determinant of disease trajectory."
+      ],
+      "reasoning": "The project aims to identify structural determinants of disease progression in COPD, using existing cohort data to develop novel imaging biomarkers that predict clinical progression. The research design involves secondary analysis of large, well-characterized cohorts with longitudinal follow-up, and the evidence strength is correlational as it focuses on associations between structural changes and disease progression."
+    }
+  },
+  {
+    "application_id": "10427308",
+    "year": "2022",
+    "title": "Development of fast penumbral imaging in acute ischemic stroke",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "stratification_treatment",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_perturbation",
+        "secondary": "observational_cohort",
+        "confidence": "medium"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "Tissue metabolic MRI is a surrogate biomarker of the collateral flow status that is promising to address this clinical need.",
+        "We will develop fast pH and DKI stroke imaging (Aim 1), establish the spatiotemporal evolution of the refined MRI in MCAO rats (Aim 2), and test tissue-clock-guided reperfusion in rats of common stroke comorbidities of age and diabetes (Aim 3).",
+        "We hypothesize that new fast MRI techniques refined tissue-clock helps delineate ischemic tissue, predict tissue outcomes in permanent stroke, and guide reperfusion treatment."
+      ],
+      "reasoning": "The project aims to develop and evaluate fast MRI techniques (pH and DKI) to guide reperfusion therapy in experimental stroke models, classifying it as stratification_treatment. The research design involves experimental perturbation in animal models (MCAO rats) and also leverages previous observational cohort data. The evidence strength is causal_preclinical as the validation is performed in experimental stroke models."
+    }
+  },
+  {
+    "application_id": "10335737",
+    "year": "2022",
+    "title": "API A4 Alzheimer's Prevention Trial",
+    "matched_terms": "surrogate biomarker",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "surrogate_endpoint",
+        "secondary": "susceptibility_risk",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_rct",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "causal_clinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "AD biomarker endpoints as primary outcomes",
+        "24-month, multicenter, double blind, placebo-controlled prevention trial",
+        "the findings would be used to support aducanumab\u00e2\u20ac\u2122s \u00e2\u20ac\u0153accelerated approval\u00e2\u20ac  in unimpaired A\u00ce\u00b2+ persons based on those biomarker effects; in doing so, it would advance the potential use of surrogate biomarker endpoints to rapidly test prevention therapies"
+      ],
+      "reasoning": "The study proposes a randomized controlled trial using AD biomarker endpoints as primary outcomes to support accelerated approval, indicating the biomarkers are intended as surrogate endpoints. The trial population is cognitively unimpaired individuals at risk for AD, classifying it as susceptibility risk. The design is a double-blind, placebo-controlled trial, and the validation of biomarkers for accelerated approval in this context represents strong clinical causal evidence."
+    }
+  },
+  {
+    "application_id": "8210853",
+    "year": "2012",
+    "title": "The effects of randomized, low-dose hormone therapy on mammographic density in KE",
+    "matched_terms": "surrogate endpoint",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "pharmacodynamic",
+        "secondary": "surrogate_endpoint",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_rct",
+        "secondary": "observational_cohort",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "experimental_weak",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "The proposed ancillary study will efficiently examine the effects of randomized low-dose HT on key breast cancer surrogate endpoints: mammographic density and rates of abnormal mammograms.",
+        "The Kronos Early Estrogen Prevention Study (KEEPS) is an ongoing, already-funded randomized clinical trial",
+        "We will determine if these two low-dose HT regimens are associated with change in mammographic density."
+      ],
+      "reasoning": "The study is an ancillary analysis within an existing RCT, examining the effects of hormone therapy on mammographic density and abnormal mammograms, which are proposed surrogate endpoints. The evidence strength is weak because while the study is experimental, it does not validate the biomarker's causal role or its ability to substitute for a clinical endpoint."
+    }
+  },
+  {
+    "application_id": "8251351",
+    "year": "2012",
+    "title": "Using Genetics For Early Phenotyping & Prevention of Hypertrophic Cardiomyopathy",
+    "matched_terms": "surrogate endpoint",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "susceptibility_risk",
+        "secondary": "pharmacodynamic",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_rct",
+        "secondary": "causal_preclinical",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "causal_preclinical",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "By identifying at-risk individuals prior to clinical diagnosis and fostering development of novel therapies to delay or prevent clinical expression, genetic discoveries can transform medicine.",
+        "Through our 2-stage CTRIP studies, we will foster clinical translation of these key scientific discoveries, culminating in a Phase II multicenter, doubleblind, placebo-controlled randomized clinical trial to assess the safety and efficacy of the potent ARB, candesartan, in attenuating disease progression, using early phenotypes as surrogate endpoints to monitor treatment response.",
+        "Promising work in animal models has shown that early pharmacologic therapy can counteract the effect of pathogenic sarcomere mutation and diminish the emergence of HCM."
+      ],
+      "reasoning": "The project aims to identify individuals at risk for Hypertrophic Cardiomyopathy (HCM) before clinical diagnosis using genetic information, fitting the 'susceptibility_risk' category. It also proposes a Phase II RCT to test a drug's efficacy and uses early phenotypes as surrogate endpoints, indicating a 'pharmacodynamic' secondary use. The research design includes preclinical studies in animal models ('causal_preclinical') and culminates in a randomized controlled trial ('experimental_rct'). The evidence strength is 'causal_preclinical' due to validation in animal models, with the RCT planned for clinical translation."
+    }
+  },
+  {
+    "application_id": "8225416",
+    "year": "2012",
+    "title": "Parkinson Disease Neuroprotection Trial: Clinical Center",
+    "matched_terms": "surrogate endpoint",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "prognostic_risk",
+        "secondary": null,
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "experimental_rct",
+        "secondary": "observational_cohort",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "magnetic resonance imaging will be used to obtain a quantitative index of regional brain iron concentration which we hypothesize to correlate with disease progression",
+        "multi-center clinical trial",
+        "magnetic resonance imaging will be used to obtain a quantitative index of regional brain iron concentration which we hypothesize to correlate with disease progression"
+      ],
+      "reasoning": "The project aims to evaluate neuroprotective strategies in a clinical trial for Parkinson's disease, with a biomarker (regional brain iron concentration) hypothesized to correlate with disease progression, fitting a prognostic risk use. The design is primarily an RCT, but includes observational cohort elements for biomarker tracking. The evidence strength for the biomarker itself is correlational, as it's hypothesized to correlate with progression rather than validated causally."
+    }
+  },
+  {
+    "application_id": "8287592",
+    "year": "2012",
+    "title": "Structural & Metabolic Neuroimaging Biomarkers in Early Alzheimer's Disease",
+    "matched_terms": "surrogate endpoint",
+    "model": "google/gemini-2.5-flash-lite",
+    "classification": {
+      "biomarker_use": {
+        "primary": "susceptibility_risk",
+        "secondary": "prognostic_risk",
+        "confidence": "high"
+      },
+      "research_design": {
+        "primary": "observational_retrospective",
+        "secondary": "observational_longitudinal",
+        "confidence": "high"
+      },
+      "evidence_strength": {
+        "code": "correlational",
+        "confidence": "high"
+      },
+      "key_phrases": [
+        "determining optimal predictor variables for identifying individuals at risk for developing progressive AD-related neurodegeneration",
+        "MRI, PET, and cognitive data will be downloaded from the publicly accessible ADNI database",
+        "Multivariate classification analyses will be applied to MRI measures to determine sensitivity and specificity for discriminating controls from subjects with MCI, and for discriminating MCI subjects who convert to AD from those who remain stable in diagnosis."
+      ],
+      "reasoning": "The project aims to identify predictors of developing AD-related neurodegeneration (susceptibility_risk) and predict conversion from MCI to AD (prognostic_risk) using existing ADNI data (observational_retrospective, observational_longitudinal). The analysis focuses on associations between neuroimaging measures and disease progression, without establishing causal validity for the biomarkers (correlational)."
+    }
+  }
+]
