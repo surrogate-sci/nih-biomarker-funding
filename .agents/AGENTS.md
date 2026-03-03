@@ -1,51 +1,66 @@
 # Repository Guidelines
 
-This repository builds a reproducible pipeline to quantify NIH funding across biomarker research phases while minimizing brittle UI search filters. We will extract a smaller, targeted dataset from SciOP snapshots/code focused on biomarker and biomarker‑adjacent research (instead of querying NIH Reporter directly). The workflow is:
-- Ingest SciOP snapshots as the primary source and extract a targeted subset using permissive biomarker/adjacency heuristics to keep datasets small (~50–150 MB per year/cohort).
-- Normalize and deduplicate projects; preserve stable identifiers for reproducibility.
-- Classify each project on three dimensions per `data/RUBRIC.md`: (1) intended biomarker use (17 codes), (2) research design (10 codes), (3) evidence strength for biomarker validity (5 codes). LLM grader loads rubric at runtime from RUBRIC.md.
-- Aggregate spend by phase, institute, mechanism, and year; export analysis tables and small artifacts for review.
+## Project Goal
 
+Produce data for a policy-level blog post testing the hypothesis that most NIH biomarker
+funding operates without a clear estimand (causal or decision-theoretic), and that
+surrogacy/mechanistic validation is an afterthought. The pipeline keyword-filters 20 years
+of NIH ExPORTER data into ~270K biomarker grants, then LLM-grades each on 3 dimensions
+using a custom rubric extending FDA-NIH BEST.
 
-## Project Structure & Module Organization
-- Root: coordination and docs.
-- `scripts/`: operational utilities (e.g., `scripts/nih_bulk_downloader.py` — experimental).
-- `_archive/`: Old skill directories (do not use).
-- `docs/plans/`: Design documents and implementation plans.
-- Proposed layout as the project grows:
-  - `src/`: reusable Python packages (`fetch/`, `parse/`, `grade/`, `agg/`).
-  - `tests/`: pytest suite mirroring `src/`.
-  - `data/` (git-ignored): local cache (CSV/Parquet). Target per-file size ≈ 50–150 MB.
+## Critical Rules
+
+- **`data/RUBRIC.md` is the classification source of truth** — do not modify definitions without Manjari's explicit direction. This is a scientific document.
+- **`data/` is gitignored** — use `git add -f` for files that need tracking (RUBRIC.md, calibration CSVs, results).
+- **Don't use**: `_archive/`, `../edison-benchmarks/` (outdated prior analysis with ~50% ambiguous classifications).
+
+## Project Structure
+
+- `scripts/`: all pipeline scripts (filtering, grading, calibration, analysis)
+- `data/`: gitignored dataset cache; tracked exceptions: `RUBRIC.md`, `filtered/SUMMARY.md`, calibration files
+- `data/RUBRIC.md`: 17 Dim1 (biomarker use) + 10 Dim2 (research design) + 5 Dim3 (evidence strength) codes
+- `docs/plans/`: design documents and implementation plans
+- `_archive/`: old skill directories (do not use)
 
 ## Build, Test, and Development Commands
-- Show downloader help: `python3 scripts/nih_bulk_downloader.py --help`
-- Lint: `ruff check .`  |  Format: `ruff format .` or `black .`
-- Type check (optional): `pyright`
-- Tests: `pytest -q` (e.g., `pytest -k grade --maxfail=1`)
-- Example fetch entrypoint (planned): `python3 -m src.fetch.export --year 2022 --out data/raw/2022.csv`
+
+```bash
+# Phase 1: Data curation (already complete, run only if re-filtering)
+python3 scripts/process_all_years.py --start-year 2004 --end-year 2024 --skip-download --raw-dir ~/Downloads
+python3 scripts/create_unified_dataset.py
+python3 scripts/generate_summary.py
+
+# Phase 2: LLM grading
+python3 scripts/run_calibration.py --model google/gemini-2.5-flash-lite --limit 5
+python3 scripts/run_calibration.py --model openai/gpt-4o-mini
+
+# Lint and format
+ruff check .
+ruff format .
+
+# Tests (when they exist)
+pytest -q
+```
 
 ## Coding Style & Naming Conventions
+
 - Python 3.10+: 4-space indent; ~100-char lines; `pathlib`, f-strings.
-- Files/modules: snake_case (`biomarker_phase_classifier.py`).
-- Functions: verb_noun (`fetch_projects`, `shard_csv`, `grade_phase`).
-- Separate concerns: `fetch` (I/O + backoff + caching) → `parse` (normalize) → `grade` (LLM/heuristics) → `agg` (rollups).
+- Files/modules: snake_case (`filter_biomarker_projects.py`).
+- Functions: verb_noun (`fetch_projects`, `load_rubric`, `grade_phase`).
 
-## Testing Guidelines
-- Use `pytest`; name tests `test_*.py` in `tests/`.
-- Mock network and LLM calls; place fixtures under `tests/fixtures/`.
-- Cover parsing, sharding (≤150 MB/file), dedupe, and grading rubric.
-- Run: `pytest -q` and measure critical-path coverage; add regressions for bugs.
+## Data Sourcing
 
-## Data Sourcing Strategy
-- Primary source: SciOP NIH Reporter snapshots: https://sciop.net/datasets/nih-reporter
-- Build a targeted biomarker-focused subset by streaming CSVs, selecting only needed columns, applying permissive keyword heuristics over title/abstract, and optionally early LLM triage to drop clearly unrelated records. Retain enough context fields for downstream grading.
-- Keep raw data out of Git; cache under `data/` with checksums and a README describing provenance and exact extraction commands.
+- Primary source: NIH ExPORTER bulk CSV downloads (FY2004-2024)
+- Keyword filtering via `filter_biomarker_projects.py` with core (4 terms) and expanded (10 terms) term sets
+- Abstracts from `~/Downloads/RePORTER_PRJABS_C_FY*.zip` (FY2016 missing)
+- Keep raw data out of Git; cache under `data/`
 
 ## Commit & Pull Request Guidelines
-- Commits: imperative, scoped prefix, e.g., `fetch: add sciop sharder`, `grade: calibrate rubric`.
-- PRs must include: purpose, dataset scope (years/institutes), repro commands, and sample outputs; note caching/ID stability.
 
-## Security & Configuration Tips
-- Never commit credentials or PII. Use env vars and a git-ignored `.env`.
-- Respect NIH rate limits; implement exponential backoff and request IDs.
-- Version LLM prompts; log seeds and templates for reproducibility.
+- Commits: imperative, scoped prefix, e.g., `grade: calibrate rubric`, `fetch: filter FY2024`.
+- PRs must include: purpose, repro commands, and sample outputs.
+
+## Security & Configuration
+
+- Never commit credentials or PII. API keys in git-ignored `.env`.
+- Version LLM prompts; log model IDs for reproducibility.
