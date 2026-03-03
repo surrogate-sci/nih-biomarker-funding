@@ -218,10 +218,50 @@ From the unified dataset, select grants that:
 
 ---
 
-## Execution Order
+## Task 6: Calibration Comparison Script
 
-1. **Task 1** (commit calibration) — immediate, no dependencies
-2. **Task 2** (update docs) — immediate, no dependencies
-3. **Task 3** (cleanup PR) — independent, parallel with 1-2
-4. **Task 4** (batch classifier) — after Task 3 is merged (depends on slimmed grader_prompt.py)
-5. **Task 5** (hard cases) — after Task 4 (uses batch classifier)
+Build a reusable script that compares calibration results across models, replacing ad-hoc analysis.
+
+**Why a script, not a skill:** This is a repeatable data task with specific inputs/outputs (JSON files in, comparison table out). Skills tell Claude *how to work*; this is *work to be done*.
+
+**Files:**
+- Create: `scripts/compare_calibration.py`
+
+**Behavior:**
+- Load all `data/calibration_results_*.json` files
+- Compute per-example agreement matrix across models (all dimensions)
+- Identify disagreement cases with specific dimension/code pairs
+- Output: summary table (stdout) + detailed disagreements CSV
+- Optionally filter by dimension or confidence level
+
+```bash
+# Compare all models
+python3 scripts/compare_calibration.py
+
+# Compare specific models on Dim1 only
+python3 scripts/compare_calibration.py --dim biomarker_use --models gemini-2.5-flash-lite gpt-4o-mini
+```
+
+**Step 1: Write the script**
+
+**Step 2: Run on existing calibration results to verify**
+
+**Step 3: Commit**
+
+```bash
+git add scripts/compare_calibration.py
+git commit -m "grade: add calibration comparison script"
+```
+
+---
+
+## Execution Order & Status
+
+| Task | Status | Dependencies | Notes |
+|------|--------|-------------|-------|
+| Task 1: Commit calibration | ✅ Done (`1067cc8`) | — | |
+| Task 2: Update docs | ✅ Done (`85a1a42`, `a10a7ec`, `b7d2f20`) | — | |
+| Task 3: Cleanup PR | **Next** | — | Must be a PR, not direct commit |
+| Task 4: Batch classifier | Pending | Task 3 merged | Depends on slimmed grader_prompt.py |
+| Task 5: Hard cases | Pending | Task 4 | Uses batch classifier |
+| Task 6: Calibration comparison | Pending | — | Independent, can do anytime |
