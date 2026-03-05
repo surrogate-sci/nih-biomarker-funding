@@ -211,7 +211,7 @@ class TestLoadDisagreementExamples(unittest.TestCase):
     def test_abstracts_loaded_from_sample_csv(self):
         """Critical: abstracts must come from ABSTRACT_TEXT column, not ABSTRACT."""
         review_items, model_slugs = load_disagreement_examples(
-            self.disagreements_json, self.grade_files
+            self.disagreements_json, self.grade_files, sample_csv=self.sample_csv
         )
         self.assertEqual(len(review_items), 1)
         item = review_items[0]
@@ -221,7 +221,7 @@ class TestLoadDisagreementExamples(unittest.TestCase):
     def test_metadata_joined_from_sample_csv(self):
         """Year, IC, activity, cost should come from sample CSV."""
         review_items, _ = load_disagreement_examples(
-            self.disagreements_json, self.grade_files
+            self.disagreements_json, self.grade_files, sample_csv=self.sample_csv
         )
         item = review_items[0]
         self.assertEqual(item["year"], "2020")
@@ -232,7 +232,7 @@ class TestLoadDisagreementExamples(unittest.TestCase):
     def test_model_results_joined(self):
         """Model classifications should be present for both models."""
         review_items, model_slugs = load_disagreement_examples(
-            self.disagreements_json, self.grade_files
+            self.disagreements_json, self.grade_files, sample_csv=self.sample_csv
         )
         item = review_items[0]
         self.assertIn("gemini", item["model_results"])
@@ -273,7 +273,7 @@ class TestLoadDisagreementExamples(unittest.TestCase):
             )
 
         review_items, _ = load_disagreement_examples(
-            self.disagreements_json, self.grade_files
+            self.disagreements_json, self.grade_files, sample_csv=self.sample_csv
         )
         item = review_items[0]
         # Gemini graded it, GPT errored — only gemini should appear
@@ -319,7 +319,7 @@ class TestLoadDisagreementExamples(unittest.TestCase):
             )
 
         review_items, _ = load_disagreement_examples(
-            self.disagreements_json, self.grade_files
+            self.disagreements_json, self.grade_files, sample_csv=self.sample_csv
         )
         self.assertEqual(len(review_items), 1)  # deduped
 

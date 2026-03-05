@@ -4,11 +4,16 @@
 Loads JSONL grade files from three models, finds grants graded by 2+ models,
 and extracts examples of predefined disagreement patterns.
 
+Usage:
+    python3 scripts/extract_disagreements.py
+    python3 scripts/extract_disagreements.py --data-dir /path/to/grades
+
 Outputs:
   - data/disagreement_examples.json  (structured, with reasoning)
   - data/disagreement_examples.csv   (flat, for quick review)
 """
 
+import argparse
 import csv
 import json
 import sys
@@ -16,12 +21,12 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
-GRADE_FILES = {
-    "gemini-2.5-flash-lite": DATA_DIR / "oncology_grades_gemini-2.5-flash-lite.jsonl",
-    "gpt-4o-mini": DATA_DIR / "oncology_grades_gpt-4o-mini.jsonl",
-    "gpt-4.1-mini": DATA_DIR / "oncology_grades_gpt-4.1-mini.jsonl",
+DEFAULT_GRADE_FILES = {
+    "gemini-2.5-flash-lite": "oncology_grades_gemini-2.5-flash-lite.jsonl",
+    "gpt-4o-mini": "oncology_grades_gpt-4o-mini.jsonl",
+    "gpt-4.1-mini": "oncology_grades_gpt-4.1-mini.jsonl",
 }
 
 # (dimension_key, code_a, code_b)
@@ -40,10 +45,10 @@ PATTERNS = [
 MAX_EXAMPLES = 5
 
 
-def load_grades() -> dict[str, dict[str, dict]]:
+def load_grades(grade_files: dict[str, Path]) -> dict[str, dict[str, dict]]:
     """Load all grade files. Returns {application_id: {model_name: record}}."""
     grants: dict[str, dict[str, dict]] = defaultdict(dict)
-    for model_name, path in GRADE_FILES.items():
+    for model_name, path in grade_files.items():
         if not path.exists():
             print(f"WARNING: {path} not found, skipping", file=sys.stderr)
             continue
@@ -120,7 +125,28 @@ def find_pattern_examples(
 
 
 def main():
-    grants = load_grades()
+    parser = argparse.ArgumentParser(description="Extract disagreement patterns from model grades")
+    parser.add_argument(
+        "--data-dir",
+        default=str(DEFAULT_DATA_DIR),
+        help="Directory containing grade JSONL files and output destination (default: data/)",
+    )
+    args = parser.parse_args()
+    data_dir = Path(args.data_dir)
+
+    # Resolve grade file paths
+    grade_files = {}
+    for model_name, fname in DEFAULT_GRADE_FILES.items():
+        path = data_dir / fname
+        if path.exists():
+            grade_files[model_name] = path
+        else:
+            print(f"WARNING: {path} not found, skipping {model_name}", file=sys.stderr)
+    if not grade_files:
+        print(f"ERROR: No grade files found in {data_dir}", file=sys.stderr)
+        sys.exit(1)
+
+    grants = load_grades(grade_files)
 
     # Filter to grants with 2+ models
     multi_model = {k: v for k, v in grants.items() if len(v) >= 2}
@@ -176,13 +202,13 @@ def main():
             csv_rows.append(row)
 
     # Save JSON
-    json_path = DATA_DIR / "disagreement_examples.json"
+    json_path = data_dir / "disagreement_examples.json"
     with open(json_path, "w") as f:
         json.dump(results, f, indent=2)
     print(f"\nJSON saved to {json_path}")
 
     # Save CSV
-    csv_path = DATA_DIR / "disagreement_examples.csv"
+    csv_path = data_dir / "disagreement_examples.csv"
     fieldnames = [
         "pattern",
         "application_id",

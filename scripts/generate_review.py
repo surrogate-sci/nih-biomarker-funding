@@ -487,11 +487,12 @@ function showComparison(idx) {{
     tbody.innerHTML += row;
   }});
 
-  // Show reasoning from models
+  // Show reasoning from models (escape HTML to prevent injection)
+  function escHtml(s) {{ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }}
   let reasoningHtml = '';
   MODELS.forEach(m => {{
     if (ex.model_results[m]?.reasoning) {{
-      reasoningHtml += `<p><strong>${{m}}:</strong> ${{ex.model_results[m].reasoning}}</p>`;
+      reasoningHtml += `<p><strong>${{escHtml(m)}}:</strong> ${{escHtml(ex.model_results[m].reasoning)}}</p>`;
     }}
   }});
   document.getElementById('model-reasoning').innerHTML = reasoningHtml;
@@ -589,8 +590,18 @@ showExample(0);
 </html>"""
 
 
-def load_disagreement_examples(json_path: Path, grade_files: dict[str, Path]) -> tuple[list[dict], list[str]]:
+def load_disagreement_examples(
+    json_path: Path,
+    grade_files: dict[str, Path],
+    sample_csv: Path | None = None,
+) -> tuple[list[dict], list[str]]:
     """Load disagreement examples from extract_disagreements.py output.
+
+    Args:
+        json_path: Path to disagreement_examples.json
+        grade_files: {model_slug: path_to_grades.jsonl}
+        sample_csv: Path to oncology_sample_100per_year.csv for abstract/metadata lookup.
+                    If None, abstracts and metadata will be empty.
 
     Returns (review_items, model_slugs) in the same format as build_review_data().
     """
@@ -611,8 +622,7 @@ def load_disagreement_examples(json_path: Path, grade_files: dict[str, Path]) ->
 
     # Load abstracts from sample CSV if available
     abstract_lookup: dict[str, dict] = {}
-    sample_csv = grade_files.get(list(grade_files.keys())[0], Path()).parent / "oncology_sample_100per_year.csv"
-    if sample_csv.exists():
+    if sample_csv and sample_csv.exists():
         with open(sample_csv, encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 aid = row.get("APPLICATION_ID", "").strip()
@@ -694,6 +704,11 @@ def main():
         default=None,
         help="Path to disagreement_examples.json (uses disagreement mode instead of calibration CSV)",
     )
+    parser.add_argument(
+        "--sample-csv",
+        default=None,
+        help="Path to sample CSV for abstract/metadata lookup (disagreement mode only)",
+    )
     args = parser.parse_args()
 
     if args.disagreements:
@@ -706,8 +721,10 @@ def main():
             slug = Path(f).stem.replace("oncology_grades_", "")
             grade_files[slug] = Path(f)
         print(f"  Grade files: {', '.join(grade_files.keys())}")
+        # Resolve sample CSV: explicit flag > default location in results_dir
+        sample_csv = Path(args.sample_csv) if args.sample_csv else results_dir / "oncology_sample_100per_year.csv"
         review_data, model_slugs = load_disagreement_examples(
-            Path(args.disagreements), grade_files
+            Path(args.disagreements), grade_files, sample_csv=sample_csv
         )
         print(f"  {len(review_data)} examples loaded")
     else:

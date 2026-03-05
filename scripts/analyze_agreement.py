@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""Analyze inter-rater agreement between LLM graders on oncology grants."""
+"""Analyze inter-rater agreement between LLM graders on oncology grants.
 
+Usage:
+    python3 scripts/analyze_agreement.py
+    python3 scripts/analyze_agreement.py --data-dir /path/to/grades
+"""
+
+import argparse
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+DEFAULT_DATA_DIR = Path(__file__).parent.parent / "data"
 
-FILES = {
-    "gemini": DATA_DIR / "oncology_grades_gemini-2.5-flash-lite.jsonl",
-    "gpt4o-mini": DATA_DIR / "oncology_grades_gpt-4o-mini.jsonl",
-    "gpt41-mini": DATA_DIR / "oncology_grades_gpt-4.1-mini.jsonl",
+DEFAULT_FILES = {
+    "gemini": "oncology_grades_gemini-2.5-flash-lite.jsonl",
+    "gpt4o-mini": "oncology_grades_gpt-4o-mini.jsonl",
+    "gpt41-mini": "oncology_grades_gpt-4.1-mini.jsonl",
 }
 
 MODEL_LABELS = {
@@ -128,14 +135,34 @@ def print_disagreements(disagree_counter, label_a, label_b, dim_name, top_n=5):
 
 
 def main():
-    # Load all files
+    parser = argparse.ArgumentParser(description="Analyze inter-rater agreement between LLM graders")
+    parser.add_argument(
+        "--data-dir",
+        default=str(DEFAULT_DATA_DIR),
+        help="Directory containing grade JSONL files (default: data/)",
+    )
+    args = parser.parse_args()
+    data_dir = Path(args.data_dir)
+
+    # Resolve file paths and check existence
+    files = {key: data_dir / fname for key, fname in DEFAULT_FILES.items()}
+    missing = [key for key, path in files.items() if not path.exists()]
+    if len(missing) == len(files):
+        print(f"ERROR: No grade files found in {data_dir}", file=sys.stderr)
+        sys.exit(1)
+    for key in missing:
+        print(f"WARNING: {files[key]} not found, skipping {MODEL_LABELS[key]}", file=sys.stderr)
+
+    # Load all available files
     all_grades = {}
     print("=" * 80)
     print("LLM GRADER AGREEMENT ANALYSIS — NIH Biomarker Oncology Grants")
     print("=" * 80)
     print()
 
-    for key, path in FILES.items():
+    for key, path in files.items():
+        if key in missing:
+            continue
         grades, errors = load_grades(path)
         all_grades[key] = grades
         print(f"  {MODEL_LABELS[key]:30s}: {len(grades):5d} valid grades, {errors} errors")
