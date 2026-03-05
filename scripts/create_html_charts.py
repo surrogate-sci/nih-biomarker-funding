@@ -1,15 +1,30 @@
 #!/usr/bin/env python3
+"""Create HTML visualizations using Chart.js for biomarker research funding.
+
+Reads filtered CSV datasets from the input directory and generates standalone
+HTML chart files using Chart.js.
+
+Usage:
+    python3 scripts/create_html_charts.py
+    python3 scripts/create_html_charts.py --input-dir data/oct-2024
+    python3 scripts/create_html_charts.py --output-dir visualizations
 """
-Create HTML visualizations using Chart.js for biomarker research funding
-"""
+
+import argparse
+import json
 
 import pandas as pd
-import json
 from pathlib import Path
 
-def create_chart_html(title, chart_type, labels, data, filename, y_label="Total Funding (Millions $)"):
-    """Create standalone HTML file with Chart.js"""
+DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DEFAULT_INPUT_DIR = DEFAULT_DATA_DIR / "oct-2024"
+DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent.parent / "visualizations"
 
+
+def create_chart_html(
+    title, chart_type, labels, data, filename, y_label="Total Funding (Millions $)"
+):
+    """Create standalone HTML file with Chart.js."""
     # Convert data to JSON
     labels_json = json.dumps(labels)
     data_json = json.dumps(data)
@@ -79,28 +94,31 @@ def create_chart_html(title, chart_type, labels, data, filename, y_label="Total 
 </body>
 </html>"""
 
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         f.write(html)
 
-    print(f"✓ Created: {filename.name}")
+    print(f"  Created: {filename.name}")
+
 
 def get_color(chart_type):
-    """Get color based on chart type"""
-    if chart_type == 'bar':
-        return 'rgba(46, 134, 171, 0.8)'
+    """Get color based on chart type."""
+    if chart_type == "bar":
+        return "rgba(46, 134, 171, 0.8)"
     else:
-        return 'rgba(162, 59, 114, 0.8)'
+        return "rgba(162, 59, 114, 0.8)"
+
 
 def get_border_color(chart_type):
-    """Get border color based on chart type"""
-    if chart_type == 'bar':
-        return 'rgba(46, 134, 171, 1)'
+    """Get border color based on chart type."""
+    if chart_type == "bar":
+        return "rgba(46, 134, 171, 1)"
     else:
-        return 'rgba(162, 59, 114, 1)'
+        return "rgba(162, 59, 114, 1)"
+
 
 def get_options(chart_type, y_label):
-    """Get chart options based on type"""
-    if chart_type == 'bar':
+    """Get chart options based on type."""
+    if chart_type == "bar":
         return """scales: {
                     y: {
                         beginAtZero: true,
@@ -148,11 +166,54 @@ def get_options(chart_type, y_label):
                     }
                 }"""
 
+
+def make_year_chart(df, title_prefix, output_dir, filename_prefix):
+    """Create a by-year funding chart for a dataset."""
+    df["Total Cost Numeric"] = pd.to_numeric(df["Total Cost"], errors="coerce")
+    yearly = df.groupby("Fiscal Year")["Total Cost Numeric"].sum() / 1_000_000
+    create_chart_html(
+        f"{title_prefix}: Total Funding by Fiscal Year",
+        "bar",
+        [int(y) for y in yearly.index.tolist()],
+        [round(v, 2) for v in yearly.values.tolist()],
+        output_dir / f"{filename_prefix}_by_year.html",
+    )
+
+
+def make_institute_chart(df, title_prefix, output_dir, filename_prefix):
+    """Create a by-institute funding chart for a dataset."""
+    df["Total Cost Numeric"] = pd.to_numeric(df["Total Cost"], errors="coerce")
+    institute = (
+        df.groupby("Administering IC")["Total Cost Numeric"].sum() / 1_000_000
+    )
+    institute = institute.sort_values(ascending=False).head(10)
+    create_chart_html(
+        f"{title_prefix}: Top 10 Institutes by Total Funding",
+        "bar",
+        institute.index.tolist(),
+        [round(v, 2) for v in institute.values.tolist()],
+        output_dir / f"{filename_prefix}_by_institute.html",
+    )
+
+
 def main():
-    # Setup paths
-    script_dir = Path(__file__).parent.parent
-    data_dir = script_dir / "data" / "oct-2024"
-    output_dir = script_dir / "visualizations"
+    parser = argparse.ArgumentParser(
+        description="Create HTML visualizations using Chart.js for biomarker research funding"
+    )
+    parser.add_argument(
+        "--input-dir",
+        default=str(DEFAULT_INPUT_DIR),
+        help=f"Directory containing filtered CSV datasets (default: {DEFAULT_INPUT_DIR.relative_to(DEFAULT_DATA_DIR.parent)})",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=str(DEFAULT_OUTPUT_DIR),
+        help=f"Output directory for HTML chart files (default: {DEFAULT_OUTPUT_DIR.relative_to(DEFAULT_DATA_DIR.parent)})",
+    )
+    args = parser.parse_args()
+
+    data_dir = Path(args.input_dir)
+    output_dir = Path(args.output_dir)
     output_dir.mkdir(exist_ok=True)
 
     print("=" * 80)
@@ -160,131 +221,57 @@ def main():
     print("=" * 80)
     print()
 
-    # 1. Biomarker Discovery
-    print("Biomarker Discovery Charts:")
-    bd_file = data_dir / "biomarker_discovery_filtered.csv"
-    bd_df = pd.read_csv(bd_file, low_memory=False)
-    bd_df['Total Cost Numeric'] = pd.to_numeric(bd_df['Total Cost'], errors='coerce')
+    # Define the datasets to chart
+    datasets = [
+        {
+            "label": "Biomarker Discovery",
+            "file": "biomarker_discovery_filtered.csv",
+            "title": "Biomarker Discovery",
+            "prefix": "biomarker_discovery",
+            "required": True,
+        },
+        {
+            "label": "Surrogate Endpoints",
+            "file": "surrogate_endpoints_filtered.csv",
+            "title": "Surrogate/Intermediate Endpoints",
+            "prefix": "surrogate_endpoints",
+            "required": True,
+        },
+        {
+            "label": "Biomarker Validation",
+            "file": "biomarker_validation_filtered.csv",
+            "title": "Biomarker Validation",
+            "prefix": "biomarker_validation",
+            "required": False,
+        },
+        {
+            "label": "All Biomarkers",
+            "file": "all_biomarkers_filtered.csv",
+            "title": "All Biomarker Research",
+            "prefix": "all_biomarkers",
+            "required": False,
+        },
+    ]
 
-    # By year
-    yearly = bd_df.groupby('Fiscal Year')['Total Cost Numeric'].sum() / 1_000_000
-    create_chart_html(
-        "Biomarker Discovery: Total Funding by Fiscal Year",
-        "bar",
-        [int(y) for y in yearly.index.tolist()],
-        [round(v, 2) for v in yearly.values.tolist()],
-        output_dir / "biomarker_discovery_by_year.html"
-    )
+    for ds in datasets:
+        print(f"{ds['label']} Charts:")
+        csv_path = data_dir / ds["file"]
+        if csv_path.exists():
+            df = pd.read_csv(csv_path, low_memory=False)
+            make_year_chart(df, ds["title"], output_dir, ds["prefix"])
+            make_institute_chart(df, ds["title"], output_dir, ds["prefix"])
+        else:
+            if ds["required"]:
+                print(f"  WARNING: {ds['file']} not found in {data_dir}")
+            else:
+                print(f"  Skipping - {ds['file']} not found")
+        print()
 
-    # By institute
-    institute = bd_df.groupby('Administering IC')['Total Cost Numeric'].sum() / 1_000_000
-    institute = institute.sort_values(ascending=False).head(10)
-    create_chart_html(
-        "Biomarker Discovery: Top 10 Institutes by Total Funding",
-        "bar",
-        institute.index.tolist(),
-        [round(v, 2) for v in institute.values.tolist()],
-        output_dir / "biomarker_discovery_by_institute.html"
-    )
-
-    print()
-
-    # 2. Surrogate Endpoints
-    print("Surrogate Endpoints Charts:")
-    se_file = data_dir / "surrogate_endpoints_filtered.csv"
-    se_df = pd.read_csv(se_file, low_memory=False)
-    se_df['Total Cost Numeric'] = pd.to_numeric(se_df['Total Cost'], errors='coerce')
-
-    # By year
-    yearly = se_df.groupby('Fiscal Year')['Total Cost Numeric'].sum() / 1_000_000
-    create_chart_html(
-        "Surrogate/Intermediate Endpoints: Total Funding by Fiscal Year",
-        "bar",
-        [int(y) for y in yearly.index.tolist()],
-        [round(v, 2) for v in yearly.values.tolist()],
-        output_dir / "surrogate_endpoints_by_year.html"
-    )
-
-    # By institute
-    institute = se_df.groupby('Administering IC')['Total Cost Numeric'].sum() / 1_000_000
-    institute = institute.sort_values(ascending=False).head(10)
-    create_chart_html(
-        "Surrogate/Intermediate Endpoints: Top 10 Institutes by Total Funding",
-        "bar",
-        institute.index.tolist(),
-        [round(v, 2) for v in institute.values.tolist()],
-        output_dir / "surrogate_endpoints_by_institute.html"
-    )
-
-    print()
-
-    # 3. Biomarker Validation
-    print("Biomarker Validation Charts:")
-    bv_file = data_dir / "biomarker_validation_filtered.csv"
-    if bv_file.exists():
-        bv_df = pd.read_csv(bv_file, low_memory=False)
-        bv_df['Total Cost Numeric'] = pd.to_numeric(bv_df['Total Cost'], errors='coerce')
-
-        # By year
-        yearly = bv_df.groupby('Fiscal Year')['Total Cost Numeric'].sum() / 1_000_000
-        create_chart_html(
-            "Biomarker Validation: Total Funding by Fiscal Year",
-            "bar",
-            [int(y) for y in yearly.index.tolist()],
-            [round(v, 2) for v in yearly.values.tolist()],
-            output_dir / "biomarker_validation_by_year.html"
-        )
-
-        # By institute
-        institute = bv_df.groupby('Administering IC')['Total Cost Numeric'].sum() / 1_000_000
-        institute = institute.sort_values(ascending=False).head(10)
-        create_chart_html(
-            "Biomarker Validation: Top 10 Institutes by Total Funding",
-            "bar",
-            institute.index.tolist(),
-            [round(v, 2) for v in institute.values.tolist()],
-            output_dir / "biomarker_validation_by_institute.html"
-        )
-    else:
-        print("  Skipping - biomarker_validation_filtered.csv not found")
-
-    print()
-
-    # 4. All Biomarkers
-    print("All Biomarkers Charts:")
-    ab_file = data_dir / "all_biomarkers_filtered.csv"
-    if ab_file.exists():
-        ab_df = pd.read_csv(ab_file, low_memory=False)
-        ab_df['Total Cost Numeric'] = pd.to_numeric(ab_df['Total Cost'], errors='coerce')
-
-        # By year
-        yearly = ab_df.groupby('Fiscal Year')['Total Cost Numeric'].sum() / 1_000_000
-        create_chart_html(
-            "All Biomarker Research: Total Funding by Fiscal Year",
-            "bar",
-            [int(y) for y in yearly.index.tolist()],
-            [round(v, 2) for v in yearly.values.tolist()],
-            output_dir / "all_biomarkers_by_year.html"
-        )
-
-        # By institute
-        institute = ab_df.groupby('Administering IC')['Total Cost Numeric'].sum() / 1_000_000
-        institute = institute.sort_values(ascending=False).head(10)
-        create_chart_html(
-            "All Biomarker Research: Top 10 Institutes by Total Funding",
-            "bar",
-            institute.index.tolist(),
-            [round(v, 2) for v in institute.values.tolist()],
-            output_dir / "all_biomarkers_by_institute.html"
-        )
-    else:
-        print("  Skipping - all_biomarkers_filtered.csv not found")
-
-    print()
     print("=" * 80)
-    print(f"All visualizations saved to: visualizations/")
+    print(f"All visualizations saved to: {output_dir}")
     print("Open the HTML files in any browser to view the charts")
     print("=" * 80)
+
 
 if __name__ == "__main__":
     main()
