@@ -104,20 +104,26 @@ def build_review_data(
     return sorted(review_items, key=lambda x: x["id"])
 
 
-def generate_html(review_data: list[dict], model_slugs: list[str]) -> str:
+def generate_html(
+    review_data: list[dict],
+    model_slugs: list[str],
+    page_title: str = "NIH Biomarker Calibration - Expert Review",
+    storage_key: str = "nih_biomarker_expert_grades_v1",
+) -> str:
     """Generate the standalone HTML review application."""
     data_json = json.dumps(review_data)
     dim1_json = json.dumps(DIM1_CODES)
     dim2_json = json.dumps(DIM2_CODES)
     dim3_json = json.dumps(DIM3_CODES)
     models_json = json.dumps(model_slugs)
+    storage_key_json = json.dumps(storage_key)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NIH Biomarker Calibration - Expert Review</title>
+<title>{html.escape(page_title)}</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; line-height: 1.5; }}
@@ -167,7 +173,7 @@ h1 {{ font-size: 1.4rem; margin-bottom: 8px; }}
 </head>
 <body>
 <div class="container">
-  <h1>NIH Biomarker Calibration - Expert Review</h1>
+  <h1>{html.escape(page_title)}</h1>
   <p class="subtitle">Grade each example, then compare with model outputs. <button class="rubric-toggle" onclick="toggleRubric()">Show Rubric Reference</button></p>
 
   <div class="rubric-panel" id="rubric-panel">
@@ -307,7 +313,7 @@ let currentIdx = 0;
 let expertGrades = new Array(DATA.length).fill(null);
 
 // --- localStorage persistence ---
-const STORAGE_KEY = 'nih_biomarker_expert_grades_v1';
+const STORAGE_KEY = {storage_key_json};
 function saveToStorage() {{
   try {{ localStorage.setItem(STORAGE_KEY, JSON.stringify(expertGrades)); }} catch(e) {{}}
 }}
@@ -583,6 +589,71 @@ showExample(0);
 </html>"""
 
 
+def load_disagreement_examples(json_path: Path, grade_files: dict[str, Path]) -> tuple[list[dict], list[str]]:
+    """Load disagreement examples from extract_disagreements.py output.
+
+    Returns (review_items, model_slugs) in the same format as build_review_data().
+    """
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Collect all model slugs from grade files
+    model_slugs = sorted(grade_files.keys())
+
+    # Load all grades by application_id per model
+    all_grades: dict[str, dict[str, dict]] = {slug: {} for slug in model_slugs}
+    for slug, path in grade_files.items():
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                rec = json.loads(line)
+                if "classification" in rec:
+                    all_grades[slug][rec["application_id"]] = rec["classification"]
+
+    # Load abstracts from sample CSV if available
+    abstract_lookup: dict[str, dict] = {}
+    sample_csv = grade_files.get(list(grade_files.keys())[0], Path()).parent / "oncology_sample_100per_year.csv"
+    if sample_csv.exists():
+        with open(sample_csv, encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                aid = row.get("APPLICATION_ID", "").strip()
+                if aid:
+                    abstract_lookup[aid] = row
+
+    review_items = []
+    seen_ids = set()
+    for pattern in data["patterns"]:
+        for ex in pattern["examples"]:
+            app_id = ex["application_id"]
+            if app_id in seen_ids:
+                continue
+            seen_ids.add(app_id)
+            sample_row = abstract_lookup.get(app_id, {})
+            item = {
+                "id": app_id,
+                "year": sample_row.get("FY", ""),
+                "title": ex["title"],
+                "abstract": sample_row.get("ABSTRACT_TEXT", sample_row.get("ABSTRACT", "")),
+                "matched_terms": f"[{pattern['dimension']}: {pattern['code_a']} vs {pattern['code_b']}]",
+                "ic": sample_row.get("ADMINISTERING_IC", ""),
+                "activity": sample_row.get("ACTIVITY", ""),
+                "cost": sample_row.get("TOTAL_COST", ""),
+                "model_results": {},
+            }
+            for slug in model_slugs:
+                if app_id in all_grades[slug]:
+                    item["model_results"][slug] = all_grades[slug][app_id]
+            # Pull year from any model's grade
+            for slug in model_slugs:
+                model_data = ex.get("models", {}).get(slug, {})
+                if model_data.get("reasoning"):
+                    # Store reasoning in model_results if not already there
+                    if slug in item["model_results"] and "reasoning" not in item["model_results"][slug]:
+                        item["model_results"][slug]["reasoning"] = model_data["reasoning"]
+            review_items.append(item)
+
+    return review_items, model_slugs
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate expert review HTML for calibration examples"
@@ -608,22 +679,56 @@ def main():
         ),
         help="Output HTML path",
     )
+    parser.add_argument(
+        "--title",
+        default="NIH Biomarker Calibration - Expert Review",
+        help="Page title",
+    )
+    parser.add_argument(
+        "--storage-key",
+        default="nih_biomarker_expert_grades_v1",
+        help="localStorage key (use different keys for different review sets)",
+    )
+    parser.add_argument(
+        "--disagreements",
+        default=None,
+        help="Path to disagreement_examples.json (uses disagreement mode instead of calibration CSV)",
+    )
     args = parser.parse_args()
 
-    print("Loading calibration examples...")
-    examples = load_examples(Path(args.examples))
-    print(f"  {len(examples)} examples loaded")
+    if args.disagreements:
+        print(f"Loading disagreement examples from {args.disagreements}...")
+        # Find grade JSONL files
+        results_dir = Path(args.results_dir)
+        grade_files = {}
+        import glob as glob_mod
+        for f in sorted(glob_mod.glob(str(results_dir / "oncology_grades_*.jsonl"))):
+            slug = Path(f).stem.replace("oncology_grades_", "")
+            grade_files[slug] = Path(f)
+        print(f"  Grade files: {', '.join(grade_files.keys())}")
+        review_data, model_slugs = load_disagreement_examples(
+            Path(args.disagreements), grade_files
+        )
+        print(f"  {len(review_data)} examples loaded")
+    else:
+        print("Loading calibration examples...")
+        examples = load_examples(Path(args.examples))
+        print(f"  {len(examples)} examples loaded")
 
-    print("Loading model results...")
-    model_results = load_model_results(Path(args.results_dir))
-    model_slugs = sorted(model_results.keys())
-    print(f"  Models: {', '.join(model_slugs)}")
+        print("Loading model results...")
+        model_results = load_model_results(Path(args.results_dir))
+        model_slugs = sorted(model_results.keys())
+        print(f"  Models: {', '.join(model_slugs)}")
 
-    print("Building review data...")
-    review_data = build_review_data(examples, model_results)
+        print("Building review data...")
+        review_data = build_review_data(examples, model_results)
 
     print("Generating HTML...")
-    html_content = generate_html(review_data, model_slugs)
+    html_content = generate_html(
+        review_data, model_slugs,
+        page_title=args.title,
+        storage_key=args.storage_key,
+    )
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

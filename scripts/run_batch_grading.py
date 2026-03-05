@@ -67,7 +67,7 @@ def load_checkpoint(output_path: Path) -> set[str]:
             try:
                 record = json.loads(line)
                 app_id = record.get("application_id", "")
-                if app_id:
+                if app_id and "error" not in record:
                     done.add(app_id)
             except json.JSONDecodeError:
                 continue
