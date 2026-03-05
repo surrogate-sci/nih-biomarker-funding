@@ -29,18 +29,7 @@ from pathlib import Path
 # Add parent to path so we can import grader_prompt
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts.grader_prompt import call_openai, call_openrouter, create_grading_prompt
-
-
-def load_env():
-    """Load .env file into os.environ."""
-    env_path = Path(__file__).parent.parent / ".env"
-    if env_path.exists():
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
-                    os.environ[key.strip()] = value.strip().strip("\"'")
+from scripts.utils import load_env, parse_llm_json
 
 
 def load_sample(csv_path: Path) -> list[dict]:
@@ -86,14 +75,7 @@ def grade_one(
     else:
         response = call_openrouter(messages, model, api_key)
     content = response["choices"][0]["message"]["content"]
-
-    # Strip markdown code fences
-    if "```json" in content:
-        content = content.split("```json")[1].split("```")[0]
-    elif "```" in content:
-        content = content.split("```")[1].split("```")[0]
-
-    return json.loads(content.strip())
+    return parse_llm_json(content)
 
 
 def run_batch(

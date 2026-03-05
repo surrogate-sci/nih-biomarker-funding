@@ -95,37 +95,80 @@ python3 scripts/create_unified_dataset.py
 
 **Output:** `data/nih_biomarker_unified_2004-2024.csv` - single CSV with all years, keeping only analytically useful columns.
 
+### LLM Classification Scripts
+
+**5. Sample Oncology Grants** (`scripts/sample_oncology.py`)
+
+Stratified sample of NCI grants with abstract join from RePORTER zip files:
+
+```bash
+python3 scripts/sample_oncology.py \
+  --unified data/nih_biomarker_unified_2004-2024.csv \
+  --abs-dir ~/Downloads \
+  --n 100 --seed 42
+```
+
+**Output:** `data/oncology_sample_100per_year.csv` (~1,900 grants with abstracts)
+
+**6. Batch LLM Grading** (`scripts/run_batch_grading.py`)
+
+Grade grants using LLM ensemble with checkpoint/resume:
+
+```bash
+python3 scripts/run_batch_grading.py \
+  --sample data/oncology_sample_100per_year.csv \
+  --model google/gemini-2.5-flash-lite \
+  --output data/oncology_grades_gemini-2.5-flash-lite.jsonl
+```
+
+**Output:** JSONL with per-grant classifications on 3 dimensions. Supports `--limit` for smoke tests, resume on restart.
+
+**7. Expert Review** (`scripts/generate_review.py`)
+
+Generate standalone HTML for expert grading with anti-anchoring design:
+
+```bash
+python3 scripts/generate_review.py \
+  --examples data/grader_calibration_examples.csv \
+  --results-dir data/
+```
+
+**Output:** `data/expert_review.html` — expert grades before seeing model outputs, localStorage persistence, CSV export.
+
+**8. Agreement Analysis** (`scripts/analyze_agreement.py`, `scripts/extract_disagreements.py`)
+
+Analyze inter-model agreement and extract disagreement patterns:
+
+```bash
+python3 scripts/analyze_agreement.py --data-dir data/
+python3 scripts/extract_disagreements.py --data-dir data/
+```
+
 ### Analysis & Visualization Scripts
 
-**5. Create HTML Visualizations** (`scripts/create_html_charts.py`)
+**9. Create HTML Visualizations** (`scripts/create_html_charts.py`)
 
 Generates interactive HTML charts using Chart.js for biomarker funding trends:
 
 ```bash
-python3 scripts/create_html_charts.py
+python3 scripts/create_html_charts.py --input-dir data/oct-2024 --output-dir visualizations/
 ```
 
 **Output:** Standalone HTML files in `visualizations/` directory showing funding by year and by institute for different biomarker categories.
 
-**6. Analyze Keywords** (`scripts/analyze_keywords.py`)
+**10. Analyze Keywords** (`scripts/analyze_keywords.py`)
 
 Search the unified dataset for specific keywords and generate statistics:
 
 ```bash
-# Single keyword
-python3 scripts/analyze_keywords.py "biomarker discovery"
-
-# Multiple keywords (OR search)
-python3 scripts/analyze_keywords.py "surrogate endpoint" "intermediate endpoint"
+python3 scripts/analyze_keywords.py --input data/nih_biomarker_unified_2004-2024.csv "surrogate endpoint" "intermediate endpoint"
 ```
 
 **Output:** Statistics (funding by year, top institutes) and filtered CSV file.
 
-**Note on Legacy Scripts**: 
+**Note on Legacy Scripts**:
 - `scripts/nih_bulk_downloader.py` - Outdated bulk downloader. Use `process_all_years.py` for current workflow.
-
-**Note on Oct-2024 Dataset Scripts**:
-- `scripts/dedupe_and_union.py` - Used for processing the October 2024 dataset (`data/oct-2024/`). For the current FY2004-2024 workflow, use `create_unified_dataset.py` instead.
+- `scripts/dedupe_and_union.py` - Used for the October 2024 dataset (`data/oct-2024/`). For FY2004-2024 workflow, use `create_unified_dataset.py`.
 
 ### Workflow
 

@@ -17,6 +17,7 @@ from pathlib import Path
 # Add parent to path so we can import grader_prompt
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts.grader_prompt import create_grading_prompt, call_openrouter
+from scripts.utils import load_env, parse_llm_json
 
 
 def run_calibration(
@@ -27,15 +28,7 @@ def run_calibration(
     """Grade calibration examples and save results."""
 
     # Load API key
-    env_path = Path(__file__).parent.parent / ".env"
-    if env_path.exists():
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
-                    os.environ[key.strip()] = value.strip().strip("\"'")
-
+    load_env()
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         print("ERROR: OPENROUTER_API_KEY not set in .env")
@@ -68,14 +61,7 @@ def run_calibration(
         try:
             response = call_openrouter(messages, model, api_key)
             content = response["choices"][0]["message"]["content"]
-
-            # Parse JSON from response
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0]
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0]
-
-            parsed = json.loads(content.strip())
+            parsed = parse_llm_json(content)
 
             print(f"  biomarker_use: {parsed.get('biomarker_use', {}).get('primary', '?')}"
                   f" (conf: {parsed.get('biomarker_use', {}).get('confidence', '?')})")

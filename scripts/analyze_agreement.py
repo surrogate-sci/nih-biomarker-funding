@@ -7,6 +7,7 @@ Usage:
 """
 
 import argparse
+import itertools
 import json
 import sys
 from collections import Counter, defaultdict
@@ -169,86 +170,106 @@ def main():
 
     print()
 
-    # Find overlaps
+    # Find overlaps dynamically
+    model_keys = list(all_grades.keys())
     ids = {k: set(v.keys()) for k, v in all_grades.items()}
-    triple = ids["gemini"] & ids["gpt4o-mini"] & ids["gpt41-mini"]
-    gem_4o = ids["gemini"] & ids["gpt4o-mini"]
-    gem_41 = ids["gemini"] & ids["gpt41-mini"]
-    pair_4o_41 = ids["gpt4o-mini"] & ids["gpt41-mini"]
+
+    # Pairwise overlaps
+    pairwise_overlaps = {}
+    for ka, kb in itertools.combinations(model_keys, 2):
+        pairwise_overlaps[(ka, kb)] = ids[ka] & ids[kb]
+
+    # N-way overlap (intersection of all loaded models)
+    nway_overlap = set.intersection(*ids.values()) if ids else set()
 
     print("OVERLAP COUNTS")
     print("-" * 50)
-    print(f"  All three models:              {len(triple):5d}")
-    print(f"  Gemini + GPT-4o-mini:          {len(gem_4o):5d}")
-    print(f"  Gemini + GPT-4.1-mini:         {len(gem_41):5d}")
-    print(f"  GPT-4o-mini + GPT-4.1-mini:    {len(pair_4o_41):5d}")
+    if len(model_keys) >= 2:
+        if len(model_keys) >= 3:
+            print(f"  All {len(model_keys)} models:{' ' * (21 - len(str(len(model_keys))))} {len(nway_overlap):5d}")
+        for (ka, kb), common in pairwise_overlaps.items():
+            la = MODEL_LABELS.get(ka, ka)
+            lb = MODEL_LABELS.get(kb, kb)
+            label = f"{la} + {lb}:"
+            print(f"  {label:35s} {len(common):5d}")
+    else:
+        print(f"  Only one model loaded ({MODEL_LABELS.get(model_keys[0], model_keys[0])}), no overlaps to compute.")
     print()
 
     # Pairwise agreement
-    pairs = [
-        ("gemini", "gpt4o-mini", gem_4o),
-        ("gemini", "gpt41-mini", gem_41),
-        ("gpt4o-mini", "gpt41-mini", pair_4o_41),
-    ]
+    if len(model_keys) >= 2:
+        print("=" * 80)
+        print("PAIRWISE AGREEMENT RATES")
+        print("=" * 80)
+        print()
+        print(f"  {'Pair':42s}   {'N':>5s}   {'Dim1':>6s}   {'Dim2':>6s}   {'Dim3':>6s}")
+        print(f"  {'-'*42}   {'-----':>5s}   {'------':>6s}   {'------':>6s}   {'------':>6s}")
 
-    print("=" * 80)
-    print("PAIRWISE AGREEMENT RATES")
-    print("=" * 80)
-    print()
-    print(f"  {'Pair':42s}   {'N':>5s}   {'Dim1':>6s}   {'Dim2':>6s}   {'Dim3':>6s}")
-    print(f"  {'-'*42}   {'-----':>5s}   {'------':>6s}   {'------':>6s}   {'------':>6s}")
+        pair_results = {}
+        for (ka, kb), common in pairwise_overlaps.items():
+            la = MODEL_LABELS.get(ka, ka)
+            lb = MODEL_LABELS.get(kb, kb)
+            res = compute_agreement(
+                all_grades[ka], all_grades[kb],
+                la, lb,
+                common,
+            )
+            pair_results[(ka, kb)] = res
+            label = f"{la} vs {lb}"
+            if res:
+                print(
+                    f"  {label:42s}   {res['n']:5d}   {res['dim1_rate']:5.1%}   {res['dim2_rate']:5.1%}   {res['dim3_rate']:5.1%}"
+                )
+            else:
+                print(f"  {label:42s}   {'0':>5s}   {'N/A':>6s}   {'N/A':>6s}   {'N/A':>6s}")
 
-    pair_results = {}
-    for ka, kb, common in pairs:
-        res = compute_agreement(
-            all_grades[ka], all_grades[kb],
-            MODEL_LABELS[ka], MODEL_LABELS[kb],
-            common,
-        )
-        pair_results[(ka, kb)] = res
-        label = f"{MODEL_LABELS[ka]} vs {MODEL_LABELS[kb]}"
-        print(
-            f"  {label:42s}   {res['n']:5d}   {res['dim1_rate']:5.1%}   {res['dim2_rate']:5.1%}   {res['dim3_rate']:5.1%}"
-        )
+        print()
 
-    print()
-
-    # Triple agreement
-    print("=" * 80)
-    print("THREE-WAY AGREEMENT (all three models must agree)")
-    print("=" * 80)
-    tres = compute_triple_agreement(all_grades, triple)
-    print(f"  N = {tres['n']}")
-    print(f"  Dim1 (biomarker use):   {tres['dim1_rate']:5.1%}")
-    print(f"  Dim2 (research design): {tres['dim2_rate']:5.1%}")
-    print(f"  Dim3 (evidence str.):   {tres['dim3_rate']:5.1%}")
-    print()
+    # N-way agreement (only if 3+ models)
+    if len(model_keys) >= 3 and nway_overlap:
+        print("=" * 80)
+        print(f"{len(model_keys)}-WAY AGREEMENT (all models must agree)")
+        print("=" * 80)
+        tres = compute_triple_agreement(all_grades, nway_overlap)
+        print(f"  N = {tres['n']}")
+        print(f"  Dim1 (biomarker use):   {tres['dim1_rate']:5.1%}")
+        print(f"  Dim2 (research design): {tres['dim2_rate']:5.1%}")
+        print(f"  Dim3 (evidence str.):   {tres['dim3_rate']:5.1%}")
+        print()
 
     # Disagreement details
-    print("=" * 80)
-    print("DISAGREEMENT PATTERNS (top 5 per dimension per pair)")
-    print("=" * 80)
-    for ka, kb, common in pairs:
-        res = pair_results[(ka, kb)]
-        la, lb = MODEL_LABELS[ka], MODEL_LABELS[kb]
-        print(f"\n  --- {la} vs {lb} (N={res['n']}) ---")
-        print_disagreements(res["dim1_disagree"], la, lb, "Dim1 (biomarker use)")
-        print_disagreements(res["dim2_disagree"], la, lb, "Dim2 (research design)")
-        print_disagreements(res["dim3_disagree"], la, lb, "Dim3 (evidence strength)")
+    if len(model_keys) >= 2:
+        print("=" * 80)
+        print("DISAGREEMENT PATTERNS (top 5 per dimension per pair)")
+        print("=" * 80)
+        for (ka, kb), common in pairwise_overlaps.items():
+            res = pair_results[(ka, kb)]
+            if not res:
+                continue
+            la = MODEL_LABELS.get(ka, ka)
+            lb = MODEL_LABELS.get(kb, kb)
+            print(f"\n  --- {la} vs {lb} (N={res['n']}) ---")
+            print_disagreements(res["dim1_disagree"], la, lb, "Dim1 (biomarker use)")
+            print_disagreements(res["dim2_disagree"], la, lb, "Dim2 (research design)")
+            print_disagreements(res["dim3_disagree"], la, lb, "Dim3 (evidence strength)")
 
-    # Distribution of codes across models (on triple-overlap set)
-    print()
-    print("=" * 80)
-    print("CODE DISTRIBUTIONS ON TRIPLE-OVERLAP SET (N={})".format(len(triple)))
-    print("=" * 80)
-    for dim_key, dim_label in [("dim1", "Dim1 (biomarker use)"), ("dim2", "Dim2 (research design)"), ("dim3", "Dim3 (evidence strength)")]:
-        print(f"\n  {dim_label}:")
-        for mk in ["gemini", "gpt4o-mini", "gpt41-mini"]:
-            dist = Counter(all_grades[mk][aid][dim_key] for aid in triple)
-            top = dist.most_common(8)
-            print(f"    {MODEL_LABELS[mk]:30s}: ", end="")
-            parts = [f"{code} ({cnt})" for code, cnt in top]
-            print(", ".join(parts))
+    # Distribution of codes across models (on N-way overlap set)
+    overlap_set = nway_overlap if len(model_keys) >= 2 else set(next(iter(ids.values()))) if ids else set()
+    if overlap_set:
+        print()
+        print("=" * 80)
+        overlap_label = f"{len(model_keys)}-WAY" if len(model_keys) >= 2 else "SINGLE-MODEL"
+        print(f"CODE DISTRIBUTIONS ON {overlap_label} OVERLAP SET (N={len(overlap_set)})")
+        print("=" * 80)
+        for dim_key, dim_label in [("dim1", "Dim1 (biomarker use)"), ("dim2", "Dim2 (research design)"), ("dim3", "Dim3 (evidence strength)")]:
+            print(f"\n  {dim_label}:")
+            for mk in model_keys:
+                dist = Counter(all_grades[mk][aid][dim_key] for aid in overlap_set)
+                top = dist.most_common(8)
+                ml = MODEL_LABELS.get(mk, mk)
+                print(f"    {ml:30s}: ", end="")
+                parts = [f"{code} ({cnt})" for code, cnt in top]
+                print(", ".join(parts))
 
     print()
 
