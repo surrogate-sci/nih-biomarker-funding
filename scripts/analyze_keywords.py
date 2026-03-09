@@ -21,7 +21,7 @@ def analyze_keywords(keywords, output_name=None):
     """
     # Load unified dataset (relative to project root)
     script_dir = Path(__file__).parent.parent
-    data_file = script_dir / "data" / "oct-2024" / "nih_biomarker_unified.csv"
+    data_file = script_dir / "data" / "nih_biomarker_unified_2004-2024.csv"
     print(f"Loading {data_file.name}...")
     df = pd.read_csv(data_file, low_memory=False)
     print(f"Total projects: {len(df):,}\n")
@@ -120,9 +120,9 @@ def analyze_keywords(keywords, output_name=None):
         # Generate filename from keywords
         output_name = "_".join(keywords).replace(" ", "_")[:50]  # Limit length
 
-    output_file = script_dir / "data" / "oct-2024" / f"{output_name}_filtered.csv"
+    output_file = script_dir / "data" / f"{output_name}_filtered.csv"
     filtered_df.to_csv(output_file, index=False)
-    print(f"\n✓ Filtered dataset saved to: data/oct-2024/{output_file.name}")
+    print(f"\n✓ Filtered dataset saved to: data/{output_file.name}")
     print(f"  Size: {output_file.stat().st_size / 1024 / 1024:.1f} MB")
 
 def print_usage():

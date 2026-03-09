@@ -151,7 +151,7 @@ def get_options(chart_type, y_label):
 def main():
     # Setup paths
     script_dir = Path(__file__).parent.parent
-    data_dir = script_dir / "data" / "oct-2024"
+    data_dir = script_dir / "data"
     output_dir = script_dir / "visualizations"
     output_dir.mkdir(exist_ok=True)
 
@@ -163,58 +163,66 @@ def main():
     # 1. Biomarker Discovery
     print("Biomarker Discovery Charts:")
     bd_file = data_dir / "biomarker_discovery_filtered.csv"
-    bd_df = pd.read_csv(bd_file, low_memory=False)
-    bd_df['Total Cost Numeric'] = pd.to_numeric(bd_df['Total Cost'], errors='coerce')
+    if not bd_file.exists():
+        print("  Skipping - biomarker_discovery_filtered.csv not found")
+        bd_df = None
+    else:
+        bd_df = pd.read_csv(bd_file, low_memory=False)
+    if bd_df is not None:
+        bd_df['Total Cost Numeric'] = pd.to_numeric(bd_df['Total Cost'], errors='coerce')
 
-    # By year
-    yearly = bd_df.groupby('Fiscal Year')['Total Cost Numeric'].sum() / 1_000_000
-    create_chart_html(
-        "Biomarker Discovery: Total Funding by Fiscal Year",
-        "bar",
-        [int(y) for y in yearly.index.tolist()],
-        [round(v, 2) for v in yearly.values.tolist()],
-        output_dir / "biomarker_discovery_by_year.html"
-    )
+        # By year
+        yearly = bd_df.groupby('Fiscal Year')['Total Cost Numeric'].sum() / 1_000_000
+        create_chart_html(
+            "Biomarker Discovery: Total Funding by Fiscal Year",
+            "bar",
+            [int(y) for y in yearly.index.tolist()],
+            [round(v, 2) for v in yearly.values.tolist()],
+            output_dir / "biomarker_discovery_by_year.html"
+        )
 
-    # By institute
-    institute = bd_df.groupby('Administering IC')['Total Cost Numeric'].sum() / 1_000_000
-    institute = institute.sort_values(ascending=False).head(10)
-    create_chart_html(
-        "Biomarker Discovery: Top 10 Institutes by Total Funding",
-        "bar",
-        institute.index.tolist(),
-        [round(v, 2) for v in institute.values.tolist()],
-        output_dir / "biomarker_discovery_by_institute.html"
-    )
+        # By institute
+        institute = bd_df.groupby('Administering IC')['Total Cost Numeric'].sum() / 1_000_000
+        institute = institute.sort_values(ascending=False).head(10)
+        create_chart_html(
+            "Biomarker Discovery: Top 10 Institutes by Total Funding",
+            "bar",
+            institute.index.tolist(),
+            [round(v, 2) for v in institute.values.tolist()],
+            output_dir / "biomarker_discovery_by_institute.html"
+        )
 
     print()
 
     # 2. Surrogate Endpoints
     print("Surrogate Endpoints Charts:")
     se_file = data_dir / "surrogate_endpoints_filtered.csv"
-    se_df = pd.read_csv(se_file, low_memory=False)
-    se_df['Total Cost Numeric'] = pd.to_numeric(se_df['Total Cost'], errors='coerce')
+    if not se_file.exists():
+        print("  Skipping - surrogate_endpoints_filtered.csv not found")
+    else:
+        se_df = pd.read_csv(se_file, low_memory=False)
+        se_df['Total Cost Numeric'] = pd.to_numeric(se_df['Total Cost'], errors='coerce')
 
-    # By year
-    yearly = se_df.groupby('Fiscal Year')['Total Cost Numeric'].sum() / 1_000_000
-    create_chart_html(
-        "Surrogate/Intermediate Endpoints: Total Funding by Fiscal Year",
-        "bar",
-        [int(y) for y in yearly.index.tolist()],
-        [round(v, 2) for v in yearly.values.tolist()],
-        output_dir / "surrogate_endpoints_by_year.html"
-    )
+        # By year
+        yearly = se_df.groupby('Fiscal Year')['Total Cost Numeric'].sum() / 1_000_000
+        create_chart_html(
+            "Surrogate/Intermediate Endpoints: Total Funding by Fiscal Year",
+            "bar",
+            [int(y) for y in yearly.index.tolist()],
+            [round(v, 2) for v in yearly.values.tolist()],
+            output_dir / "surrogate_endpoints_by_year.html"
+        )
 
-    # By institute
-    institute = se_df.groupby('Administering IC')['Total Cost Numeric'].sum() / 1_000_000
-    institute = institute.sort_values(ascending=False).head(10)
-    create_chart_html(
-        "Surrogate/Intermediate Endpoints: Top 10 Institutes by Total Funding",
-        "bar",
-        institute.index.tolist(),
-        [round(v, 2) for v in institute.values.tolist()],
-        output_dir / "surrogate_endpoints_by_institute.html"
-    )
+        # By institute
+        institute = se_df.groupby('Administering IC')['Total Cost Numeric'].sum() / 1_000_000
+        institute = institute.sort_values(ascending=False).head(10)
+        create_chart_html(
+            "Surrogate/Intermediate Endpoints: Top 10 Institutes by Total Funding",
+            "bar",
+            institute.index.tolist(),
+            [round(v, 2) for v in institute.values.tolist()],
+            output_dir / "surrogate_endpoints_by_institute.html"
+        )
 
     print()
 

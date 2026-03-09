@@ -121,11 +121,20 @@ python3 scripts/analyze_keywords.py "surrogate endpoint" "intermediate endpoint"
 
 **Output:** Statistics (funding by year, top institutes) and filtered CSV file.
 
-**Note on Legacy Scripts**: 
-- `scripts/nih_bulk_downloader.py` - Outdated bulk downloader. Use `process_all_years.py` for current workflow.
+### LLM Classification Scripts
 
-**Note on Oct-2024 Dataset Scripts**:
-- `scripts/dedupe_and_union.py` - Used for processing the October 2024 dataset (`data/oct-2024/`). For the current FY2004-2024 workflow, use `create_unified_dataset.py` instead.
+**7. Grader Prompt Library** (`scripts/grader_prompt.py`)
+
+Library module that loads `data/RUBRIC.md`, constructs system prompts, and provides the OpenRouter API helper. Imported by `run_calibration.py` and future batch scripts.
+
+**8. Run Calibration** (`scripts/run_calibration.py`)
+
+Runs the grader on calibration examples to validate model behavior:
+
+```bash
+python3 scripts/run_calibration.py --model google/gemini-2.5-flash-lite --limit 5
+python3 scripts/run_calibration.py --model openai/gpt-4o-mini
+```
 
 ### Workflow
 
@@ -196,5 +205,7 @@ For current summary statistics and per-year funding breakdowns, see `data/filter
 - Strong growth trend: funding increased from $1.71B (FY2004) to $13.55B (FY2024)
 - Peak year: FY2024 with 23,252 matched projects and $13.55B in biomarker relevant spending
 
-**Oct-2024 Dataset**: 
-The `data/oct-2024/` directory contains analysis results from October 2024 using different search strategies and keyword filters. This is a separate analysis from the current FY2004-2024 workflow which uses the expanded term set.
+**Classification Rubric**: `data/RUBRIC.md`
+- Source of truth for the 3-dimension classification scheme
+- 17 Dimension 1 codes (biomarker use), 10 Dimension 2 codes (research design), 5 Dimension 3 codes (evidence strength)
+- Loaded at runtime by `scripts/grader_prompt.py`
