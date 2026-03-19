@@ -2,9 +2,32 @@
 
 ## Goal
 
-Get the unified dataset (130MB, 269,630 grants) accessible inside a Claude Code session
-so the Phase 2/3 pipeline can run: LLM grading, agreement analysis, expert review, etc.
-The dataset is a prerequisite for all downstream work.
+Produce an internal data analysis with figures explaining what we have so far — not for
+public posting, but to characterize the crude ~270K grant dataset before LLM grading refines it.
+
+### Analysis goals
+
+1. **Define the biomarker research universe** — explain core terms (4) vs. expanded terms (10),
+   what "biomarker-adjacent" means, and acknowledge data quality gaps (e.g., missing grants in
+   some years due to empty PROJECT_TERMS fields)
+
+2. **Funding summaries**:
+   - Total funding across all NIH
+   - Broken down by institute
+   - Broken down by year (trends over time)
+
+3. **Biomarker type distribution** — how often are diagnostic/risk biomarkers studied vs.
+   intermediate outcome, clinical endpoint, or surrogate endpoint biomarkers?
+
+4. **Grant mechanism breakdown** — R01 (basic/early-stage research) vs. clinical trial grant
+   types, showing that surrogacy validation is underrepresented in earlier research stages
+
+### Background
+
+- The 270K grant dataset is a crude keyword-filtered approximation with known gaps
+- Edison (prior agent) couldn't distinguish surrogate/causal evidence from non-causal —
+  that's why we're building the rubric-based LLM grading system
+- This analysis characterizes the *pre-grading* dataset to understand what we're working with
 
 ## What was tried
 
@@ -34,7 +57,7 @@ Multiple approaches to get the file into the session environment all failed:
 
 ## Next session
 
-- **Primary goal**: Download the dataset into `data/` and start running the analysis pipeline
+- **Primary goal**: Download the dataset and produce the analysis described above (figures + narrative)
 - Ensure unrestricted internet is enabled *before* session starts so `curl`/`wget` can reach GitHub
 - Figshare mirror may also exist (Manjari mentioned it) but URL not confirmed
-- Once dataset is available: run grading, agreement analysis, expert review scripts
+- This is internal/exploratory work — nothing goes to public repo yet
