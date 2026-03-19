@@ -114,8 +114,4 @@ python3 -m unittest tests.test_generate_review -v
 
 ## Status
 
-Scale-up experiment complete: 2,309 Gemini grades on NCI oncology sample.
-GPT-4.1-mini and GPT-4o-mini partial (~150-230 grades each).
-28% Dim1 three-way disagreement on calibration set.
-Open issues: #3-#8 (rubric boundaries, Inspect AI migration, trace storage).
-Next: rubric refinement → Inspect AI migration → full 270K run.
+See `docs/session-notes/` for current project status. The most recent note captures where we left off.
