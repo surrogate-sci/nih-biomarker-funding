@@ -37,27 +37,52 @@ Multiple approaches to get the file into the session environment all failed:
 - **GitHub release download**: proxy/firewall in the sandbox blocks GitHub file downloads (403 on CONNECT)
 - **Unrestricted internet setting**: user enabled it but it didn't take effect mid-session
 
+### Session 2 attempts (same day)
+
+- **Tag confirmed**: `git ls-remote --tags origin` shows `dataset-release-v1.0` exists
+- **Release asset 404**: The download URL returns "Not Found" — the release may not have an
+  asset attached, or the release was created as a tag without uploading the zip via the Releases UI
+- **`gh` CLI**: Not pre-installed; installed via apt but no GitHub token available for auth
+- **Proxy limitation**: The sandbox git proxy (`127.0.0.1:42449`) only handles git protocol,
+  not GitHub API or release asset downloads
+- **No `GITHUB_TOKEN`**: Environment has no GitHub token set, so authenticated API calls fail
+
 ## What was done
 
 1. **Dataset published as GitHub release** — the unified dataset (130MB CSV, 269,630 grants)
    was uploaded by Manjari via the GitHub web UI:
    - **Download URL**: https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v1.0/nih_biomarker_unified_2004-2024.zip
    - Release tag: `dataset-release-v1.0`
+   - **Status**: Tag exists but asset download returns 404 — needs verification
 
-2. **Download instructions** — to get the dataset into the working directory:
+2. **Download instructions** — preferred method using `gh` (requires auth):
    ```bash
+   # Option A: gh CLI (if GITHUB_TOKEN is set or gh is logged in)
+   gh release download dataset-release-v1.0 --repo surrogate-sci/nih-biomarker-funding --dir data/
+   unzip data/nih_biomarker_unified_2004-2024.zip -d data/
+
+   # Option B: curl with token
+   curl -L -H "Authorization: token $GITHUB_TOKEN" \
+     -o data/nih_biomarker_unified_2004-2024.zip \
+     "https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v1.0/nih_biomarker_unified_2004-2024.zip"
+   unzip data/nih_biomarker_unified_2004-2024.zip -d data/
+
+   # Option C: curl (only works if repo is public or unrestricted internet is enabled)
    curl -L -o data/nih_biomarker_unified_2004-2024.zip \
      "https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v1.0/nih_biomarker_unified_2004-2024.zip"
    unzip data/nih_biomarker_unified_2004-2024.zip -d data/
    ```
 
-3. **Environment note** — the sandbox proxy blocks GitHub file downloads (403 on CONNECT tunnel).
-   If `curl`/`wget` fail, the user may need to grant unrestricted network access before session start,
-   or download the file locally first.
+3. **Environment requirements for dataset download in Claude Code web sessions**:
+   - Set `GITHUB_TOKEN` env var before session start, OR
+   - Enable unrestricted internet before session start (not mid-session), OR
+   - Upload the file directly to the session (only if <10MB or split)
 
 ## Next session
 
-- **Primary goal**: Download the dataset and produce the analysis described above (figures + narrative)
-- Ensure unrestricted internet is enabled *before* session starts so `curl`/`wget` can reach GitHub
+- **Verify release**: Check https://github.com/surrogate-sci/nih-biomarker-funding/releases
+  to confirm the zip was actually uploaded as a release asset (not just a tag)
+- **Primary goal**: Download the dataset and produce the analysis (figures + narrative)
+- **Auth fix**: Set `GITHUB_TOKEN` in Claude Code env vars before starting session
 - Figshare mirror may also exist (Manjari mentioned it) but URL not confirmed
 - This is internal/exploratory work — nothing goes to public repo yet

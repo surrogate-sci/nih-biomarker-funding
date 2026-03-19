@@ -18,6 +18,7 @@ with ~50% ambiguous classifications. This repo replaces that with a hand-designe
 ## Session Setup
 
 - **Skills bootstrap**: If `.claude/skills/using-superpowers/SKILL.md` doesn't exist, run `bash scripts/download-skills.sh` to download obra/superpowers skills. This is needed in environments without access to user-level skills (e.g., mobile Claude Code sessions).
+- **Dataset download**: If `data/nih_biomarker_unified_2004-2024.csv` doesn't exist, run `bash scripts/download-dataset.sh`. Requires `gh` auth or `GITHUB_TOKEN` env var (private repo).
 
 ## Rules
 
