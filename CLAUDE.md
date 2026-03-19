@@ -102,10 +102,16 @@ ruff check . && ruff format .
 python3 -m unittest tests.test_generate_review -v
 ```
 
+## Session Workflow
+
+1. **At session start**: Read `docs/session-notes/` for prior context before taking action. Identify the most recent note and understand where we left off.
+2. **Before acting**: Confirm you understand the user's goals for this session.
+3. **At session end**: Write a session note to `docs/session-notes/YYYY-MM-DD-<topic>.md` capturing:
+   - Goal for the session
+   - What was tried (including dead ends)
+   - What was done (concrete outcomes)
+   - Next session priorities
+
 ## Status
 
-Scale-up experiment complete: 2,309 Gemini grades on NCI oncology sample.
-GPT-4.1-mini and GPT-4o-mini partial (~150-230 grades each).
-28% Dim1 three-way disagreement on calibration set.
-Open issues: #3-#8 (rubric boundaries, Inspect AI migration, trace storage).
-Next: rubric refinement → Inspect AI migration → full 270K run.
+See `docs/session-notes/` for current project status. The most recent note captures where we left off.
