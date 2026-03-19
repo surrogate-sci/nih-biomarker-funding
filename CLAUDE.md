@@ -15,6 +15,10 @@ in how researchers invoke biomarker concepts.
 **Prior art**: The Edison analysis agent (`../edison-benchmarks/`) produced a poor rubric
 with ~50% ambiguous classifications. This repo replaces that with a hand-designed rubric.
 
+## Session Setup
+
+- **Skills bootstrap**: If `.claude/skills/using-superpowers/SKILL.md` doesn't exist, run `bash scripts/download-skills.sh` to download obra/superpowers skills. This is needed in environments without access to user-level skills (e.g., mobile Claude Code sessions).
+
 ## Rules
 
 - **RUBRIC.md is scientific content** — do not modify definitions without Manjari's explicit direction
