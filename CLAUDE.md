@@ -77,7 +77,7 @@ calibration_examples.csv → run_calibration.py → calibration_results_*.json
 | `scripts/process_all_years.py` | Batch download + filter FY2004-2024 |
 | `scripts/create_unified_dataset.py` | Merges filtered year CSVs into single dataset |
 | `data/grader_calibration_examples.csv` | 25 easy cases (explicit biomarker terms from 2012 & 2022) |
-| `data/nih_biomarker_unified_2004-2024.csv` | 269,630 grants, NO abstracts |
+| `data/nih_biomarker_unified_2004-2024.csv` | 269,630 grants, NO abstracts (130MB; download from [GitHub release](https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v1.0/nih_biomarker_unified_2004-2024.zip)) |
 
 ## Commands
 
