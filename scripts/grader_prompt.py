@@ -1,13 +1,8 @@
 """
-NIH Biomarker Project Grader — prompt construction and API helpers.
+NIH Biomarker Project — Grader prompt construction and API helpers.
 
-Public API
-----------
-- load_rubric()             Read data/RUBRIC.md
-- build_system_prompt()     Assemble classifier system prompt from rubric text
-- create_grading_prompt()   Full messages list ready for an LLM call
-- call_openrouter()         Send messages via OpenRouter
-- call_openai()             Send messages via OpenAI
+Library module imported by ``run_calibration.py`` and ``run_batch_grading.py``.
+No ``__main__`` block; not intended to be run directly.
 """
 
 import json
@@ -82,14 +77,36 @@ def load_rubric(path: Path | None = None) -> str:
     return Path(path).read_text(encoding="utf-8")
 
 
+def _strip_rubric_for_prompt(rubric_text: str) -> str:
+    """Remove documentation-only sections from rubric before prompt injection."""
+    lines = rubric_text.split("\n")
+    filtered = []
+    skip = False
+    for line in lines:
+        # Skip the "SOURCE OF TRUTH" preamble
+        if line.startswith("> **SOURCE OF TRUTH**"):
+            continue
+        # Skip References section
+        if line.startswith("## References"):
+            skip = True
+            continue
+        if skip and line.startswith("## "):
+            skip = False
+        if not skip:
+            filtered.append(line)
+    return "\n".join(filtered)
+
+
 def build_system_prompt(rubric_text: str) -> str:
     """Construct the full system prompt from rubric text.
 
     The prompt is assembled from three pieces:
     1. A preamble describing the classifier's role.
-    2. The rubric text (loaded from ``data/RUBRIC.md``).
+    2. The rubric text (loaded from ``data/RUBRIC.md``), with
+       documentation-only sections stripped.
     3. Output-format instructions and classification rules.
     """
+    rubric_text = _strip_rubric_for_prompt(rubric_text)
     return (
         f"{_SYSTEM_PROMPT_PREAMBLE}\n\n"
         f"{rubric_text}\n"
@@ -111,7 +128,7 @@ Return ONLY the JSON classification."""
 
 
 def create_grading_prompt(title: str, abstract: str) -> list:
-    """Create the messages for the grading API call"""
+    """Create the messages for the grading API call."""
     system_prompt = build_system_prompt(load_rubric())
     return [
         {"role": "system", "content": system_prompt},
@@ -120,18 +137,18 @@ def create_grading_prompt(title: str, abstract: str) -> list:
 
 
 # ---------------------------------------------------------------------------
-# API call functions
+# API helpers
 # ---------------------------------------------------------------------------
 
 
 def call_openrouter(messages: list, model: str, api_key: str) -> dict:
-    """Call OpenRouter API"""
+    """Call OpenRouter API."""
     import urllib.request
 
     payload = {
         "model": model,
         "messages": messages,
-        "temperature": 0.1,  # Low temp for consistency
+        "temperature": 0.1,
         "max_tokens": 500
     }
 
@@ -153,7 +170,7 @@ def call_openrouter(messages: list, model: str, api_key: str) -> dict:
 
 
 def call_openai(messages: list, model: str, api_key: str) -> dict:
-    """Call OpenAI API directly"""
+    """Call OpenAI API directly."""
     import urllib.request
 
     payload = {
