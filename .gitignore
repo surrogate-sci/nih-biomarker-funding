@@ -14,10 +14,6 @@ __pycache__/
 dist/
 build/
 
-# Visualizations
-visualizations/
-*.html
-
 # IDE
 .vscode/
 .idea/
