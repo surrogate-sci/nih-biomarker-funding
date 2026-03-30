@@ -1,2 +1,3 @@
 inspect-ai>=0.3.200
+openai  # required by inspect-ai for OpenRouter/OpenAI providers
 ruff
