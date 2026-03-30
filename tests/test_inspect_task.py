@@ -54,8 +54,8 @@ class TestRecordToSample:
         assert sample.metadata["ic_name"] == "NATIONAL CANCER INSTITUTE"
         assert sample.metadata["activity"] == "R01"
         assert sample.metadata["total_cost"] == "500000.0"
-        assert sample.metadata["explicit_biomarker"] == "True"
-        assert sample.metadata["has_abstract"] == "True"
+        assert sample.metadata["explicit_biomarker"] is True
+        assert sample.metadata["has_abstract"] is True
 
     def test_calibration_format(self):
         """Calibration CSV row maps correctly to Sample."""
@@ -77,6 +77,10 @@ class TestRecordToSample:
         assert "This study identifies biomarkers for AML." in sample.input
         assert sample.metadata["fy"] == "2012"
         assert sample.metadata["matched_terms"] == "pharmacodynamic biomarker"
+        # Calibration CSVs lack HAS_ABSTRACT — should fall back to bool(abstract.strip())
+        assert sample.metadata["has_abstract"] is True
+        # Calibration CSVs lack EXPLICIT_BIOMARKER — should default to False
+        assert sample.metadata["explicit_biomarker"] is False
 
     def test_missing_abstract(self):
         """Sample is created even when abstract is empty."""
@@ -93,6 +97,10 @@ class TestRecordToSample:
         # The abstract portion should be empty but the template still renders
         assert "**Title:**" in sample.input
         assert "**Abstract:**" in sample.input
+        # No HAS_ABSTRACT column and no abstract text → has_abstract is False
+        assert sample.metadata["has_abstract"] is False
+        # No EXPLICIT_BIOMARKER column → explicit_biomarker is False
+        assert sample.metadata["explicit_biomarker"] is False
 
     def test_input_template_matches_grader_prompt(self):
         """_INPUT_TEMPLATE in inspect_task.py is the same as USER_PROMPT_TEMPLATE."""
@@ -166,7 +174,7 @@ class TestParseClassification:
     """Tests for the classification parser."""
 
     def test_valid_json(self):
-        """Valid JSON parses correctly."""
+        """Valid JSON parses correctly and includes validation result."""
         payload = {
             "biomarker_use": {
                 "primary": "diagnostic",
@@ -189,6 +197,8 @@ class TestParseClassification:
         assert result["biomarker_use"]["primary"] == "diagnostic"
         assert result["research_design"]["primary"] == "observational_cohort"
         assert result["evidence_strength"]["code"] == "correlational"
+        assert result["valid"] is True
+        assert result["invalid_codes"] == []
 
     def test_markdown_fenced_json(self):
         """JSON wrapped in markdown code fences parses correctly."""
@@ -204,6 +214,7 @@ class TestParseClassification:
 
         assert result is not None
         assert result["biomarker_use"]["primary"] == "monitoring"
+        assert result["valid"] is True
 
     def test_bare_fenced_json(self):
         """JSON wrapped in bare ``` fences parses correctly."""
@@ -219,6 +230,7 @@ class TestParseClassification:
 
         assert result is not None
         assert result["biomarker_use"]["primary"] == "safety"
+        assert result["valid"] is True
 
     def test_malformed_json(self):
         """Malformed JSON returns None."""
@@ -226,8 +238,8 @@ class TestParseClassification:
         result = _parse_classification(raw)
         assert result is None
 
-    def test_invalid_codes_still_parses(self):
-        """JSON with invalid codes still parses (validation is separate)."""
+    def test_invalid_codes_reports_which_dimensions(self):
+        """JSON with invalid codes parses but reports invalid dimensions."""
         payload = {
             "biomarker_use": {"primary": "not_a_real_code", "secondary": None, "confidence": "high"},
             "research_design": {"primary": "fake_design", "secondary": None, "confidence": "high"},
@@ -238,55 +250,66 @@ class TestParseClassification:
         raw = json.dumps(payload)
         result = _parse_classification(raw)
 
-        # Parsing succeeds
+        # Parsing succeeds but validation flags all three dimensions
         assert result is not None
-        # But validation should fail
-        assert not _validate_codes(result)
+        assert result["valid"] is False
+        assert "dim1" in result["invalid_codes"]
+        assert "dim2" in result["invalid_codes"]
+        assert "dim3" in result["invalid_codes"]
 
     def test_validate_codes_valid(self):
-        """Valid codes pass validation."""
+        """Valid codes return an empty invalid list."""
         parsed = {
             "biomarker_use": {"primary": "predictive_optimal", "secondary": "pharmacodynamic"},
             "research_design": {"primary": "experimental_rct", "secondary": None},
             "evidence_strength": {"code": "causal_clinical"},
         }
-        assert _validate_codes(parsed) is True
+        assert _validate_codes(parsed) == []
 
     def test_validate_codes_invalid_dim1(self):
-        """Invalid dim1 code fails validation."""
+        """Invalid dim1 code is reported."""
         parsed = {
             "biomarker_use": {"primary": "bogus_code"},
             "research_design": {"primary": "experimental_rct"},
             "evidence_strength": {"code": "correlational"},
         }
-        assert _validate_codes(parsed) is False
+        result = _validate_codes(parsed)
+        assert "dim1" in result
+        assert "dim2" not in result
+        assert "dim3" not in result
 
     def test_validate_codes_invalid_dim2(self):
-        """Invalid dim2 code fails validation."""
+        """Invalid dim2 code is reported."""
         parsed = {
             "biomarker_use": {"primary": "diagnostic"},
             "research_design": {"primary": "not_a_design"},
             "evidence_strength": {"code": "correlational"},
         }
-        assert _validate_codes(parsed) is False
+        result = _validate_codes(parsed)
+        assert "dim2" in result
+        assert "dim1" not in result
 
     def test_validate_codes_invalid_dim3(self):
-        """Invalid dim3 code fails validation."""
+        """Invalid dim3 code is reported."""
         parsed = {
             "biomarker_use": {"primary": "diagnostic"},
             "research_design": {"primary": "experimental_rct"},
             "evidence_strength": {"code": "not_real"},
         }
-        assert _validate_codes(parsed) is False
+        result = _validate_codes(parsed)
+        assert "dim3" in result
+        assert "dim1" not in result
+        assert "dim2" not in result
 
     def test_validate_codes_invalid_secondary(self):
-        """Invalid secondary code fails validation."""
+        """Invalid secondary code is reported for dim1."""
         parsed = {
             "biomarker_use": {"primary": "diagnostic", "secondary": "fake_secondary"},
             "research_design": {"primary": "experimental_rct"},
             "evidence_strength": {"code": "correlational"},
         }
-        assert _validate_codes(parsed) is False
+        result = _validate_codes(parsed)
+        assert "dim1" in result
 
 
 # ---------------------------------------------------------------------------

@@ -17,12 +17,11 @@ from inspect_ai import Task, task
 from inspect_ai.dataset import Sample, csv_dataset
 from inspect_ai.model import ChatMessageSystem, GenerateConfig
 from inspect_ai.scorer import (
-    CORRECT,
-    INCORRECT,
     Score,
     Target,
     mean,
     scorer,
+    stderr,
 )
 from inspect_ai.solver import TaskState, generate, solver
 
@@ -115,12 +114,13 @@ def record_to_sample(record: dict) -> Sample:
         metadata["activity"] = record["ACTIVITY"]
     if record.get("TOTAL_COST"):
         metadata["total_cost"] = record["TOTAL_COST"]
-    if record.get("EXPLICIT_BIOMARKER"):
-        metadata["explicit_biomarker"] = record["EXPLICIT_BIOMARKER"]
+    metadata["explicit_biomarker"] = record.get("EXPLICIT_BIOMARKER", "") == "True"
     if record.get("MATCHED_TERMS"):
         metadata["matched_terms"] = record["MATCHED_TERMS"]
-    if record.get("HAS_ABSTRACT"):
-        metadata["has_abstract"] = record["HAS_ABSTRACT"]
+    if "HAS_ABSTRACT" in record:
+        metadata["has_abstract"] = record["HAS_ABSTRACT"] == "True"
+    else:
+        metadata["has_abstract"] = bool(abstract.strip())
 
     return Sample(
         input=input_text,
@@ -158,20 +158,14 @@ def rubric_solver(rubric_path: str | None = None):
 # ---------------------------------------------------------------------------
 
 
-def _parse_classification(raw: str) -> dict | None:
-    """Parse and validate LLM classification JSON.
+def _validate_codes(parsed: dict) -> list[str]:
+    """Check dimension codes in the parsed classification against enum sets.
 
-    Returns the parsed dict on success, or None if the JSON is malformed
-    or cannot be extracted from the response.
+    Returns a list of invalid dimension names (e.g., ``["dim1", "dim3"]``).
+    An empty list means all codes are valid.
     """
-    try:
-        return parse_llm_json(raw)
-    except Exception:
-        return None
+    invalid: list[str] = []
 
-
-def _validate_codes(parsed: dict) -> bool:
-    """Check that all dimension codes in the parsed classification are valid."""
     dim1_primary = parsed.get("biomarker_use", {}).get("primary", "")
     dim1_secondary = parsed.get("biomarker_use", {}).get("secondary")
     dim2_primary = parsed.get("research_design", {}).get("primary", "")
@@ -179,36 +173,58 @@ def _validate_codes(parsed: dict) -> bool:
     dim3_code = parsed.get("evidence_strength", {}).get("code", "")
 
     if dim1_primary not in VALID_DIM1:
-        return False
-    if dim1_secondary and dim1_secondary not in VALID_DIM1:
-        return False
+        invalid.append("dim1")
+    if dim1_secondary and dim1_secondary not in VALID_DIM1 and "dim1" not in invalid:
+        invalid.append("dim1")
     if dim2_primary not in VALID_DIM2:
-        return False
-    if dim2_secondary and dim2_secondary not in VALID_DIM2:
-        return False
+        invalid.append("dim2")
+    if dim2_secondary and dim2_secondary not in VALID_DIM2 and "dim2" not in invalid:
+        invalid.append("dim2")
     if dim3_code not in VALID_DIM3:
-        return False
+        invalid.append("dim3")
 
-    return True
+    return invalid
 
 
-@scorer(metrics=[mean()])
+def _parse_classification(raw: str) -> dict | None:
+    """Parse LLM classification JSON, then validate dimension codes.
+
+    Returns a dict with the following keys on success:
+    - All original parsed keys (biomarker_use, research_design, etc.)
+    - ``valid``: bool indicating whether all codes are in the enum sets
+    - ``invalid_codes``: list of dimension names with invalid codes
+
+    Returns None if the JSON is malformed or cannot be extracted.
+    """
+    try:
+        parsed = parse_llm_json(raw)
+    except Exception:
+        return None
+
+    if parsed is None:
+        return None
+
+    invalid_codes = _validate_codes(parsed)
+    parsed["valid"] = len(invalid_codes) == 0
+    parsed["invalid_codes"] = invalid_codes
+    return parsed
+
+
+@scorer(metrics={"valid_json": [mean(), stderr()], "valid_codes": [mean(), stderr()]})
 def rubric_scorer():
     """Score LLM classifications against the rubric code enums.
 
-    Produces a Score with:
-    - value: dict mapping metric names to CORRECT/INCORRECT
-      - ``valid_json``: whether the response parsed as valid JSON
-      - ``valid_codes``: whether all dimension codes are in the enum sets
-    - metadata: dim1, dim2, dim3 codes, confidences, key_phrases, reasoning
+    Produces a multi-valued Score with:
+    - value: dict with ``valid_json`` (1.0/0.0) and ``valid_codes`` (1.0/0.0)
+    - metadata: dim1, dim2, dim3 codes, confidences, key_phrases, reasoning,
+      and ``invalid_codes`` listing which dimensions had bad codes
     """
 
     async def score(state: TaskState, target: Target) -> Score:
         if not state.output or not state.output.completion:
             return Score(
-                value=INCORRECT,
+                value={"valid_json": 0.0, "valid_codes": 0.0},
                 explanation="No model output",
-                metadata={"valid_json": False, "valid_codes": False},
             )
 
         raw = state.output.completion
@@ -216,12 +232,12 @@ def rubric_scorer():
 
         if parsed is None:
             return Score(
-                value=INCORRECT,
+                value={"valid_json": 0.0, "valid_codes": 0.0},
                 explanation="Failed to parse JSON from response",
-                metadata={"valid_json": False, "valid_codes": False},
             )
 
-        codes_valid = _validate_codes(parsed)
+        codes_valid = parsed["valid"]
+        invalid_codes = parsed["invalid_codes"]
 
         # Extract classification details for metadata
         dim1 = parsed.get("biomarker_use", {})
@@ -229,8 +245,7 @@ def rubric_scorer():
         dim3 = parsed.get("evidence_strength", {})
 
         score_metadata = {
-            "valid_json": True,
-            "valid_codes": codes_valid,
+            "invalid_codes": invalid_codes,
             "dim1_primary": dim1.get("primary"),
             "dim1_secondary": dim1.get("secondary"),
             "dim1_confidence": dim1.get("confidence"),
@@ -244,11 +259,11 @@ def rubric_scorer():
         }
 
         return Score(
-            value=CORRECT if codes_valid else INCORRECT,
+            value={"valid_json": 1.0, "valid_codes": 1.0 if codes_valid else 0.0},
             explanation=(
                 "Valid classification"
                 if codes_valid
-                else "One or more dimension codes not in valid set"
+                else f"Invalid codes in: {', '.join(invalid_codes)}"
             ),
             metadata=score_metadata,
         )
