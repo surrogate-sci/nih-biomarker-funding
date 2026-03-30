@@ -13,8 +13,9 @@ Usage:
 
 from pathlib import Path
 
-from inspect_ai.dataset import Sample
-from inspect_ai.model import ChatMessageSystem
+from inspect_ai import Task, task
+from inspect_ai.dataset import Sample, csv_dataset
+from inspect_ai.model import ChatMessageSystem, GenerateConfig
 from inspect_ai.scorer import (
     CORRECT,
     INCORRECT,
@@ -23,7 +24,7 @@ from inspect_ai.scorer import (
     mean,
     scorer,
 )
-from inspect_ai.solver import TaskState, solver
+from inspect_ai.solver import TaskState, generate, solver
 
 from scripts.grader_prompt import USER_PROMPT_TEMPLATE, build_system_prompt, load_rubric
 from scripts.utils import parse_llm_json
@@ -253,3 +254,39 @@ def rubric_scorer():
         )
 
     return score
+
+
+# ---------------------------------------------------------------------------
+# Task 5: Task definition
+# ---------------------------------------------------------------------------
+
+
+@task
+def biomarker_grading(
+    dataset_path: str = "data/oncology_sample_100per_year.csv",
+    rubric_path: str | None = None,
+) -> Task:
+    """Inspect AI task for NIH biomarker grant classification.
+
+    Composes:
+    1. csv_dataset with record_to_sample for input mapping
+    2. rubric_solver to inject the system prompt
+    3. generate() for the LLM call
+    4. rubric_scorer to validate the JSON output
+
+    Parameters
+    ----------
+    dataset_path : str
+        Path to the CSV file with grant data.
+    rubric_path : str or None
+        Path to RUBRIC.md. None uses the default location.
+    """
+    return Task(
+        dataset=csv_dataset(
+            csv_file=dataset_path,
+            sample_fields=record_to_sample,
+        ),
+        solver=[rubric_solver(rubric_path=rubric_path), generate()],
+        scorer=rubric_scorer(),
+        config=GenerateConfig(temperature=0.1, max_tokens=500),
+    )

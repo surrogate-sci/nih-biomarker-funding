@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from inspect_ai import Task
 from inspect_ai.dataset import Sample
 
 from inspect_task import (
@@ -13,6 +14,7 @@ from inspect_task import (
     _INPUT_TEMPLATE,
     _parse_classification,
     _validate_codes,
+    biomarker_grading,
     record_to_sample,
     rubric_solver,
 )
@@ -285,3 +287,33 @@ class TestParseClassification:
             "evidence_strength": {"code": "correlational"},
         }
         assert _validate_codes(parsed) is False
+
+
+# ---------------------------------------------------------------------------
+# Task 5: Task definition tests
+# ---------------------------------------------------------------------------
+
+
+class TestBiomarkerGrading:
+    """Tests for the task definition."""
+
+    def test_returns_task_instance(self):
+        """biomarker_grading() returns a Task."""
+        t = biomarker_grading()
+        assert isinstance(t, Task)
+
+    def test_task_has_solver(self):
+        """The task has a solver list."""
+        t = biomarker_grading()
+        assert t.solver is not None
+
+    def test_task_has_scorer(self):
+        """The task has a scorer."""
+        t = biomarker_grading()
+        assert t.scorer is not None
+
+    def test_task_config(self):
+        """The task has the expected GenerateConfig."""
+        t = biomarker_grading()
+        assert t.config.temperature == 0.1
+        assert t.config.max_tokens == 500
