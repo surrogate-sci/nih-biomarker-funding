@@ -201,6 +201,10 @@ python3 scripts/analyze_keywords.py --input data/nih_biomarker_unified_2004-2024
 
 ## Data
 
+**Downloads**:
+- [GitHub Release (v1.0)](https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v1.0/nih_biomarker_unified_2004-2024.zip) — 130MB zip
+- [Google Drive](https://drive.google.com/file/d/1izm9E7S2KFZSeVcRbD40n-BWVEz9oIPS/view?usp=drivesdk) — unified dataset
+
 **Current Dataset**: `data/nih_biomarker_unified_2004-2024.csv`
 - 269,630 unique project-year records (Application ID + Fiscal Year combinations)
 - Spans FY2004 - FY2024 (21 years)
