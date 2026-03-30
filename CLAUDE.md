@@ -30,6 +30,7 @@ with ~50% ambiguous classifications. This repo replaces that with a hand-designe
 - **Commit style**: imperative, scoped prefix: `grade: calibrate rubric`, `fetch: add sharder`
 - **Don't use**: `_archive/`, `../edison-benchmarks/`, old skill dirs
 - **Don't invent scientific positions** — never paraphrase domain claims or add causal language Manjari didn't provide
+- **Visualization**: For analysis outputs and publication-quality charts, use Datawrapper (preferred, requires `DATAWRAPPER_API_TOKEN`) or Python data science libraries (seaborn, matplotlib, plotnine, bokeh). Chart.js is acceptable only for quick dev prototyping during iteration — never for analysis outputs or anything shared externally.
 
 ## Pipeline
 
