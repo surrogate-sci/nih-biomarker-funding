@@ -47,13 +47,26 @@ process_all_years.py  →  filter_biomarker_projects.py  →  data/filtered/biom
 
 ### Phase 2: LLM Classification (current focus)
 
-3-dimension rubric grading via LLM ensemble.
+3-dimension rubric grading via LLM ensemble. Migrating to **[Inspect AI](https://inspect.aisi.org.uk/)** (UK AISI's eval framework) — see Issue #7.
 
+**Current state** (hand-rolled scripts, being replaced):
 ```
 RUBRIC.md → grader_prompt.py (build_system_prompt) → OpenRouter API
                                                       ↓
 calibration_examples.csv → run_calibration.py → calibration_results_*.json
 ```
+
+**Target state** (Inspect AI):
+```
+RUBRIC.md → Inspect Solver (reuses grader_prompt.py) → inspect eval --batch
+                                                         ↓
+calibration CSV / oncology sample → Inspect Dataset → .eval logs + inspect view
+```
+
+Inspect provides: batch API support (OpenAI, Anthropic, Google — 50% cost savings),
+`eval-set` for multi-model runs with automatic retry/resume, caching for rubric
+iteration, `.eval` structured logging with `inspect view`, and W&B integration
+via `inspect-wandb`. OpenRouter is also a first-class provider for quick comparisons.
 
 - **Models**: Gemini 2.5 Flash Lite + GPT-4.1-mini (primary), Sonnet 4.6 Batch API (tiebreaker on ~28% disagreements). ~$700-900 for 270K grants.
 - **Rubric**: 17 Dim1 (biomarker use) + 10 Dim2 (research design) + 5 Dim3 (evidence strength) codes
@@ -66,13 +79,14 @@ calibration_examples.csv → run_calibration.py → calibration_results_*.json
 | `data/RUBRIC.md` | Source of truth: classification rubric with "Assign when..." definitions |
 | `scripts/grader_prompt.py` | Loads RUBRIC.md at runtime, constructs system prompt, calls OpenRouter/OpenAI |
 | `scripts/utils.py` | Shared utilities: `load_env()`, `parse_llm_json()` |
-| `scripts/run_calibration.py` | Runs grader on calibration examples (`--model`, `--limit`, `--delay`) |
+| `scripts/run_calibration.py` | Runs grader on calibration examples (`--model`, `--limit`, `--delay`). Being replaced by Inspect task. |
 | `scripts/abstract_loader.py` | Loads abstracts from RePORTER zip files |
 | `scripts/sample_oncology.py` | Stratified NCI sample + abstract join |
-| `scripts/run_batch_grading.py` | Batch grading with JSONL checkpoint/resume |
+| `scripts/run_batch_grading.py` | Batch grading with JSONL checkpoint/resume. Being replaced by Inspect eval/eval-set. |
 | `scripts/generate_review.py` | Expert review HTML generator (anti-anchoring design) |
-| `scripts/analyze_agreement.py` | Inter-model agreement analysis |
+| `scripts/analyze_agreement.py` | Inter-model agreement analysis. Will be partially replaced by Inspect scorer metrics. |
 | `scripts/extract_disagreements.py` | Extract disagreement patterns for rubric refinement |
+| `inspect_task.py` (planned) | Inspect AI task: Dataset + Solver + Scorer for rubric grading |
 | `scripts/filter_biomarker_projects.py` | Filters NIH ExPORTER CSVs by keyword term sets |
 | `scripts/process_all_years.py` | Batch download + filter FY2004-2024 |
 | `scripts/create_unified_dataset.py` | Merges filtered year CSVs into single dataset |
@@ -87,7 +101,19 @@ python3 scripts/process_all_years.py --start-year 2004 --end-year 2024 --skip-do
 python3 scripts/create_unified_dataset.py
 python3 scripts/generate_summary.py
 
-# Phase 2: Sampling + LLM grading
+# Phase 2: Sampling + LLM grading (Inspect AI — target)
+# Calibration (25 examples, quick turnaround)
+inspect eval inspect_task.py --model openrouter/google/gemini-2.5-flash-lite --limit 25
+# Mid-scale pass (~10-20K grants per institute/year, direct provider APIs)
+inspect eval inspect_task.py --model google/gemini-2.5-flash-lite --max-connections 20
+# Multi-model comparison via eval-set
+inspect eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --log-dir logs/
+# Full 270K production run with batch API (50% cost savings)
+inspect eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --batch --log-dir logs/production-v1
+# Browse results
+inspect view
+
+# Phase 2: Sampling + LLM grading (legacy hand-rolled scripts)
 python3 scripts/sample_oncology.py --unified data/nih_biomarker_unified_2004-2024.csv --abs-dir ~/Downloads --n 100 --seed 42
 python3 scripts/run_batch_grading.py --sample data/oncology_sample_100per_year.csv --model google/gemini-2.5-flash-lite --output data/oncology_grades_gemini-2.5-flash-lite.jsonl
 python3 scripts/run_calibration.py --model google/gemini-2.5-flash-lite --limit 5
