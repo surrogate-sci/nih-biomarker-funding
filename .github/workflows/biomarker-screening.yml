@@ -1,0 +1,49 @@
+name: Biomarker Screening Analysis
+
+on:
+  push:
+    paths:
+      - 'analysis/biomarker-screening/**'
+      - 'data/nih_biomarker_unified_2004-2024.csv'
+      - '.github/workflows/biomarker-screening.yml'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: pip install -r analysis/biomarker-screening/requirements.txt
+
+    - name: Check dataset exists
+      run: |
+        if [ ! -f data/nih_biomarker_unified_2004-2024.csv ]; then
+          echo "Dataset not found — run scripts/download-dataset.sh first"
+          exit 1
+        fi
+
+    - name: Run analysis
+      env:
+        DATAWRAPPER_API_TOKEN: ${{ secrets.DATAWRAPPER_API_TOKEN }}
+      run: python analysis/biomarker-screening/analyze.py
+
+    - name: Commit updated charts
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add analysis/biomarker-screening/charts/
+        if git diff --cached --quiet; then
+          echo "No chart changes to commit"
+        else
+          git commit -m "analysis: auto-update biomarker screening charts"
+          git push
+        fi
