@@ -1,0 +1,292 @@
+{
+  "funding_over_time": {
+    "years": [
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "total_funding": [
+      1707538600.0,
+      105312134.0,
+      85598679.0,
+      2707045315.0,
+      2789666762.0,
+      4798898996.0,
+      5022876830.0,
+      4913859608.0,
+      6510388071.0,
+      2254259426.0,
+      5790739538.0,
+      6096233033.0,
+      7404839225.0,
+      8363845954.0,
+      3868691866.0,
+      9949648770.0,
+      11362176300.0,
+      11540584584.0,
+      12532050214.0,
+      13128946678.0,
+      13554716921.0
+    ],
+    "explicit_funding": [
+      491569133.0,
+      57523573.0,
+      68403000.0,
+      161609837.0,
+      179291556.0,
+      1596884888.0,
+      1829475721.0,
+      1853110699.0,
+      2508474055.0,
+      288086345.0,
+      320064277.0,
+      481643954.0,
+      1718797663.0,
+      2085658170.0,
+      1085648236.0,
+      2712873350.0,
+      3112399606.0,
+      3331468012.0,
+      3603940410.0,
+      4086608579.0,
+      4192846870.0
+    ],
+    "grant_count": [
+      6524,
+      327,
+      336,
+      7543,
+      8388,
+      12722,
+      12487,
+      12215,
+      13628,
+      4182,
+      11536,
+      12189,
+      14714,
+      16024,
+      8435,
+      19148,
+      20098,
+      21001,
+      22048,
+      22833,
+      23252
+    ]
+  },
+  "top_institutes": {
+    "institutes": [
+      {
+        "ADMINISTERING_IC": "CA",
+        "IC_NAME": "NATIONAL CANCER INSTITUTE",
+        "total_funding": 28226615350.0,
+        "grant_count": 66450
+      },
+      {
+        "ADMINISTERING_IC": "AG",
+        "IC_NAME": "NATIONAL INSTITUTE ON AGING",
+        "total_funding": 14546480777.0,
+        "grant_count": 22591
+      },
+      {
+        "ADMINISTERING_IC": "HL",
+        "IC_NAME": "NATIONAL HEART, LUNG, AND BLOOD INSTITUTE",
+        "total_funding": 13058722000.0,
+        "grant_count": 23672
+      },
+      {
+        "ADMINISTERING_IC": "AI",
+        "IC_NAME": "NATIONAL INSTITUTE OF ALLERGY AND INFECTIOUS DISEASES",
+        "total_funding": 11427337111.0,
+        "grant_count": 17080
+      },
+      {
+        "ADMINISTERING_IC": "NS",
+        "IC_NAME": "NATIONAL INSTITUTE OF NEUROLOGICAL DISORDERS AND STROKE",
+        "total_funding": 9159160345.0,
+        "grant_count": 18801
+      },
+      {
+        "ADMINISTERING_IC": "MH",
+        "IC_NAME": "NATIONAL INSTITUTE OF MENTAL HEALTH",
+        "total_funding": 8553916084.0,
+        "grant_count": 17296
+      },
+      {
+        "ADMINISTERING_IC": "DK",
+        "IC_NAME": "NATIONAL INSTITUTE OF DIABETES AND DIGESTIVE AND KIDNEY DISEASES",
+        "total_funding": 7149764216.0,
+        "grant_count": 17287
+      },
+      {
+        "ADMINISTERING_IC": "LM",
+        "IC_NAME": "NATIONAL LIBRARY OF MEDICINE",
+        "total_funding": 4954666266.0,
+        "grant_count": 853
+      },
+      {
+        "ADMINISTERING_IC": "HD",
+        "IC_NAME": "EUNICE KENNEDY SHRIVER NATIONAL INSTITUTE OF CHILD HEALTH & HUMAN DEVELOPMENT",
+        "total_funding": 4469704440.0,
+        "grant_count": 10224
+      },
+      {
+        "ADMINISTERING_IC": "HG",
+        "IC_NAME": "NATIONAL HUMAN GENOME RESEARCH INSTITUTE",
+        "total_funding": 3948930077.0,
+        "grant_count": 3883
+      },
+      {
+        "ADMINISTERING_IC": "GM",
+        "IC_NAME": "NATIONAL INSTITUTE OF GENERAL MEDICAL SCIENCES",
+        "total_funding": 3593825737.0,
+        "grant_count": 9807
+      },
+      {
+        "ADMINISTERING_IC": "DA",
+        "IC_NAME": "NATIONAL INSTITUTE ON DRUG ABUSE",
+        "total_funding": 3571399197.0,
+        "grant_count": 7203
+      },
+      {
+        "ADMINISTERING_IC": "EB",
+        "IC_NAME": "NATIONAL INSTITUTE OF BIOMEDICAL IMAGING AND BIOENGINEERING",
+        "total_funding": 2990265570.0,
+        "grant_count": 7813
+      },
+      {
+        "ADMINISTERING_IC": "OD",
+        "IC_NAME": "OFFICE OF THE DIRECTOR, NATIONAL INSTITUTES OF HEALTH",
+        "total_funding": 2670030558.0,
+        "grant_count": 1820
+      },
+      {
+        "ADMINISTERING_IC": "AR",
+        "IC_NAME": "NATIONAL INSTITUTE OF ARTHRITIS AND MUSCULOSKELETAL AND SKIN DISEASES",
+        "total_funding": 2586212462.0,
+        "grant_count": 6891
+      }
+    ]
+  },
+  "mechanism_breakdown": {
+    "categories": [
+      {
+        "category": "Research (R)",
+        "total_funding": 62953377923.0,
+        "grant_count": 135643
+      },
+      {
+        "category": "Cooperative (U)",
+        "total_funding": 29425800686.0,
+        "grant_count": 33140
+      },
+      {
+        "category": "Other",
+        "total_funding": 24802578461.0,
+        "grant_count": 22138
+      },
+      {
+        "category": "Program/Center (P)",
+        "total_funding": 13193887022.0,
+        "grant_count": 46725
+      },
+      {
+        "category": "Career Dev (K)",
+        "total_funding": 3561332136.0,
+        "grant_count": 22129
+      },
+      {
+        "category": "Fellowship (F)",
+        "total_funding": 400937484.0,
+        "grant_count": 9309
+      },
+      {
+        "category": "Training (T)",
+        "total_funding": 150003792.0,
+        "grant_count": 546
+      }
+    ]
+  },
+  "explicit_adoption": {
+    "years": [
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "pct_explicit": [
+      29.2,
+      73.1,
+      81.2,
+      7.5,
+      7.7,
+      36.6,
+      39.5,
+      41.6,
+      43.3,
+      17.6,
+      7.6,
+      10.5,
+      27.3,
+      27.3,
+      32.9,
+      29.0,
+      28.8,
+      29.0,
+      28.9,
+      30.0,
+      29.8
+    ]
+  },
+  "summary": {
+    "total_grants": 269630,
+    "explicit_grants": 75849,
+    "total_funding_billions": 134.49,
+    "explicit_funding_billions": 35.77,
+    "year_range": [
+      2004,
+      2024
+    ],
+    "data_quality_years": [
+      2005,
+      2006
+    ],
+    "renderer": "seaborn"
+  }
+}
