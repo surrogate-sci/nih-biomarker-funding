@@ -15,9 +15,18 @@ from pathlib import Path
 
 from inspect_ai.dataset import Sample
 from inspect_ai.model import ChatMessageSystem
+from inspect_ai.scorer import (
+    CORRECT,
+    INCORRECT,
+    Score,
+    Target,
+    mean,
+    scorer,
+)
 from inspect_ai.solver import TaskState, solver
 
 from scripts.grader_prompt import USER_PROMPT_TEMPLATE, build_system_prompt, load_rubric
+from scripts.utils import parse_llm_json
 
 # ---------------------------------------------------------------------------
 # Valid classification codes (from data/RUBRIC.md)
@@ -141,3 +150,106 @@ def rubric_solver(rubric_path: str | None = None):
         return state
 
     return solve
+
+
+# ---------------------------------------------------------------------------
+# Task 4: Scorer
+# ---------------------------------------------------------------------------
+
+
+def _parse_classification(raw: str) -> dict | None:
+    """Parse and validate LLM classification JSON.
+
+    Returns the parsed dict on success, or None if the JSON is malformed
+    or cannot be extracted from the response.
+    """
+    try:
+        return parse_llm_json(raw)
+    except Exception:
+        return None
+
+
+def _validate_codes(parsed: dict) -> bool:
+    """Check that all dimension codes in the parsed classification are valid."""
+    dim1_primary = parsed.get("biomarker_use", {}).get("primary", "")
+    dim1_secondary = parsed.get("biomarker_use", {}).get("secondary")
+    dim2_primary = parsed.get("research_design", {}).get("primary", "")
+    dim2_secondary = parsed.get("research_design", {}).get("secondary")
+    dim3_code = parsed.get("evidence_strength", {}).get("code", "")
+
+    if dim1_primary not in VALID_DIM1:
+        return False
+    if dim1_secondary and dim1_secondary not in VALID_DIM1:
+        return False
+    if dim2_primary not in VALID_DIM2:
+        return False
+    if dim2_secondary and dim2_secondary not in VALID_DIM2:
+        return False
+    if dim3_code not in VALID_DIM3:
+        return False
+
+    return True
+
+
+@scorer(metrics=[mean()])
+def rubric_scorer():
+    """Score LLM classifications against the rubric code enums.
+
+    Produces a Score with:
+    - value: dict mapping metric names to CORRECT/INCORRECT
+      - ``valid_json``: whether the response parsed as valid JSON
+      - ``valid_codes``: whether all dimension codes are in the enum sets
+    - metadata: dim1, dim2, dim3 codes, confidences, key_phrases, reasoning
+    """
+
+    async def score(state: TaskState, target: Target) -> Score:
+        if not state.output or not state.output.completion:
+            return Score(
+                value=INCORRECT,
+                explanation="No model output",
+                metadata={"valid_json": False, "valid_codes": False},
+            )
+
+        raw = state.output.completion
+        parsed = _parse_classification(raw)
+
+        if parsed is None:
+            return Score(
+                value=INCORRECT,
+                explanation="Failed to parse JSON from response",
+                metadata={"valid_json": False, "valid_codes": False},
+            )
+
+        codes_valid = _validate_codes(parsed)
+
+        # Extract classification details for metadata
+        dim1 = parsed.get("biomarker_use", {})
+        dim2 = parsed.get("research_design", {})
+        dim3 = parsed.get("evidence_strength", {})
+
+        score_metadata = {
+            "valid_json": True,
+            "valid_codes": codes_valid,
+            "dim1_primary": dim1.get("primary"),
+            "dim1_secondary": dim1.get("secondary"),
+            "dim1_confidence": dim1.get("confidence"),
+            "dim2_primary": dim2.get("primary"),
+            "dim2_secondary": dim2.get("secondary"),
+            "dim2_confidence": dim2.get("confidence"),
+            "dim3_code": dim3.get("code"),
+            "dim3_confidence": dim3.get("confidence"),
+            "key_phrases": parsed.get("key_phrases"),
+            "reasoning": parsed.get("reasoning"),
+        }
+
+        return Score(
+            value=CORRECT if codes_valid else INCORRECT,
+            explanation=(
+                "Valid classification"
+                if codes_valid
+                else "One or more dimension codes not in valid set"
+            ),
+            metadata=score_metadata,
+        )
+
+    return score

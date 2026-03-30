@@ -11,6 +11,8 @@ from inspect_task import (
     VALID_DIM2,
     VALID_DIM3,
     _INPUT_TEMPLATE,
+    _parse_classification,
+    _validate_codes,
     record_to_sample,
     rubric_solver,
 )
@@ -151,3 +153,135 @@ class TestRubricSolver:
         prompt = build_system_prompt(rubric_text)
         assert "## References" not in prompt
         assert "FDA-NIH BEST" not in prompt or "SOURCE OF TRUTH" not in prompt
+
+
+# ---------------------------------------------------------------------------
+# Task 4: _parse_classification tests
+# ---------------------------------------------------------------------------
+
+
+class TestParseClassification:
+    """Tests for the classification parser."""
+
+    def test_valid_json(self):
+        """Valid JSON parses correctly."""
+        payload = {
+            "biomarker_use": {
+                "primary": "diagnostic",
+                "secondary": None,
+                "confidence": "high",
+            },
+            "research_design": {
+                "primary": "observational_cohort",
+                "secondary": None,
+                "confidence": "medium",
+            },
+            "evidence_strength": {"code": "correlational", "confidence": "high"},
+            "key_phrases": ["biomarker level"],
+            "reasoning": "The study measures a diagnostic biomarker.",
+        }
+        raw = json.dumps(payload)
+        result = _parse_classification(raw)
+
+        assert result is not None
+        assert result["biomarker_use"]["primary"] == "diagnostic"
+        assert result["research_design"]["primary"] == "observational_cohort"
+        assert result["evidence_strength"]["code"] == "correlational"
+
+    def test_markdown_fenced_json(self):
+        """JSON wrapped in markdown code fences parses correctly."""
+        payload = {
+            "biomarker_use": {"primary": "monitoring", "secondary": None, "confidence": "high"},
+            "research_design": {"primary": "experimental_rct", "secondary": None, "confidence": "high"},
+            "evidence_strength": {"code": "experimental_weak", "confidence": "medium"},
+            "key_phrases": [],
+            "reasoning": "RCT with monitoring biomarker.",
+        }
+        raw = f"```json\n{json.dumps(payload)}\n```"
+        result = _parse_classification(raw)
+
+        assert result is not None
+        assert result["biomarker_use"]["primary"] == "monitoring"
+
+    def test_bare_fenced_json(self):
+        """JSON wrapped in bare ``` fences parses correctly."""
+        payload = {
+            "biomarker_use": {"primary": "safety", "secondary": None, "confidence": "low"},
+            "research_design": {"primary": "experimental_singlearm", "secondary": None, "confidence": "low"},
+            "evidence_strength": {"code": "correlational", "confidence": "low"},
+            "key_phrases": [],
+            "reasoning": "Safety biomarker in single-arm trial.",
+        }
+        raw = f"```\n{json.dumps(payload)}\n```"
+        result = _parse_classification(raw)
+
+        assert result is not None
+        assert result["biomarker_use"]["primary"] == "safety"
+
+    def test_malformed_json(self):
+        """Malformed JSON returns None."""
+        raw = "This is not JSON at all {broken"
+        result = _parse_classification(raw)
+        assert result is None
+
+    def test_invalid_codes_still_parses(self):
+        """JSON with invalid codes still parses (validation is separate)."""
+        payload = {
+            "biomarker_use": {"primary": "not_a_real_code", "secondary": None, "confidence": "high"},
+            "research_design": {"primary": "fake_design", "secondary": None, "confidence": "high"},
+            "evidence_strength": {"code": "imaginary", "confidence": "high"},
+            "key_phrases": [],
+            "reasoning": "Made up codes.",
+        }
+        raw = json.dumps(payload)
+        result = _parse_classification(raw)
+
+        # Parsing succeeds
+        assert result is not None
+        # But validation should fail
+        assert not _validate_codes(result)
+
+    def test_validate_codes_valid(self):
+        """Valid codes pass validation."""
+        parsed = {
+            "biomarker_use": {"primary": "predictive_optimal", "secondary": "pharmacodynamic"},
+            "research_design": {"primary": "experimental_rct", "secondary": None},
+            "evidence_strength": {"code": "causal_clinical"},
+        }
+        assert _validate_codes(parsed) is True
+
+    def test_validate_codes_invalid_dim1(self):
+        """Invalid dim1 code fails validation."""
+        parsed = {
+            "biomarker_use": {"primary": "bogus_code"},
+            "research_design": {"primary": "experimental_rct"},
+            "evidence_strength": {"code": "correlational"},
+        }
+        assert _validate_codes(parsed) is False
+
+    def test_validate_codes_invalid_dim2(self):
+        """Invalid dim2 code fails validation."""
+        parsed = {
+            "biomarker_use": {"primary": "diagnostic"},
+            "research_design": {"primary": "not_a_design"},
+            "evidence_strength": {"code": "correlational"},
+        }
+        assert _validate_codes(parsed) is False
+
+    def test_validate_codes_invalid_dim3(self):
+        """Invalid dim3 code fails validation."""
+        parsed = {
+            "biomarker_use": {"primary": "diagnostic"},
+            "research_design": {"primary": "experimental_rct"},
+            "evidence_strength": {"code": "not_real"},
+        }
+        assert _validate_codes(parsed) is False
+
+    def test_validate_codes_invalid_secondary(self):
+        """Invalid secondary code fails validation."""
+        parsed = {
+            "biomarker_use": {"primary": "diagnostic", "secondary": "fake_secondary"},
+            "research_design": {"primary": "experimental_rct"},
+            "evidence_strength": {"code": "correlational"},
+        }
+        assert _validate_codes(parsed) is False
