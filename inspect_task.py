@@ -201,7 +201,7 @@ def _parse_classification(raw: str) -> dict | None:
     except Exception:
         return None
 
-    if parsed is None:
+    if parsed is None or not isinstance(parsed, dict):
         return None
 
     invalid_codes = _validate_codes(parsed)

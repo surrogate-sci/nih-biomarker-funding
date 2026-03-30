@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from inspect_ai import Task
 from inspect_ai.dataset import Sample
 
@@ -236,6 +234,11 @@ class TestParseClassification:
         """Malformed JSON returns None."""
         raw = "This is not JSON at all {broken"
         result = _parse_classification(raw)
+        assert result is None
+
+    def test_non_dict_json(self):
+        """Valid JSON that is not a dict returns None."""
+        result = _parse_classification("[1, 2, 3]")
         assert result is None
 
     def test_invalid_codes_reports_which_dimensions(self):
