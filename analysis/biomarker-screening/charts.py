@@ -97,7 +97,7 @@ class SeabornRenderer:
         annotations: str | None = None,
     ):
         fig, ax = plt.subplots(figsize=(10, 8))
-        sns.barplot(data=df, y=y, x=x, ax=ax, palette="viridis")
+        sns.barplot(data=df, y=y, x=x, hue=y, ax=ax, palette="viridis", legend=False)
         ax.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax.set_xlabel("Total Funding")
         ax.set_ylabel("")
