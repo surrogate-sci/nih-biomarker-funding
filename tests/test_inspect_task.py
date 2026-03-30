@@ -12,8 +12,9 @@ from inspect_task import (
     VALID_DIM3,
     _INPUT_TEMPLATE,
     record_to_sample,
+    rubric_solver,
 )
-from scripts.grader_prompt import USER_PROMPT_TEMPLATE
+from scripts.grader_prompt import USER_PROMPT_TEMPLATE, build_system_prompt, load_rubric
 
 
 # ---------------------------------------------------------------------------
@@ -113,3 +114,40 @@ class TestCodeEnums:
     def test_dim3_count(self):
         """Dimension 3 has exactly 5 codes."""
         assert len(VALID_DIM3) == 5
+
+
+# ---------------------------------------------------------------------------
+# Task 3: Solver tests
+# ---------------------------------------------------------------------------
+
+
+class TestRubricSolver:
+    """Tests for the rubric solver."""
+
+    def test_solver_is_callable(self):
+        """rubric_solver() returns a callable Solver."""
+        s = rubric_solver()
+        assert callable(s)
+
+    def test_system_prompt_contains_rubric_codes(self):
+        """The built system prompt includes key rubric codes."""
+        rubric_text = load_rubric()
+        prompt = build_system_prompt(rubric_text)
+
+        # Check a sampling of codes from each dimension
+        assert "susceptibility_risk" in prompt
+        assert "predictive_optimal" in prompt
+        assert "methods_correlational" in prompt
+        assert "observational_retrospective" in prompt
+        assert "experimental_rct" in prompt
+        assert "methods_secondary_analysis" in prompt
+        assert "correlational" in prompt
+        assert "causal_clinical" in prompt
+        assert "methods_for_causal" in prompt
+
+    def test_system_prompt_excludes_references(self):
+        """The system prompt strips the References section."""
+        rubric_text = load_rubric()
+        prompt = build_system_prompt(rubric_text)
+        assert "## References" not in prompt
+        assert "FDA-NIH BEST" not in prompt or "SOURCE OF TRUTH" not in prompt

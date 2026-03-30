@@ -11,9 +11,13 @@ Usage:
     inspect eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite
 """
 
-from inspect_ai.dataset import Sample
+from pathlib import Path
 
-from scripts.grader_prompt import USER_PROMPT_TEMPLATE
+from inspect_ai.dataset import Sample
+from inspect_ai.model import ChatMessageSystem
+from inspect_ai.solver import TaskState, solver
+
+from scripts.grader_prompt import USER_PROMPT_TEMPLATE, build_system_prompt, load_rubric
 
 # ---------------------------------------------------------------------------
 # Valid classification codes (from data/RUBRIC.md)
@@ -113,3 +117,27 @@ def record_to_sample(record: dict) -> Sample:
         id=record.get("APPLICATION_ID", ""),
         metadata=metadata if metadata else None,
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 3: Solver
+# ---------------------------------------------------------------------------
+
+
+@solver
+def rubric_solver(rubric_path: str | None = None):
+    """Inject the RUBRIC.md system prompt into the conversation.
+
+    Loads the rubric via ``scripts.grader_prompt.load_rubric()`` and builds
+    the full system prompt via ``build_system_prompt()``. The system prompt
+    is inserted as the first message. Does NOT call generate().
+    """
+    path = Path(rubric_path) if rubric_path else None
+    rubric_text = load_rubric(path)
+    system_prompt = build_system_prompt(rubric_text)
+
+    async def solve(state: TaskState, generate_fn) -> TaskState:
+        state.messages.insert(0, ChatMessageSystem(content=system_prompt))
+        return state
+
+    return solve
