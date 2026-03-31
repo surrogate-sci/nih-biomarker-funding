@@ -80,6 +80,7 @@ COLUMNS_TO_KEEP = [
 
     # Our classification
     "EXPLICIT_BIOMARKER",
+    "MATCHED_TERMS",
     "MATCH_SOURCE",
 ]
 

@@ -34,6 +34,35 @@ EXPANDED_BIOMARKER_TERMS = [
 ]
 
 
+def find_matching_terms(text: str, terms: List[str]) -> List[str]:
+    """
+    Return which biomarker terms match in text (case-insensitive).
+
+    Args:
+        text: Text to search
+        terms: List of search terms (single terms or AND conditions with '+')
+
+    Returns:
+        List of matched terms (empty if none match)
+    """
+    if not text:
+        return []
+
+    text_lower = text.lower()
+    matched = []
+
+    for term in terms:
+        if '+' in term:
+            parts = [part.strip().lower() for part in term.split('+')]
+            if all(part in text_lower for part in parts):
+                matched.append(term)
+        else:
+            if term.lower() in text_lower:
+                matched.append(term)
+
+    return matched
+
+
 def contains_biomarker_terms(text: str, terms: List[str]) -> bool:
     """
     Check if text contains any of the biomarker terms (case-insensitive).

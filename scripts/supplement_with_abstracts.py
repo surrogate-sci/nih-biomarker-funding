@@ -24,6 +24,7 @@ from scripts.keyword_terms import (
     CORE_BIOMARKER_TERMS,
     EXPANDED_BIOMARKER_TERMS,
     contains_biomarker_terms,
+    find_matching_terms,
 )
 
 
@@ -48,7 +49,7 @@ def find_new_grants_from_abstracts(
 
     Returns
     -------
-    dict mapping APPLICATION_ID -> {"EXPLICIT_BIOMARKER": "TRUE"/"FALSE"}
+    dict mapping APPLICATION_ID -> {"EXPLICIT_BIOMARKER": "TRUE"/"FALSE", "MATCHED_TERMS": "term1;term2"}
         Only includes grants that match expanded terms in abstract AND are not
         in existing_ids.
     """
@@ -68,15 +69,17 @@ def find_new_grants_from_abstracts(
         if not abstract_text or not abstract_text.strip():
             continue
 
-        # Check expanded terms on abstract text
-        if not contains_biomarker_terms(abstract_text, expanded_terms):
+        # Find which expanded terms matched
+        matched = find_matching_terms(abstract_text, expanded_terms)
+        if not matched:
             continue
 
         # Check core terms for EXPLICIT_BIOMARKER flag
-        is_explicit = contains_biomarker_terms(abstract_text, core_terms)
+        is_explicit = any(t in core_terms for t in matched) or bool(find_matching_terms(abstract_text, core_terms))
 
         new_grants[app_id] = {
             "EXPLICIT_BIOMARKER": "TRUE" if is_explicit else "FALSE",
+            "MATCHED_TERMS": ";".join(matched),
         }
 
     return new_grants
@@ -314,8 +317,9 @@ def process_year(
                 continue  # No metadata available
 
             row = project_rows[app_id]
-            # Ensure EXPLICIT_BIOMARKER is set from our analysis
+            # Set fields from our analysis
             row["EXPLICIT_BIOMARKER"] = new_grants[app_id]["EXPLICIT_BIOMARKER"]
+            row["MATCHED_TERMS"] = new_grants[app_id].get("MATCHED_TERMS", "")
 
             # Write only the columns we expect
             output_row = {col: row.get(col, "") for col in output_columns}
@@ -431,9 +435,11 @@ Examples:
     # Determine output columns from existing filtered files, or use defaults
     output_columns = get_filtered_columns(args.filtered_dir) or DEFAULT_COLUMNS
 
-    # Ensure EXPLICIT_BIOMARKER is in the column list
+    # Ensure EXPLICIT_BIOMARKER and MATCHED_TERMS are in the column list
     if "EXPLICIT_BIOMARKER" not in output_columns:
         output_columns.append("EXPLICIT_BIOMARKER")
+    if "MATCHED_TERMS" not in output_columns:
+        output_columns.append("MATCHED_TERMS")
 
     print(f"Processing {len(args.years)} fiscal years")
     print(f"  Abstract dir: {args.abs_dir}")
