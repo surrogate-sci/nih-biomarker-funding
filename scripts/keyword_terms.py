@@ -34,6 +34,43 @@ EXPANDED_BIOMARKER_TERMS = [
 ]
 
 
+# Priority order: most specific biomarker concept → most generic
+# Used to assign each grant a single PRIMARY_TERM for non-overlapping counts
+TERM_PRIORITY = [
+    "surrogate endpoint",
+    "intermediate outcome",
+    "digital biomarker",
+    "imaging marker",
+    "clinical marker",
+    "endophenotype",
+    "genetic marker",
+    "clinical+omics",
+    "clinical+imaging",
+    "biomarker",
+]
+
+
+def primary_term(matched_terms: List[str]) -> str:
+    """Assign a single primary term from a list of matched terms.
+
+    Uses TERM_PRIORITY ordering: most specific biomarker concept wins.
+    Returns empty string if matched_terms is empty.
+
+    Args:
+        matched_terms: List of terms that matched (from find_matching_terms or MATCHED_TERMS column)
+
+    Returns:
+        The highest-priority term, or "" if no terms provided.
+    """
+    if not matched_terms:
+        return ""
+    for term in TERM_PRIORITY:
+        if term in matched_terms:
+            return term
+    # Fallback: return first term if somehow not in priority list
+    return matched_terms[0]
+
+
 def find_matching_terms(text: str, terms: List[str]) -> List[str]:
     """
     Return which biomarker terms match in text (case-insensitive).

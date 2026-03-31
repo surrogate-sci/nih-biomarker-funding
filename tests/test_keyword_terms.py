@@ -42,5 +42,37 @@ class TestContainsBiomarkerTerms(unittest.TestCase):
         self.assertIn("endophenotype", EXPANDED_BIOMARKER_TERMS)
 
 
+class TestPrimaryTerm(unittest.TestCase):
+    def test_specific_wins_over_generic(self):
+        from scripts.keyword_terms import primary_term
+        self.assertEqual(primary_term(["biomarker", "surrogate endpoint"]), "surrogate endpoint")
+
+    def test_imaging_marker_over_biomarker(self):
+        from scripts.keyword_terms import primary_term
+        self.assertEqual(primary_term(["biomarker", "imaging marker"]), "imaging marker")
+
+    def test_clinical_omics_over_biomarker(self):
+        from scripts.keyword_terms import primary_term
+        self.assertEqual(primary_term(["biomarker", "clinical+omics"]), "clinical+omics")
+
+    def test_single_term(self):
+        from scripts.keyword_terms import primary_term
+        self.assertEqual(primary_term(["biomarker"]), "biomarker")
+
+    def test_empty_list(self):
+        from scripts.keyword_terms import primary_term
+        self.assertEqual(primary_term([]), "")
+
+    def test_biomarker_is_lowest_priority(self):
+        from scripts.keyword_terms import primary_term, TERM_PRIORITY
+        # biomarker should be last in priority
+        self.assertEqual(TERM_PRIORITY[-1], "biomarker")
+
+    def test_all_expanded_terms_in_priority(self):
+        from scripts.keyword_terms import TERM_PRIORITY, EXPANDED_BIOMARKER_TERMS
+        for term in EXPANDED_BIOMARKER_TERMS:
+            self.assertIn(term, TERM_PRIORITY, f"{term} missing from TERM_PRIORITY")
+
+
 if __name__ == "__main__":
     unittest.main()
