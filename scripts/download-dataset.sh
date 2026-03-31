@@ -10,7 +10,7 @@ DATA_DIR="$REPO_ROOT/data"
 CSV_FILE="$DATA_DIR/nih_biomarker_unified_2004-2024.csv"
 ZIP_FILE="$DATA_DIR/nih_biomarker_unified_2004-2024.zip"
 REPO="surrogate-sci/nih-biomarker-funding"
-TAG="dataset-release-v1.0"
+TAG="dataset-release-v2.0"
 
 if [ -f "$CSV_FILE" ]; then
     echo "Dataset already present at $CSV_FILE, skipping download."
