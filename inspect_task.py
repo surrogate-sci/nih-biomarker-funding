@@ -11,6 +11,8 @@ Usage:
     inspect eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite
 """
 
+import json
+import re
 from pathlib import Path
 
 from inspect_ai import Task, task
@@ -29,49 +31,54 @@ from scripts.grader_prompt import USER_PROMPT_TEMPLATE, build_system_prompt, loa
 from scripts.utils import parse_llm_json
 
 # ---------------------------------------------------------------------------
-# Valid classification codes (from data/RUBRIC.md)
+# Parse valid classification codes from RUBRIC.md
 # ---------------------------------------------------------------------------
 
-VALID_DIM1: set[str] = {
-    "susceptibility_risk",
-    "diagnostic",
-    "monitoring",
-    "prognostic_risk",
-    "prognostic_efficacy",
-    "prognostic_enrichment",
-    "predictive_optimal",
-    "predictive_enrichment",
-    "predictive_ambiguous",
-    "pharmacodynamic",
-    "safety",
-    "surrogate_endpoint",
-    "stratification_treatment",
-    "stratification_diagnostic",
-    "stratification_ambiguous",
-    "methods_causal",
-    "methods_correlational",
-}
+_CODE_RE = re.compile(r"^\*\*`([a-z_]+)`\*\*\s+—")
+"""Matches lines like: **`susceptibility_risk`** — Assign when..."""
 
-VALID_DIM2: set[str] = {
-    "observational_retrospective",
-    "observational_crosssectional",
-    "observational_cohort",
-    "observational_longitudinal",
-    "observational_case_cohort",
-    "observational_quasi",
-    "experimental_singlearm",
-    "experimental_rct",
-    "experimental_perturbation",
-    "methods_secondary_analysis",
-}
+_DIM_HEADER_RE = re.compile(r"^## Dimension (\d+):")
+"""Matches section headers like: ## Dimension 1: Intended Biomarker Use"""
 
-VALID_DIM3: set[str] = {
-    "correlational",
-    "experimental_weak",
-    "causal_preclinical",
-    "causal_clinical",
-    "methods_for_causal",
-}
+
+def parse_rubric_codes(rubric_path: Path | None = None) -> dict[int, set[str]]:
+    """Parse valid classification codes from RUBRIC.md.
+
+    Returns a dict mapping dimension number (1, 2, 3) to the set of valid
+    codes defined under that dimension's ``## Dimension N:`` header.
+    """
+    path = rubric_path or Path("data/RUBRIC.md")
+    text = path.read_text(encoding="utf-8")
+
+    codes: dict[int, set[str]] = {}
+    current_dim: int | None = None
+
+    for line in text.splitlines():
+        dim_match = _DIM_HEADER_RE.match(line)
+        if dim_match:
+            current_dim = int(dim_match.group(1))
+            codes.setdefault(current_dim, set())
+            continue
+
+        # Any non-dimension ## header (Decision Hierarchy, Mapping, etc.)
+        # ends the current dimension's code section.
+        if line.startswith("## ") and not _DIM_HEADER_RE.match(line):
+            current_dim = None
+            continue
+
+        if current_dim is not None:
+            code_match = _CODE_RE.match(line)
+            if code_match:
+                codes[current_dim].add(code_match.group(1))
+
+    return codes
+
+
+_RUBRIC_CODES = parse_rubric_codes()
+
+VALID_DIM1: set[str] = _RUBRIC_CODES.get(1, set())
+VALID_DIM2: set[str] = _RUBRIC_CODES.get(2, set())
+VALID_DIM3: set[str] = _RUBRIC_CODES.get(3, set())
 
 # ---------------------------------------------------------------------------
 # Input template (must match USER_PROMPT_TEMPLATE in grader_prompt.py)
@@ -122,9 +129,22 @@ def record_to_sample(record: dict) -> Sample:
     else:
         metadata["has_abstract"] = bool(abstract.strip())
 
+    # Gold labels: if the CSV has GOLD_DIM1/DIM2/DIM3 columns, pack them into
+    # Sample.target so reference-based scorers can compare against expert labels.
+    gold = {}
+    for col, key in [
+        ("GOLD_DIM1", "dim1"),
+        ("GOLD_DIM2", "dim2"),
+        ("GOLD_DIM3", "dim3"),
+    ]:
+        if record.get(col):
+            gold[key] = record[col]
+    target = json.dumps(gold) if gold else ""
+
     return Sample(
         input=input_text,
         id=record.get("APPLICATION_ID", ""),
+        target=target,
         metadata=metadata if metadata else None,
     )
 
@@ -303,5 +323,5 @@ def biomarker_grading(
         ),
         solver=[rubric_solver(rubric_path=rubric_path), generate()],
         scorer=rubric_scorer(),
-        config=GenerateConfig(temperature=0.1, max_tokens=500),
+        config=GenerateConfig(),
     )

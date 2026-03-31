@@ -13,6 +13,7 @@ from inspect_task import (
     _parse_classification,
     _validate_codes,
     biomarker_grading,
+    parse_rubric_codes,
     record_to_sample,
     rubric_solver,
 )
@@ -104,6 +105,51 @@ class TestRecordToSample:
         """_INPUT_TEMPLATE in inspect_task.py is the same as USER_PROMPT_TEMPLATE."""
         assert _INPUT_TEMPLATE == USER_PROMPT_TEMPLATE
 
+    def test_gold_labels_set_target(self):
+        """When GOLD_DIM* columns are present, Sample.target is set."""
+        record = {
+            "FY": "2020",
+            "APPLICATION_ID": "12345",
+            "PROJECT_TITLE": "Test grant",
+            "ABSTRACT_TEXT": "Abstract.",
+            "GOLD_DIM1": "diagnostic",
+            "GOLD_DIM2": "observational_cohort",
+            "GOLD_DIM3": "correlational",
+        }
+        sample = record_to_sample(record)
+        assert sample.target is not None
+        target = json.loads(sample.target)
+        assert target["dim1"] == "diagnostic"
+        assert target["dim2"] == "observational_cohort"
+        assert target["dim3"] == "correlational"
+
+    def test_no_gold_labels_target_is_empty(self):
+        """Without GOLD_DIM* columns, Sample.target is empty string."""
+        record = {
+            "FY": "2020",
+            "APPLICATION_ID": "12345",
+            "PROJECT_TITLE": "Test grant",
+            "ABSTRACT_TEXT": "Abstract.",
+        }
+        sample = record_to_sample(record)
+        assert sample.target == ""
+
+    def test_partial_gold_labels(self):
+        """Partial gold labels (only some dimensions) still set target."""
+        record = {
+            "FY": "2020",
+            "APPLICATION_ID": "12345",
+            "PROJECT_TITLE": "Test grant",
+            "ABSTRACT_TEXT": "Abstract.",
+            "GOLD_DIM1": "diagnostic",
+        }
+        sample = record_to_sample(record)
+        assert sample.target is not None
+        target = json.loads(sample.target)
+        assert target["dim1"] == "diagnostic"
+        assert "dim2" not in target
+        assert "dim3" not in target
+
 
 # ---------------------------------------------------------------------------
 # Code enum counts
@@ -124,6 +170,28 @@ class TestCodeEnums:
     def test_dim3_count(self):
         """Dimension 3 has exactly 5 codes."""
         assert len(VALID_DIM3) == 5
+
+    def test_parse_rubric_codes_returns_three_dimensions(self):
+        """parse_rubric_codes returns codes for dimensions 1, 2, and 3."""
+        codes = parse_rubric_codes()
+        assert set(codes.keys()) == {1, 2, 3}
+
+    def test_parsed_codes_match_module_level_sets(self):
+        """Module-level VALID_DIM* sets match what parse_rubric_codes returns."""
+        codes = parse_rubric_codes()
+        assert codes[1] == VALID_DIM1
+        assert codes[2] == VALID_DIM2
+        assert codes[3] == VALID_DIM3
+
+    def test_specific_codes_present(self):
+        """Spot-check that well-known codes are present in each dimension."""
+        assert "diagnostic" in VALID_DIM1
+        assert "surrogate_endpoint" in VALID_DIM1
+        assert "methods_causal" in VALID_DIM1
+        assert "experimental_rct" in VALID_DIM2
+        assert "observational_cohort" in VALID_DIM2
+        assert "correlational" in VALID_DIM3
+        assert "causal_clinical" in VALID_DIM3
 
 
 # ---------------------------------------------------------------------------
@@ -201,8 +269,16 @@ class TestParseClassification:
     def test_markdown_fenced_json(self):
         """JSON wrapped in markdown code fences parses correctly."""
         payload = {
-            "biomarker_use": {"primary": "monitoring", "secondary": None, "confidence": "high"},
-            "research_design": {"primary": "experimental_rct", "secondary": None, "confidence": "high"},
+            "biomarker_use": {
+                "primary": "monitoring",
+                "secondary": None,
+                "confidence": "high",
+            },
+            "research_design": {
+                "primary": "experimental_rct",
+                "secondary": None,
+                "confidence": "high",
+            },
             "evidence_strength": {"code": "experimental_weak", "confidence": "medium"},
             "key_phrases": [],
             "reasoning": "RCT with monitoring biomarker.",
@@ -217,8 +293,16 @@ class TestParseClassification:
     def test_bare_fenced_json(self):
         """JSON wrapped in bare ``` fences parses correctly."""
         payload = {
-            "biomarker_use": {"primary": "safety", "secondary": None, "confidence": "low"},
-            "research_design": {"primary": "experimental_singlearm", "secondary": None, "confidence": "low"},
+            "biomarker_use": {
+                "primary": "safety",
+                "secondary": None,
+                "confidence": "low",
+            },
+            "research_design": {
+                "primary": "experimental_singlearm",
+                "secondary": None,
+                "confidence": "low",
+            },
             "evidence_strength": {"code": "correlational", "confidence": "low"},
             "key_phrases": [],
             "reasoning": "Safety biomarker in single-arm trial.",
@@ -244,8 +328,16 @@ class TestParseClassification:
     def test_invalid_codes_reports_which_dimensions(self):
         """JSON with invalid codes parses but reports invalid dimensions."""
         payload = {
-            "biomarker_use": {"primary": "not_a_real_code", "secondary": None, "confidence": "high"},
-            "research_design": {"primary": "fake_design", "secondary": None, "confidence": "high"},
+            "biomarker_use": {
+                "primary": "not_a_real_code",
+                "secondary": None,
+                "confidence": "high",
+            },
+            "research_design": {
+                "primary": "fake_design",
+                "secondary": None,
+                "confidence": "high",
+            },
             "evidence_strength": {"code": "imaginary", "confidence": "high"},
             "key_phrases": [],
             "reasoning": "Made up codes.",
@@ -263,7 +355,10 @@ class TestParseClassification:
     def test_validate_codes_valid(self):
         """Valid codes return an empty invalid list."""
         parsed = {
-            "biomarker_use": {"primary": "predictive_optimal", "secondary": "pharmacodynamic"},
+            "biomarker_use": {
+                "primary": "predictive_optimal",
+                "secondary": "pharmacodynamic",
+            },
             "research_design": {"primary": "experimental_rct", "secondary": None},
             "evidence_strength": {"code": "causal_clinical"},
         }
@@ -338,8 +433,9 @@ class TestBiomarkerGrading:
         t = biomarker_grading()
         assert t.scorer is not None
 
-    def test_task_config(self):
-        """The task has the expected GenerateConfig."""
+    def test_task_config_no_hardcoded_defaults(self):
+        """The task does not hardcode temperature or max_tokens."""
         t = biomarker_grading()
-        assert t.config.temperature == 0.1
-        assert t.config.max_tokens == 500
+        # These should be None (CLI-controlled), not hardcoded values
+        assert t.config.temperature is None
+        assert t.config.max_tokens is None
