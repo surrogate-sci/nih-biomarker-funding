@@ -16,6 +16,9 @@ import sys
 import zipfile
 from pathlib import Path
 
+# Add parent to path so we can import sibling modules
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from scripts.abstract_loader import load_abstracts_for_year
 from scripts.keyword_terms import (
     CORE_BIOMARKER_TERMS,
