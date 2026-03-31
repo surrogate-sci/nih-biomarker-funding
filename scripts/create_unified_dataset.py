@@ -131,23 +131,31 @@ def combine_filtered_years(
     Deduplication by (APPLICATION_ID, FY) keeps keyword rows over abstract rows.
     """
 
-    # Find keyword-match files (required)
+    # Find keyword-match files in keywords/ subdir (required)
+    kw_dir = filtered_dir / "keywords"
     kw_pattern = "biomarker_FY*.csv"
-    kw_files = sorted(
-        f
-        for f in filtered_dir.glob(kw_pattern)
-        if "abstract" not in f.name
-    )
+    if kw_dir.exists():
+        kw_files = sorted(kw_dir.glob(kw_pattern))
+    else:
+        # Fallback: flat layout (exclude abstract files)
+        kw_files = sorted(
+            f for f in filtered_dir.glob(kw_pattern) if "abstract" not in f.name
+        )
 
     if not kw_files:
         logger.error(
-            f"No keyword files found matching {kw_pattern} in {filtered_dir}"
+            f"No keyword files found matching {kw_pattern} in {kw_dir if kw_dir.exists() else filtered_dir}"
         )
         sys.exit(1)
 
-    # Find abstract-match files (optional)
+    # Find abstract-match files in abstracts/ subdir (optional)
+    abs_dir = filtered_dir / "abstracts"
     abs_pattern = "biomarker_abstract_FY*.csv"
-    abs_files = sorted(filtered_dir.glob(abs_pattern))
+    if abs_dir.exists():
+        abs_files = sorted(abs_dir.glob(abs_pattern))
+    else:
+        # Fallback: flat layout
+        abs_files = sorted(filtered_dir.glob(abs_pattern))
 
     logger.info(
         f"Found {len(kw_files)} keyword files, {len(abs_files)} abstract files"

@@ -150,7 +150,10 @@ def get_filtered_columns(filtered_dir: Path) -> list[str] | None:
     Scans filtered_dir for any biomarker_FY*.csv and returns its fieldnames.
     Returns None if no file is found.
     """
-    for f in sorted(filtered_dir.glob("biomarker_FY*.csv")):
+    # Check keywords/ subdir first, fallback to flat
+    kw_dir = filtered_dir / "keywords"
+    search_dir = kw_dir if kw_dir.exists() else filtered_dir
+    for f in sorted(search_dir.glob("biomarker_FY*.csv")):
         with open(f, "r", encoding="utf-8", errors="ignore") as fh:
             reader = csv.DictReader(fh)
             if reader.fieldnames:
@@ -263,8 +266,9 @@ def process_year(
         "written": 0,
     }
 
-    # Step 1: Load existing keyword-filtered IDs
-    filtered_csv = filtered_dir / f"biomarker_FY{year}.csv"
+    # Step 1: Load existing keyword-filtered IDs (check keywords/ subdir first)
+    kw_subdir = filtered_dir / "keywords" / f"biomarker_FY{year}.csv"
+    filtered_csv = kw_subdir if kw_subdir.exists() else filtered_dir / f"biomarker_FY{year}.csv"
     existing_ids = load_existing_ids(filtered_csv)
     stats["existing_count"] = len(existing_ids)
 
@@ -293,8 +297,12 @@ def process_year(
     new_ids = set(new_grants.keys())
     project_rows = load_raw_project_rows(raw_dir, year, new_ids)
 
-    # Step 5: Write output CSV
-    output_path = filtered_dir / f"biomarker_abstract_FY{year}.csv"
+    # Step 5: Write output CSV to abstracts/ subdir (fallback to flat)
+    abs_subdir = filtered_dir / "abstracts"
+    if abs_subdir.exists():
+        output_path = abs_subdir / f"biomarker_abstract_FY{year}.csv"
+    else:
+        output_path = filtered_dir / f"biomarker_abstract_FY{year}.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_path, "w", newline="", encoding="utf-8") as f:
