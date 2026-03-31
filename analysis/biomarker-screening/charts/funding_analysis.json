@@ -1,5 +1,5 @@
 {
-  "funding_over_time": {
+  "spending_over_time": {
     "years": [
       2004,
       2005,
@@ -46,29 +46,6 @@
       13128946678.0,
       13554716921.0
     ],
-    "explicit_funding": [
-      491569133.0,
-      57523573.0,
-      68403000.0,
-      161609837.0,
-      179291556.0,
-      1596884888.0,
-      1829475721.0,
-      1853110699.0,
-      2508474055.0,
-      288086345.0,
-      320064277.0,
-      481643954.0,
-      1718797663.0,
-      2085658170.0,
-      1085648236.0,
-      2712873350.0,
-      3112399606.0,
-      3331468012.0,
-      3603940410.0,
-      4086608579.0,
-      4192846870.0
-    ],
     "grant_count": [
       6524,
       327,
@@ -93,140 +70,81 @@
       23252
     ]
   },
-  "top_institutes": {
+  "institute_allocation": {
     "institutes": [
       {
         "ADMINISTERING_IC": "CA",
         "IC_NAME": "NATIONAL CANCER INSTITUTE",
+        "label": "NCI (Cancer)",
         "total_funding": 28226615350.0,
         "grant_count": 66450
       },
       {
         "ADMINISTERING_IC": "AG",
         "IC_NAME": "NATIONAL INSTITUTE ON AGING",
+        "label": "NIA (Aging)",
         "total_funding": 14546480777.0,
         "grant_count": 22591
       },
       {
         "ADMINISTERING_IC": "HL",
         "IC_NAME": "NATIONAL HEART, LUNG, AND BLOOD INSTITUTE",
+        "label": "NHLBI (Heart/Lung/Blood)",
         "total_funding": 13058722000.0,
         "grant_count": 23672
       },
       {
         "ADMINISTERING_IC": "AI",
         "IC_NAME": "NATIONAL INSTITUTE OF ALLERGY AND INFECTIOUS DISEASES",
+        "label": "NIAID (Allergy/Infectious)",
         "total_funding": 11427337111.0,
         "grant_count": 17080
       },
       {
         "ADMINISTERING_IC": "NS",
         "IC_NAME": "NATIONAL INSTITUTE OF NEUROLOGICAL DISORDERS AND STROKE",
+        "label": "NINDS (Neurological)",
         "total_funding": 9159160345.0,
         "grant_count": 18801
       },
       {
         "ADMINISTERING_IC": "MH",
         "IC_NAME": "NATIONAL INSTITUTE OF MENTAL HEALTH",
+        "label": "NIMH (Mental Health)",
         "total_funding": 8553916084.0,
         "grant_count": 17296
       },
       {
         "ADMINISTERING_IC": "DK",
         "IC_NAME": "NATIONAL INSTITUTE OF DIABETES AND DIGESTIVE AND KIDNEY DISEASES",
+        "label": "NIDDK (Diabetes/Digestive)",
         "total_funding": 7149764216.0,
         "grant_count": 17287
       },
       {
         "ADMINISTERING_IC": "LM",
         "IC_NAME": "NATIONAL LIBRARY OF MEDICINE",
+        "label": "NLM (Library of Medicine)",
         "total_funding": 4954666266.0,
         "grant_count": 853
       },
       {
         "ADMINISTERING_IC": "HD",
         "IC_NAME": "EUNICE KENNEDY SHRIVER NATIONAL INSTITUTE OF CHILD HEALTH & HUMAN DEVELOPMENT",
+        "label": "NICHD (Child Health)",
         "total_funding": 4469704440.0,
         "grant_count": 10224
       },
       {
         "ADMINISTERING_IC": "HG",
         "IC_NAME": "NATIONAL HUMAN GENOME RESEARCH INSTITUTE",
+        "label": "HG",
         "total_funding": 3948930077.0,
         "grant_count": 3883
-      },
-      {
-        "ADMINISTERING_IC": "GM",
-        "IC_NAME": "NATIONAL INSTITUTE OF GENERAL MEDICAL SCIENCES",
-        "total_funding": 3593825737.0,
-        "grant_count": 9807
-      },
-      {
-        "ADMINISTERING_IC": "DA",
-        "IC_NAME": "NATIONAL INSTITUTE ON DRUG ABUSE",
-        "total_funding": 3571399197.0,
-        "grant_count": 7203
-      },
-      {
-        "ADMINISTERING_IC": "EB",
-        "IC_NAME": "NATIONAL INSTITUTE OF BIOMEDICAL IMAGING AND BIOENGINEERING",
-        "total_funding": 2990265570.0,
-        "grant_count": 7813
-      },
-      {
-        "ADMINISTERING_IC": "OD",
-        "IC_NAME": "OFFICE OF THE DIRECTOR, NATIONAL INSTITUTES OF HEALTH",
-        "total_funding": 2670030558.0,
-        "grant_count": 1820
-      },
-      {
-        "ADMINISTERING_IC": "AR",
-        "IC_NAME": "NATIONAL INSTITUTE OF ARTHRITIS AND MUSCULOSKELETAL AND SKIN DISEASES",
-        "total_funding": 2586212462.0,
-        "grant_count": 6891
       }
     ]
   },
-  "mechanism_breakdown": {
-    "categories": [
-      {
-        "category": "Research (R)",
-        "total_funding": 62953377923.0,
-        "grant_count": 135643
-      },
-      {
-        "category": "Cooperative (U)",
-        "total_funding": 29425800686.0,
-        "grant_count": 33140
-      },
-      {
-        "category": "Other",
-        "total_funding": 24802578461.0,
-        "grant_count": 22138
-      },
-      {
-        "category": "Program/Center (P)",
-        "total_funding": 13193887022.0,
-        "grant_count": 46725
-      },
-      {
-        "category": "Career Dev (K)",
-        "total_funding": 3561332136.0,
-        "grant_count": 22129
-      },
-      {
-        "category": "Fellowship (F)",
-        "total_funding": 400937484.0,
-        "grant_count": 9309
-      },
-      {
-        "category": "Training (T)",
-        "total_funding": 150003792.0,
-        "grant_count": 546
-      }
-    ]
-  },
-  "explicit_adoption": {
+  "institute_over_time": {
     "years": [
       2004,
       2005,
@@ -250,29 +168,215 @@
       2023,
       2024
     ],
-    "pct_explicit": [
-      29.2,
-      73.1,
-      81.2,
-      7.5,
-      7.7,
-      36.6,
-      39.5,
-      41.6,
-      43.3,
-      17.6,
-      7.6,
-      10.5,
-      27.3,
-      27.3,
-      32.9,
-      29.0,
-      28.8,
-      29.0,
-      28.9,
-      30.0,
-      29.8
-    ]
+    "institutes": {
+      "NCI": [
+        344807953.0,
+        61722957.0,
+        36944339.0,
+        674391100.0,
+        619008024.0,
+        1010550539.0,
+        1072436888.0,
+        1042848624.0,
+        1425742442.0,
+        594873706.0,
+        1203161148.0,
+        1274283191.0,
+        1600021477.0,
+        1940561496.0,
+        841800586.0,
+        2047421055.0,
+        2324353707.0,
+        2289375670.0,
+        2509961571.0,
+        2653663465.0,
+        2658685412.0
+      ],
+      "NIA": [
+        146544999.0,
+        5654708.0,
+        4560242.0,
+        105799554.0,
+        121503770.0,
+        256351108.0,
+        319500057.0,
+        293909731.0,
+        361558376.0,
+        105753535.0,
+        346088520.0,
+        343126507.0,
+        574137863.0,
+        792957964.0,
+        430239269.0,
+        1158299285.0,
+        1414584971.0,
+        1673212166.0,
+        1900684869.0,
+        2063045381.0,
+        2128967902.0
+      ],
+      "NHLBI": [
+        196290915.0,
+        9225554.0,
+        7905957.0,
+        314601615.0,
+        350566245.0,
+        594932282.0,
+        689836798.0,
+        580384473.0,
+        745980169.0,
+        142184138.0,
+        584484562.0,
+        643405132.0,
+        750690036.0,
+        792423871.0,
+        239711046.0,
+        882738121.0,
+        1067884796.0,
+        1068089429.0,
+        1021572679.0,
+        1137539538.0,
+        1238274644.0
+      ],
+      "NIAID": [
+        63491367.0,
+        1325704.0,
+        1705607.0,
+        259732299.0,
+        210100640.0,
+        330661090.0,
+        335385186.0,
+        396878360.0,
+        524020625.0,
+        110711625.0,
+        463601215.0,
+        480727111.0,
+        622604687.0,
+        722270727.0,
+        244063180.0,
+        863859856.0,
+        1178421498.0,
+        1029954476.0,
+        1304362127.0,
+        1075178713.0,
+        1208281018.0
+      ],
+      "NINDS": [
+        129891253.0,
+        5008121.0,
+        2526459.0,
+        184629554.0,
+        221024352.0,
+        286605796.0,
+        293472104.0,
+        324894682.0,
+        388697399.0,
+        179482966.0,
+        371554209.0,
+        371807154.0,
+        464465716.0,
+        497294912.0,
+        280869738.0,
+        692620015.0,
+        731699893.0,
+        828537120.0,
+        885356050.0,
+        1011366350.0,
+        1007356502.0
+      ],
+      "NIMH": [
+        150202258.0,
+        7416884.0,
+        7590945.0,
+        246499157.0,
+        288129868.0,
+        397323023.0,
+        349837293.0,
+        365500574.0,
+        430777159.0,
+        157444671.0,
+        403319166.0,
+        421459814.0,
+        465669395.0,
+        509750949.0,
+        243348124.0,
+        579268264.0,
+        637885124.0,
+        648533030.0,
+        712470859.0,
+        736967007.0,
+        794522520.0
+      ],
+      "NIDDK": [
+        119901956.0,
+        3105947.0,
+        3620721.0,
+        117170284.0,
+        138286510.0,
+        264258895.0,
+        310349736.0,
+        335855253.0,
+        366474868.0,
+        133158851.0,
+        351728114.0,
+        381457616.0,
+        447535224.0,
+        451232700.0,
+        184841041.0,
+        511176084.0,
+        569574979.0,
+        561109100.0,
+        605171894.0,
+        619354171.0,
+        674400272.0
+      ],
+      "NLM": [
+        1793439.0,
+        0.0,
+        0.0,
+        16171964.0,
+        15602464.0,
+        273511442.0,
+        17825228.0,
+        252300245.0,
+        282273395.0,
+        269295096.0,
+        286526318.0,
+        300346585.0,
+        313707507.0,
+        324406670.0,
+        333421312.0,
+        354414708.0,
+        363580420.0,
+        368356216.0,
+        386286553.0,
+        397109076.0,
+        397737628.0
+      ],
+      "Other": [
+        554614460.0,
+        11852259.0,
+        20744409.0,
+        788049788.0,
+        825444889.0,
+        1384704821.0,
+        1634233540.0,
+        1321287666.0,
+        1984863638.0,
+        561354838.0,
+        1780276286.0,
+        1879619923.0,
+        2166007320.0,
+        2332946665.0,
+        1070397570.0,
+        2859851382.0,
+        3074190912.0,
+        3073417377.0,
+        3206183612.0,
+        3434722977.0,
+        3446491023.0
+      ]
+    }
   },
   "summary": {
     "total_grants": 269630,

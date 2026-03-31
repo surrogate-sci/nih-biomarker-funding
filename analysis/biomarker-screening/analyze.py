@@ -2,10 +2,9 @@
 """Biomarker Screening Analysis — descriptive statistics and charts.
 
 Reads the unified NIH biomarker dataset and produces:
-- Funding over time (total vs explicit biomarker)
-- Top institutes by funding
-- Grant mechanism breakdown
-- Explicit biomarker adoption rate
+1. Total biomarker spending over time (all keywords unified)
+2. Funding allocation by institute (top 10 bar chart)
+3. Funding by institute over time (stacked area, top 8 + other)
 
 Uses Datawrapper if DATAWRAPPER_API_TOKEN is set, else seaborn/matplotlib.
 Outputs: charts/ directory + funding_analysis.json
@@ -14,7 +13,6 @@ import json
 import sys
 from pathlib import Path
 
-# Ensure analysis dir is on path for local imports
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import pandas as pd
@@ -25,37 +23,24 @@ from utils import DATA_QUALITY_YEARS, activity_category, load_dataset
 CHARTS_DIR = Path(__file__).parent / "charts"
 
 
-def funding_over_time(df: pd.DataFrame, renderer) -> dict:
-    """Compute and plot funding over time."""
+def spending_over_time(df: pd.DataFrame, renderer) -> dict:
+    """Chart 1: Total biomarker spending per fiscal year."""
     yearly = df.groupby("FY").agg(
         total_funding=("TOTAL_COST", "sum"),
         grant_count=("APPLICATION_ID", "count"),
     ).reset_index()
 
-    explicit_yearly = df[df["EXPLICIT_BIOMARKER"]].groupby("FY")["TOTAL_COST"].sum()
-    yearly["explicit_funding"] = yearly["FY"].map(explicit_yearly).fillna(0)
-    yearly["expanded_only_funding"] = yearly["total_funding"] - yearly["explicit_funding"]
-
-    renderer.stacked_area(
-        yearly,
-        x="FY",
-        y_cols=["explicit_funding", "expanded_only_funding"],
-        labels=["Core terms (4)", "Expanded terms only (+6)"],
-        title="NIH Biomarker-Related Funding by Keyword Match Type (FY2004\u20132024)",
-        filename="funding_over_time.png",
-        vlines=sorted(DATA_QUALITY_YEARS),
-    )
+    renderer.spending_over_time(yearly, "spending_over_time.png")
 
     return {
         "years": yearly["FY"].tolist(),
         "total_funding": yearly["total_funding"].tolist(),
-        "explicit_funding": yearly["explicit_funding"].tolist(),
         "grant_count": yearly["grant_count"].tolist(),
     }
 
 
-def top_institutes(df: pd.DataFrame, renderer, n: int = 15) -> dict:
-    """Compute and plot top institutes by funding."""
+def institute_allocation(df: pd.DataFrame, renderer, n: int = 10) -> dict:
+    """Chart 2: Top institutes by total biomarker funding."""
     ic = (
         df.groupby(["ADMINISTERING_IC", "IC_NAME"])
         .agg(
@@ -67,76 +52,76 @@ def top_institutes(df: pd.DataFrame, renderer, n: int = 15) -> dict:
         .head(n)
     )
 
-    renderer.horizontal_bar(
-        ic,
-        x="total_funding",
-        y="ADMINISTERING_IC",
-        title=f"Top {n} NIH Institutes by Biomarker-Related Funding",
-        filename="top_institutes.png",
-        annotations="grant_count",
+    # Readable labels: "NCI (Cancer)" style
+    name_map = {
+        "CA": "NCI (Cancer)",
+        "AG": "NIA (Aging)",
+        "HL": "NHLBI (Heart/Lung/Blood)",
+        "AI": "NIAID (Allergy/Infectious)",
+        "NS": "NINDS (Neurological)",
+        "MH": "NIMH (Mental Health)",
+        "DK": "NIDDK (Diabetes/Digestive)",
+        "LM": "NLM (Library of Medicine)",
+        "GM": "NIGMS (General Medical)",
+        "EB": "NIBIB (Biomedical Imaging)",
+        "ES": "NIEHS (Environmental Health)",
+        "EY": "NEI (Eye)",
+        "DA": "NIDA (Drug Abuse)",
+        "AR": "NIAMS (Arthritis/Musculoskeletal)",
+        "HD": "NICHD (Child Health)",
+        "DC": "NIDCD (Deafness)",
+    }
+    ic["label"] = ic["ADMINISTERING_IC"].map(
+        lambda x: name_map.get(x, x)
     )
+
+    renderer.institute_allocation(ic, "institute_allocation.png")
 
     return {
         "institutes": ic[
-            ["ADMINISTERING_IC", "IC_NAME", "total_funding", "grant_count"]
+            ["ADMINISTERING_IC", "IC_NAME", "label", "total_funding", "grant_count"]
         ].to_dict(orient="records")
     }
 
 
-def mechanism_breakdown(df: pd.DataFrame, renderer) -> dict:
-    """Compute and plot grant mechanism breakdown over time."""
+def institute_over_time(df: pd.DataFrame, renderer, n_top: int = 8) -> dict:
+    """Chart 3: Stacked area of funding by institute over time."""
+    # Identify top N institutes by total funding
+    top_ics = (
+        df.groupby("ADMINISTERING_IC")["TOTAL_COST"]
+        .sum()
+        .nlargest(n_top)
+        .index.tolist()
+    )
+
+    name_map = {
+        "CA": "NCI", "AG": "NIA", "HL": "NHLBI", "AI": "NIAID",
+        "NS": "NINDS", "MH": "NIMH", "DK": "NIDDK", "LM": "NLM",
+    }
+
     df = df.copy()
-    df["category"] = df["ACTIVITY"].apply(activity_category)
-
-    cat_year = df.groupby(["FY", "category"]).agg(
-        total_funding=("TOTAL_COST", "sum"),
-    ).reset_index()
-
-    pivot = cat_year.pivot_table(
-        index="FY", columns="category", values="total_funding", fill_value=0
+    df["ic_group"] = df["ADMINISTERING_IC"].apply(
+        lambda x: name_map.get(x, x) if x in top_ics else "Other"
     )
 
-    renderer.area_by_category(
-        pivot,
-        title="Biomarker Funding by Grant Mechanism Category (FY2004\u20132024)",
-        filename="mechanism_breakdown.png",
-    )
-
-    overall = (
-        df.groupby("category")
-        .agg(
-            total_funding=("TOTAL_COST", "sum"),
-            grant_count=("APPLICATION_ID", "count"),
-        )
-        .sort_values("total_funding", ascending=False)
+    yearly_ic = (
+        df.groupby(["FY", "ic_group"])["TOTAL_COST"]
+        .sum()
         .reset_index()
     )
+    pivot = yearly_ic.pivot(index="FY", columns="ic_group", values="TOTAL_COST").fillna(0)
 
-    return {"categories": overall.to_dict(orient="records")}
+    # Order columns by total funding (largest first), but keep "Other" last
+    col_order = pivot.drop(columns=["Other"], errors="ignore").sum().sort_values(ascending=False).index.tolist()
+    if "Other" in pivot.columns:
+        col_order.append("Other")
+    pivot = pivot[col_order]
 
-
-def explicit_adoption(df: pd.DataFrame, renderer) -> dict:
-    """Plot explicit biomarker term adoption rate over time."""
-    yearly = df.groupby("FY").agg(
-        total=("APPLICATION_ID", "count"),
-        explicit=("EXPLICIT_BIOMARKER", "sum"),
-    ).reset_index()
-    yearly["pct_explicit"] = 100.0 * yearly["explicit"] / yearly["total"]
-
-    renderer.line(
-        yearly,
-        x="FY",
-        y="pct_explicit",
-        title="Adoption of Explicit 'Biomarker' Terminology in NIH Grants",
-        filename="explicit_adoption.png",
-        ylabel="% Grants Using Core Biomarker Terms",
-        ylim=(0, 100),
-        vlines=sorted(DATA_QUALITY_YEARS),
-    )
+    renderer.institute_over_time(pivot, "institute_over_time.png")
 
     return {
-        "years": yearly["FY"].tolist(),
-        "pct_explicit": yearly["pct_explicit"].round(1).tolist(),
+        "years": pivot.index.tolist(),
+        "institutes": {col: pivot[col].tolist() for col in pivot.columns},
     }
 
 
@@ -153,18 +138,17 @@ def main():
     print(f"  Using {renderer.backend} renderer\n")
 
     results = {}
-    print("1. Funding over time...")
-    results["funding_over_time"] = funding_over_time(df, renderer)
 
-    print("\n2. Top institutes...")
-    results["top_institutes"] = top_institutes(df, renderer)
+    print("1. Total biomarker spending over time...")
+    results["spending_over_time"] = spending_over_time(df, renderer)
 
-    print("\n3. Grant mechanism breakdown...")
-    results["mechanism_breakdown"] = mechanism_breakdown(df, renderer)
+    print("\n2. Institute allocation...")
+    results["institute_allocation"] = institute_allocation(df, renderer)
 
-    print("\n4. Explicit biomarker adoption...")
-    results["explicit_adoption"] = explicit_adoption(df, renderer)
+    print("\n3. Institute funding over time...")
+    results["institute_over_time"] = institute_over_time(df, renderer)
 
+    # Summary stats
     results["summary"] = {
         "total_grants": len(df),
         "explicit_grants": int(df["EXPLICIT_BIOMARKER"].sum()),

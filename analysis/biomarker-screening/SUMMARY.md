@@ -34,42 +34,37 @@ fields in NIH ExPORTER data.
 
 ## Findings
 
-### 1. Funding Has Grown ~8x in 20 Years
+### 1. Biomarker Spending Grew Nearly 8× in Two Decades
 
-![Funding over time](charts/funding_over_time.png)
+![Spending over time](charts/spending_over_time.png)
 
-Biomarker-related NIH funding grew from $1.71B (FY2004) to $13.55B (FY2024) — a ~7.9x
-increase. Both core-term and expanded-term matches show steady growth, with core-term
-grants consistently representing roughly a quarter of the total.
+Biomarker-related NIH funding grew from $1.7B (FY2004) to $13.6B (FY2024). The growth
+is roughly consistent across years, with dips at FY2005–06 (data quality) and FY2013
+(sequester year).
 
-### 2. NCI Dominates Biomarker Funding
+### 2. NCI Dominates — Cancer Drove Early Biomarker Adoption
 
-![Top institutes](charts/top_institutes.png)
+![Institute allocation](charts/institute_allocation.png)
 
-The National Cancer Institute (NCI) leads with $28.2B across 66,450 grants — roughly 21%
-of all biomarker-related funding. The National Institute on Aging ($14.5B) and NHLBI
-($13.1B) follow. Cancer research's outsized share likely reflects oncology's early and
-deep adoption of biomarker-driven trial design.
+The National Cancer Institute leads with $28.2B across 66,450 grants — 21% of all
+biomarker-related funding. NIA ($14.5B) and NHLBI ($13.1B) follow. Cancer research's
+outsized share reflects oncology's early and deep adoption of biomarker-driven trial
+design and companion diagnostics.
 
-### 3. Research Grants (R-series) Are the Primary Mechanism
+### 3. Institute Funding Composition Shifted Over Time
 
-![Mechanism breakdown](charts/mechanism_breakdown.png)
+![Institute over time](charts/institute_over_time.png)
 
-R-series grants (R01, R21, etc.) account for $63.0B across 135,643 grants — nearly half
-of all biomarker funding. Cooperative agreements (U-series, $29.4B) are the second
-largest category. The dominance of hypothesis-driven research grants over cooperative
-agreements or contracts is notable — it suggests most biomarker funding flows to
-discovery and basic research rather than the coordinated validation or clinical
-qualification work that cooperative mechanisms tend to support.
+NCI has led throughout, but NIA and NHLBI grew substantially after 2010, reflecting
+the expansion of biomarker concepts into aging (Alzheimer's fluid biomarkers) and
+cardiovascular research. NIAID surges are visible around pandemic years.
 
-### 4. Explicit Biomarker Terminology Adoption
+## Planned: Funding by Biomarker Term
 
-![Explicit adoption](charts/explicit_adoption.png)
-
-The percentage of keyword-matched grants that use core biomarker terminology has
-remained relatively stable at ~28%, suggesting the expanded terms capture a consistent
-proportion of biomarker-adjacent work that doesn't self-identify with the "biomarker"
-label.
+*Pending merge with parallel branch that adds `MATCH_SOURCE` column and per-keyword
+filtered CSVs.* This will enable a fourth chart showing the fraction of funding
+attributable to each keyword — particularly "biomarker" vs "surrogate endpoint" vs
+"clinical marker" — which is the key sensitivity analysis for this screening step.
 
 ## What This Cannot Tell Us
 
