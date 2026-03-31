@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - 'analysis/biomarker-screening/**'
-      - 'data/nih_biomarker_unified_2004-2024.csv'
       - '.github/workflows/biomarker-screening.yml'
   workflow_dispatch:
 
@@ -24,12 +23,10 @@ jobs:
     - name: Install dependencies
       run: pip install -r analysis/biomarker-screening/requirements.txt
 
-    - name: Check dataset exists
-      run: |
-        if [ ! -f data/nih_biomarker_unified_2004-2024.csv ]; then
-          echo "Dataset not found — run scripts/download-dataset.sh first"
-          exit 1
-        fi
+    - name: Download dataset
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: bash scripts/download-dataset.sh
 
     - name: Run analysis
       env:
