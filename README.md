@@ -202,46 +202,56 @@ python3 scripts/analyze_keywords.py --input data/nih_biomarker_unified_2004-2024
 ## Data
 
 **Downloads**:
-- [GitHub Release (v1.0)](https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v1.0/nih_biomarker_unified_2004-2024.zip) — 130MB zip
-- [Google Drive](https://drive.google.com/file/d/1izm9E7S2KFZSeVcRbD40n-BWVEz9oIPS/view?usp=drivesdk) — unified dataset
+- [GitHub Release (v2.0)](https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v2.0/nih_biomarker_unified_2004-2024.zip) — 38MB zip (keyword + abstract union, 332K grants)
+- [GitHub Release (v1.0)](https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v1.0/nih_biomarker_unified_2004-2024.zip) — 130MB zip (keywords only, 270K grants)
+- [Google Drive](https://drive.google.com/file/d/1izm9E7S2KFZSeVcRbD40n-BWVEz9oIPS/view?usp=drivesdk) — v1.0
 
 **Current Dataset**: `data/nih_biomarker_unified_2004-2024.csv`
-- 269,630 unique project-year records (Application ID + Fiscal Year combinations)
+- 332,324 unique project-year records (union of keyword + abstract text filters)
 - Spans FY2004 - FY2024 (21 years)
-- Unified dataset with selected columns (removes large text fields like PROJECT_TERMS)
-- Sourced from NIH ExPORTER bulk data filtered by biomarker-related keywords
+- Sourced from NIH ExPORTER bulk data filtered by biomarker-related keywords in PROJECT_TITLE, PROJECT_TERMS, and ABSTRACT_TEXT
 
-**Individual Year Files**: `data/filtered/biomarker_FY{year}.csv`
-- One CSV per fiscal year (2004-2024)
-- Each includes `EXPLICIT_BIOMARKER` column flagging core term matches
-- Full project data including abstracts and metadata
+**Per-grant columns**:
+
+| Column | Description |
+|--------|-------------|
+| `MATCH_SOURCE` | `keywords_only` or `abstract_only` — where the keyword matched |
+| `MATCHED_TERMS` | Semicolon-delimited list of all matching terms |
+| `PRIMARY_TERM` | Single most-specific term per grant (non-overlapping) |
+| `EXPLICIT_BIOMARKER` | TRUE if any core (4) term matched |
+
+**Individual Year Files**:
+
+```
+data/filtered/
+  keywords/biomarker_FY{year}.csv          # keyword matches (PROJECT_TITLE + PROJECT_TERMS)
+  abstracts/biomarker_abstract_FY{year}.csv # abstract-only matches (ABSTRACT_TEXT)
+  SUMMARY.md                                # unified comparison
+```
 
 **Summary Statistics** (from `data/filtered/SUMMARY.md`):
-- **Total Matched Projects**: 269,630 (16.9% of scanned projects)
-- **Explicit Biomarker Projects**: 75,849 (4.8% of scanned projects)
-- **Total Biomarker Relevant Spending**: $134.49B
-- **Explicit Biomarker Spending**: $35.77B (26.6% of total)
+- **Total Matched Projects**: 332,324 (keywords: 269,630 + abstract-only: 62,694)
+- **Core Biomarker Term Matches**: 109,234
+- **Total Biomarker Relevant Spending**: $168.05B
 
 **Search Terms Used**:
 - **Core terms (4)**: biomarker, clinical marker, surrogate endpoint, imaging marker
 - **Expanded terms (10)**: core + digital biomarker, intermediate outcome, endophenotype, genetic marker, clinical+omics, clinical+imaging
 
 **Data Quality Notes**:
-- FY2005: PROJECT_TERMS field only 68% populated (vs 89% in FY2004)
-- FY2006: PROJECT_TERMS field completely empty (0% populated)
-- These years show artificially low match counts since filtering relies heavily on PROJECT_TERMS keywords
+- FY2005-06 and FY2013/2018 had sparse PROJECT_TERMS — now mitigated by abstract text search
+- See `data/filtered/SUMMARY.md` for per-year breakdowns by filter method
 
 
 ## Results
 
 For current summary statistics and per-year funding breakdowns, see `data/filtered/SUMMARY.md`.
 
-**Key Findings** (FY2004-2024):
-- Biomarker-related research represents 16.9% of all NIH projects scanned
-- Total biomarker relevant spending: $134.49B over 21 years
-- Explicit biomarker projects (core terms) account for 4.8% of projects and $35.77B in funding
-- Strong growth trend: funding increased from $1.71B (FY2004) to $13.55B (FY2024)
-- Peak year: FY2024 with 23,252 matched projects and $13.55B in biomarker relevant spending
+**Key Findings** (FY2004-2024, unified dataset v2.0):
+- 332,324 biomarker-related grants totaling $168.05B over 21 years
+- 19% of grants (62,694) were only discoverable via abstract text search
+- Non-overlapping PRIMARY_TERM distribution: clinical+omics 39.8%, clinical+imaging 33.3%, biomarker 20.0%, with specific terms (surrogate endpoint, digital biomarker, etc.) at <4% each
+- Sparse years (FY2005-06, FY2013, FY2018) recovered via abstract search (e.g., FY2006: 336 → 4,323 grants)
 
 **Oct-2024 Dataset**: 
 The `data/oct-2024/` directory contains analysis results from October 2024 using different search strategies and keyword filters. This is a separate analysis from the current FY2004-2024 workflow which uses the expanded term set.
