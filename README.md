@@ -110,7 +110,41 @@ python3 scripts/sample_oncology.py \
 
 **Output:** `data/oncology_sample_100per_year.csv` (~1,900 grants with abstracts)
 
-**6. Batch LLM Grading** (`scripts/run_batch_grading.py`)
+**6. LLM Grading via Inspect AI** (`inspect_task.py`) — **recommended**
+
+Single entry point that replaces `run_batch_grading.py` and `run_calibration.py`. Built on [UK AISI Inspect AI](https://inspect.aisi.org.uk/) for structured logging, multi-model comparison, and batch API support.
+
+```bash
+# Calibration (25 examples, quick turnaround via OpenRouter)
+inspect eval inspect_task.py --model openrouter/google/gemini-2.5-flash-lite --temperature 0.0 --limit 25
+
+# Mid-scale grading (direct provider API)
+inspect eval inspect_task.py \
+  --model google/gemini-2.5-flash-lite \
+  --temperature 0.0 --max-connections 20
+
+# Multi-model comparison
+inspect eval-set inspect_task.py \
+  --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --log-dir logs/
+
+# Production run with batch API (50% cost savings)
+inspect eval-set inspect_task.py \
+  --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite \
+  --batch --log-dir logs/production-v1
+
+# Browse results in web UI
+inspect view
+```
+
+**Features:**
+- Code enums parsed from `data/RUBRIC.md` at runtime — rubric edits auto-propagate
+- `temperature`, `max_tokens` controlled via CLI (not hardcoded)
+- Gold-label support: add `GOLD_DIM1/DIM2/DIM3` columns to CSV for expert-label scoring
+- `.eval` structured logs for post-hoc analysis with HiBayES, CJE, or custom scripts
+
+**Output:** `.eval` log files in `logs/` with per-grant classifications, model outputs, and scorer metadata. View with `inspect view`.
+
+**6a. Batch LLM Grading** (`scripts/run_batch_grading.py`) — **legacy, being replaced**
 
 Grade grants using LLM ensemble with checkpoint/resume:
 

@@ -23,20 +23,22 @@ full 270K production run via batch API.
 
 1. **Design doc** — `docs/plans/2026-03-30-inspect-task-design.md` (8 tasks, TDD steps)
 
-2. **Implementation** (`inspect_task.py`, 307 lines):
-   - `record_to_sample()` — handles both CSV formats (oncology: FY/ABSTRACT_TEXT, calibration: YEAR/ABSTRACT/MATCHED_TERMS)
+2. **Implementation** (`inspect_task.py`):
+   - `parse_rubric_codes()` — parses valid codes from RUBRIC.md via regex at import time (not hardcoded)
+   - `record_to_sample()` — handles oncology, calibration, and gold-labeled CSV formats
    - `rubric_solver()` — injects RUBRIC.md system prompt via `scripts.grader_prompt`
    - `rubric_scorer()` — multi-valued Score with `valid_json` and `valid_codes` metrics, full classification metadata
    - `_parse_classification()` / `_validate_codes()` — JSON extraction with per-dimension code validation
    - `biomarker_grading()` @task — composes Dataset + Solver + generate() + Scorer
-   - Code enum sets: VALID_DIM1 (17), VALID_DIM2 (10), VALID_DIM3 (5)
+   - `GenerateConfig()` empty — temperature/max_tokens controlled via CLI
+   - Gold-label support: `GOLD_DIM1/DIM2/DIM3` CSV columns → `Sample.target`
 
-3. **Tests** (`tests/test_inspect_task.py`, 25 tests, all passing):
-   - Dataset loader: oncology format, calibration format, missing abstract, template match
-   - Code enums: count assertions per dimension
+3. **Tests** (`tests/test_inspect_task.py`, 31 tests, all passing):
+   - Dataset loader: oncology format, calibration format, missing abstract, template match, gold labels, partial gold labels
+   - Code enums: count assertions per dimension, rubric parsing round-trip, specific codes present
    - Solver: callable, system prompt content, references excluded
    - Parser: valid JSON, markdown-fenced, bare-fenced, malformed, non-dict, invalid code reporting
-   - Task: returns Task instance, has solver/scorer/config
+   - Task: returns Task instance, has solver/scorer, no hardcoded config defaults
 
 4. **Smoke test** — 3 grants graded via `inspect eval inspect_task.py --model openrouter/google/gemini-2.5-flash-lite --limit 3`:
    - 100% valid_json, 100% valid_codes
@@ -52,12 +54,18 @@ full 270K production run via batch API.
    - GitHub Issue #8 — Updated for Inspect logging + inspect-wandb path
 
 6. **PR #18** — https://github.com/surrogate-sci/nih-biomarker-funding/pull/18
-   (10 commits, inspect_task.py + tests + requirements.txt + docs)
 
-7. **Environment setup**:
+7. **Issue #20** — Grader sensitivity analysis plan (temperature, inter-model, disagreement patterns, gold-label calibration). Covers execution order, Inspect mechanisms, and cost estimates for 3K oncology sample.
+
+8. **Environment setup**:
    - `uv venv .venv --python 3.14` + `uv pip install inspect-ai openai ruff`
    - `.env` copied from main repo for API keys
    - `logs/` added to `.gitignore`
+
+9. **Judge evaluation ecosystem research**:
+   - **HiBayES** (AISI) — Hierarchical Bayesian analysis, reads `.eval` natively
+   - **CJE** — Calibrates cheap judge against oracle slice with valid CIs
+   - **RAND JRH** — Perturbation stress tests (format invariance, verbosity bias, label flip, paraphrase)
 
 ## Bugs fixed during review
 
@@ -74,4 +82,5 @@ full 270K production run via batch API.
 - **Batch mode test** — `inspect eval inspect_task.py --batch --limit 10` with a direct provider
 - **`inspect view`** — manually verify the web UI shows structured results correctly
 - **Multi-model comparison** — `inspect eval-set` with two models
+- **Sensitivity runs** — start with temperature self-consistency (Issue #20, step 1)
 - **Data quality** — fix missing abstracts / FY2016 gap before scaling to 270K
