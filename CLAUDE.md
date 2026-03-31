@@ -47,17 +47,52 @@ process_all_years.py  →  filter_biomarker_projects.py  →  data/filtered/biom
 
 ### Phase 2: LLM Classification (current focus)
 
-3-dimension rubric grading via LLM ensemble.
+3-dimension rubric grading via LLM ensemble using **[Inspect AI](https://inspect.aisi.org.uk/)** (UK AISI's eval framework) — see Issue #7, PR #18.
 
 ```
-RUBRIC.md → grader_prompt.py (build_system_prompt) → OpenRouter API
-                                                      ↓
-calibration_examples.csv → run_calibration.py → calibration_results_*.json
+RUBRIC.md ──parse_rubric_codes()──→ code enum sets (17 + 10 + 5)
+    │                                       │
+    └─→ grader_prompt.py (build_system_prompt)
+              │
+              ↓
+        inspect_task.py
+         ├─ record_to_sample()  ← CSV (oncology/calibration/gold-labeled)
+         ├─ rubric_solver()     ← system prompt from RUBRIC.md
+         ├─ generate()          ← LLM call (model/temp/max_tokens via CLI)
+         └─ rubric_scorer()     ← JSON validation + code enum check
+              │
+              ↓
+        .eval logs → inspect view / HiBayES / post-hoc analysis
 ```
 
-- **Models**: Gemini 2.5 Flash Lite + GPT-4.1-mini (primary), Sonnet 4.6 Batch API (tiebreaker on ~28% disagreements). ~$700-900 for 270K grants.
-- **Rubric**: 17 Dim1 (biomarker use) + 10 Dim2 (research design) + 5 Dim3 (evidence strength) codes
+**Key design decisions:**
+- Code enums are **parsed from RUBRIC.md at import time** (not hardcoded) — rubric edits auto-propagate
+- `temperature` and `max_tokens` are **not hardcoded** — set via CLI (`--temperature 0.0`, `--max-tokens 500`)
+- Gold-label support: CSVs with `GOLD_DIM1/DIM2/DIM3` columns → `Sample.target` for expert-label scoring
+- Same task works at all scales: `--limit 25` for calibration, `--batch` for 270K production run
+
+**Legacy scripts** (still present, being replaced by `inspect_task.py`):
+`run_calibration.py`, `run_batch_grading.py`, `analyze_agreement.py`, `extract_disagreements.py`
+
+Inspect provides: batch API support (OpenAI, Anthropic, Google — 50% cost savings),
+`eval-set` for multi-model runs with automatic retry/resume, caching,
+`.eval` structured logging with `inspect view`, deferred scoring (`--no-score` +
+`inspect score`) for re-scoring without regenerating outputs.
+
+- **Models**: Gemini 2.5 Flash Lite + GPT-4.1-mini (primary), Sonnet 4.6 Batch API (tiebreaker on ~28% disagreements). ~$350-480 with batch API for 270K grants.
+- **Rubric**: 17 Dim1 (biomarker use) + 10 Dim2 (research design) + 5 Dim3 (evidence strength) codes — parsed from `data/RUBRIC.md`
 - Abstracts from `~/Downloads/RePORTER_PRJABS_C_FY*.zip` (FY2016 missing)
+
+### Grader Sensitivity & Judge Evaluation (Issue #20)
+
+Before scaling to 270K, sensitivity analysis on the 3K oncology sample:
+temperature self-consistency, inter-model agreement, known disagreement patterns,
+gold-label calibration. See Issue #20 for full plan.
+
+**Ecosystem tools** (for post-hoc analysis on `.eval` logs):
+- **[HiBayES](https://github.com/UKGovernmentBEIS/hibayes)** — Hierarchical Bayesian analysis, first-class Inspect integration (same AISI team)
+- **[CJE](https://github.com/cimo-labs/cje)** — Calibrates cheap judge scores against oracle slice, valid CIs
+- **[RAND JRH](https://github.com/RANDCorporation/judge-reliability-harness)** — Perturbation-based judge stress testing
 
 ## Key Files
 
@@ -66,13 +101,14 @@ calibration_examples.csv → run_calibration.py → calibration_results_*.json
 | `data/RUBRIC.md` | Source of truth: classification rubric with "Assign when..." definitions |
 | `scripts/grader_prompt.py` | Loads RUBRIC.md at runtime, constructs system prompt, calls OpenRouter/OpenAI |
 | `scripts/utils.py` | Shared utilities: `load_env()`, `parse_llm_json()` |
-| `scripts/run_calibration.py` | Runs grader on calibration examples (`--model`, `--limit`, `--delay`) |
+| `scripts/run_calibration.py` | Runs grader on calibration examples (`--model`, `--limit`, `--delay`). Being replaced by Inspect task. |
 | `scripts/abstract_loader.py` | Loads abstracts from RePORTER zip files |
 | `scripts/sample_oncology.py` | Stratified NCI sample + abstract join |
-| `scripts/run_batch_grading.py` | Batch grading with JSONL checkpoint/resume |
+| `scripts/run_batch_grading.py` | Batch grading with JSONL checkpoint/resume. Being replaced by Inspect eval/eval-set. |
 | `scripts/generate_review.py` | Expert review HTML generator (anti-anchoring design) |
-| `scripts/analyze_agreement.py` | Inter-model agreement analysis |
+| `scripts/analyze_agreement.py` | Inter-model agreement analysis. Will be partially replaced by Inspect scorer metrics. |
 | `scripts/extract_disagreements.py` | Extract disagreement patterns for rubric refinement |
+| `inspect_task.py` | Inspect AI task: Dataset loader, Solver, Scorer. Parses codes from RUBRIC.md, supports gold labels, CLI-controlled config. |
 | `scripts/filter_biomarker_projects.py` | Filters NIH ExPORTER CSVs by keyword term sets |
 | `scripts/process_all_years.py` | Batch download + filter FY2004-2024 |
 | `scripts/create_unified_dataset.py` | Merges filtered year CSVs into single dataset |
@@ -87,7 +123,21 @@ python3 scripts/process_all_years.py --start-year 2004 --end-year 2024 --skip-do
 python3 scripts/create_unified_dataset.py
 python3 scripts/generate_summary.py
 
-# Phase 2: Sampling + LLM grading
+# Phase 2: Sampling + LLM grading (Inspect AI — recommended)
+# Calibration (25 examples, quick turnaround)
+inspect eval inspect_task.py --model openrouter/google/gemini-2.5-flash-lite --temperature 0.0 --limit 25
+# Mid-scale pass (~10-20K grants per institute/year, direct provider APIs)
+inspect eval inspect_task.py --model google/gemini-2.5-flash-lite --temperature 0.0 --max-connections 20
+# Multi-model comparison via eval-set
+inspect eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --log-dir logs/
+# Sensitivity: self-consistency (Issue #20)
+inspect eval inspect_task.py --model google/gemini-2.5-flash-lite --temperature 0.1 --epochs 3 --limit 100
+# Full 270K production run with batch API (50% cost savings)
+inspect eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --batch --log-dir logs/production-v1
+# Browse results
+inspect view
+
+# Phase 2: Sampling + LLM grading (legacy hand-rolled scripts)
 python3 scripts/sample_oncology.py --unified data/nih_biomarker_unified_2004-2024.csv --abs-dir ~/Downloads --n 100 --seed 42
 python3 scripts/run_batch_grading.py --sample data/oncology_sample_100per_year.csv --model google/gemini-2.5-flash-lite --output data/oncology_grades_gemini-2.5-flash-lite.jsonl
 python3 scripts/run_calibration.py --model google/gemini-2.5-flash-lite --limit 5

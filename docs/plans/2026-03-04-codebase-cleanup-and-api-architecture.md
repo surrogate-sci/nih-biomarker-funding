@@ -8,6 +8,12 @@
 
 **Tech Stack:** Python 3.10+, urllib (existing), no new dependencies
 
+> **Note (2026-03-29):** The API issues (timeout, retry, checkpoint bugs) in Tasks 1-2 are largely
+> moot once we migrate to Inspect AI (Issue #7), which handles all of these natively. The cleanup
+> in Tasks 3-6 (dead code removal, doc updates, script staging) remains valuable regardless.
+> `grader_prompt.py` is kept as a library — the Inspect Solver wraps its `load_rubric()`,
+> `build_system_prompt()`, and `create_grading_prompt()` functions.
+
 **Supersedes:** Task 3 from `docs/plans/2026-03-02-calibration-cleanup-scale.md` (which planned a subset of this work).
 
 ---

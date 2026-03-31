@@ -4,9 +4,11 @@
 
 **Goal:** Commit calibration infrastructure, clean up obsolete code, and prepare the pipeline for 270K-grant classification with a 3-model ensemble strategy.
 
-**Architecture:** Two cheap models (Gemini 2.5 Flash Lite + GPT-4o-mini) classify all grants; disagreements (~28%) go to Sonnet 4.6 Batch API as tiebreaker. Total estimated cost ~$700-900.
+**Architecture:** Two cheap models (Gemini 2.5 Flash Lite + GPT-4.1-mini) classify all grants; disagreements (~28%) go to Sonnet 4.6 Batch API as tiebreaker. Total estimated cost ~$350-480 with Inspect batch mode.
 
-**Tech Stack:** Python 3.10+, OpenRouter API, Anthropic Batch API (for Sonnet tiebreaker)
+**Tech Stack:** Python 3.10+, Inspect AI (UK AISI eval framework — handles batch API, retry, caching, logging), direct provider APIs for production (OpenAI, Google, Anthropic), OpenRouter for calibration comparisons.
+
+> **Note (2026-03-29):** Task 4 (batch classifier) is superseded by the Inspect AI migration (Issue #7). The hand-rolled `run_batch_grading.py` is replaced by `inspect eval` / `inspect eval-set --batch`.
 
 ---
 
@@ -162,39 +164,24 @@ gh pr create --title "Remove obsolete code and slim grader_prompt.py" --body "##
 
 ---
 
-## Task 4: Build Batch Classification Script
+## Task 4: ~~Build Batch Classification Script~~ → Inspect AI Migration (Issue #7)
 
-Build the script that runs the full 270K-grant classification pipeline.
+> **Superseded (2026-03-29):** Hand-rolled batch classifier replaced by Inspect AI migration.
+> See Issue #7 for the full migration plan.
 
-**Files:**
-- Create: `scripts/run_classification.py`
-- Create: `scripts/join_abstracts.py`
+**What Inspect provides instead of a custom script:**
+- `inspect eval --batch` for provider batch APIs (50% cost savings)
+- `inspect eval-set` for multi-model runs with automatic retry/resume
+- Caching (`--cache`) to avoid re-running identical prompts
+- `.eval` logs with `inspect view` for structured experiment tracking
+- `inspect-wandb` for W&B integration (Issue #8)
 
-**Step 1: Write abstract joiner**
+**Phased rollout:**
+1. Calibration (25 examples): `inspect eval` with OpenRouter
+2. Mid-scale (~10-20K grants per institute/year): `inspect eval` with direct provider APIs
+3. Full 270K production: `inspect eval-set --batch` with OpenAI/Google batch APIs
 
-Script to join abstracts from `~/Downloads/RePORTER_PRJABS_C_FY*.zip` to the main dataset. Handle missing FY2016 gracefully.
-
-**Step 2: Write batch classifier**
-
-Script that:
-- Reads joined dataset (title + abstract)
-- Calls Model 1 (Gemini 2.5 Flash Lite) on all grants
-- Calls Model 2 (GPT-4o-mini) on all grants
-- Identifies disagreements
-- Calls Model 3 (Sonnet 4.6 via Anthropic Batch API) on disagreements only
-- Saves results with checkpointing (resume from last successful grant)
-- Rate limiting and error handling
-
-**Step 3: Test on 100 grants**
-
-Run on first 100 grants to validate pipeline end-to-end.
-
-**Step 4: Commit**
-
-```bash
-git add scripts/run_classification.py scripts/join_abstracts.py
-git commit -m "grade: add batch classification pipeline with 3-model ensemble"
-```
+**Still needed:** `scripts/abstract_loader.py` for joining abstracts to the Inspect Dataset via `record_to_sample`.
 
 ---
 
