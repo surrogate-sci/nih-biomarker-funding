@@ -15,6 +15,11 @@ in how researchers invoke biomarker concepts.
 **Prior art**: The Edison analysis agent (`../edison-benchmarks/`) produced a poor rubric
 with ~50% ambiguous classifications. This repo replaces that with a hand-designed rubric.
 
+## Session Setup
+
+- **Skills bootstrap**: If `.claude/skills/using-superpowers/SKILL.md` doesn't exist, run `bash scripts/download-skills.sh` to download obra/superpowers skills. This is needed in environments without access to user-level skills (e.g., mobile Claude Code sessions).
+- **Dataset download**: If `data/nih_biomarker_unified_2004-2024.csv` doesn't exist, run `bash scripts/download-dataset.sh`. Requires `gh` auth or `GITHUB_TOKEN` env var (private repo).
+
 ## Rules
 
 - **RUBRIC.md is scientific content** — do not modify definitions without Manjari's explicit direction
@@ -25,6 +30,7 @@ with ~50% ambiguous classifications. This repo replaces that with a hand-designe
 - **Commit style**: imperative, scoped prefix: `grade: calibrate rubric`, `fetch: add sharder`
 - **Don't use**: `_archive/`, `../edison-benchmarks/`, old skill dirs
 - **Don't invent scientific positions** — never paraphrase domain claims or add causal language Manjari didn't provide
+- **Visualization**: For analysis outputs and publication-quality charts, use Datawrapper (preferred, requires `DATAWRAPPER_API_TOKEN`) or Python data science libraries (seaborn, matplotlib, plotnine, bokeh). Chart.js is acceptable only for quick dev prototyping during iteration — never for analysis outputs or anything shared externally.
 
 ## Pipeline
 
