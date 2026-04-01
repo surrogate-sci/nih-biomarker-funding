@@ -196,7 +196,7 @@ class DatawrapperRenderer:
 
         base_meta = {
             "describe": {
-                "source-name": "NIH ExPORTER (FY2004–2024), keyword-filtered",
+                "source-name": "NIH ExPORTER (FY2004–2024), keyword + abstract filtered",
                 "source-url": "https://reporter.nih.gov/",
                 "byline": "Surrogate Science Project",
             },
@@ -235,8 +235,8 @@ class DatawrapperRenderer:
             chart_df, filename,
             metadata={
                 "describe": {
-                    "intro": ("Biomarker-related NIH funding grew from $1.7B "
-                              "to $13.6B over two decades"),
+                    "intro": ("Biomarker-related NIH funding grew nearly "
+                              "8-fold over two decades"),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -269,7 +269,7 @@ class DatawrapperRenderer:
             chart_df, filename,
             metadata={
                 "describe": {
-                    "intro": ("NCI accounts for 21% — cancer research drove "
+                    "intro": ("NCI leads — cancer research drove "
                               "early biomarker adoption"),
                     "number-prepend": "$",
                     "number-append": "B",
