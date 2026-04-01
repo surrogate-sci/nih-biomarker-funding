@@ -62,8 +62,8 @@ INSTITUTE_LABELS = {
 
 sns.set_theme(style="whitegrid", font_scale=1.1)
 
-SOURCE_NOTE = "Source: NIH ExPORTER (FY2004–2024), keyword-filtered"
-DATA_CAVEAT = "FY2005–06 undercounted due to missing PROJECT_TERMS data"
+SOURCE_NOTE = "Source: NIH ExPORTER (FY2004–2024), keyword + abstract filtered"
+DATA_CAVEAT = "FY2005–06 likely undercounted despite title, term, and abstract search"
 
 SPENDING_LINE_COLOR = "#225588"
 
@@ -106,10 +106,8 @@ class SeabornRenderer:
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("")
         ax.set_title("NIH Biomarker-Related Spending (FY2004–2024)", fontsize=14)
-        for yr in [2005, 2006]:
-            ax.axvspan(yr - 0.4, yr + 0.4, alpha=0.15, color="red")
         ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
-                    fontsize=8, color="red", fontstyle="italic")
+                    fontsize=8, color="gray", fontstyle="italic")
         ax.text(0.99, -0.08, SOURCE_NOTE, transform=ax.transAxes,
                 fontsize=8, ha="right", color="gray")
         fig.tight_layout()
@@ -126,7 +124,7 @@ class SeabornRenderer:
         ax.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax.set_xlabel("")
         ax.set_ylabel("")
-        ax.set_title("Where Does $134.5B in NIH Biomarker Funding Go?", fontsize=14)
+        ax.set_title("Where Does NIH Biomarker Funding Go?", fontsize=14)
         for i, row in enumerate(df.itertuples()):
             pct = 100 * row.total_funding / total
             ax.text(row.total_funding, i,
@@ -148,8 +146,6 @@ class SeabornRenderer:
         ax.set_ylabel("")
         ax.set_title("Biomarker Funding by Institute Over Time", fontsize=14)
         ax.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
-        for yr in [2005, 2006]:
-            ax.axvspan(yr - 0.4, yr + 0.4, alpha=0.15, color="red")
         ax.text(0.99, -0.06, SOURCE_NOTE, transform=ax.transAxes,
                 fontsize=8, ha="right", color="gray")
         fig.tight_layout()
@@ -200,7 +196,7 @@ class DatawrapperRenderer:
 
         base_meta = {
             "describe": {
-                "source-name": "NIH ExPORTER (FY2004–2024), keyword-filtered",
+                "source-name": "NIH ExPORTER (FY2004–2024), keyword + abstract filtered",
                 "source-url": "https://reporter.nih.gov/",
                 "byline": "Surrogate Science Project",
             },
@@ -239,8 +235,8 @@ class DatawrapperRenderer:
             chart_df, filename,
             metadata={
                 "describe": {
-                    "intro": ("Biomarker-related NIH funding grew from $1.7B "
-                              "to $13.6B over two decades"),
+                    "intro": ("Biomarker-related NIH funding grew nearly "
+                              "8-fold over two decades"),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -269,11 +265,11 @@ class DatawrapperRenderer:
 
         return self._upsert_chart(
             "d3-bars",
-            "Where Does $134.5B in NIH Biomarker Funding Go?",
+            "Where Does NIH Biomarker Funding Go?",
             chart_df, filename,
             metadata={
                 "describe": {
-                    "intro": ("NCI accounts for 21% — cancer research drove "
+                    "intro": ("NCI leads — cancer research drove "
                               "early biomarker adoption"),
                     "number-prepend": "$",
                     "number-append": "B",
