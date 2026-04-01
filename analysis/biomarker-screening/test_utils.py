@@ -24,8 +24,8 @@ class TestLoadDataset(unittest.TestCase):
 
     def test_load_has_expected_row_count(self):
         df = load_dataset()
-        self.assertGreater(len(df), 260_000)
-        self.assertLess(len(df), 280_000)
+        self.assertGreater(len(df), 320_000)
+        self.assertLess(len(df), 340_000)
 
     def test_explicit_biomarker_is_boolean(self):
         df = load_dataset()
