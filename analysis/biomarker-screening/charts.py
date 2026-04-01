@@ -63,7 +63,7 @@ INSTITUTE_LABELS = {
 sns.set_theme(style="whitegrid", font_scale=1.1)
 
 SOURCE_NOTE = "Source: NIH ExPORTER (FY2004–2024), keyword + abstract filtered"
-DATA_CAVEAT = "Grants matched via keyword search on titles, terms, and abstracts"
+DATA_CAVEAT = "FY2005–06 likely undercounted despite title, term, and abstract search"
 
 SPENDING_LINE_COLOR = "#225588"
 
