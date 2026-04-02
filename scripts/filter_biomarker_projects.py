@@ -9,12 +9,10 @@ biomarker-related terminology in their project titles and terms.
 import argparse
 import csv
 import logging
-import re
 import sys
 import time
 from pathlib import Path
 from typing import Set, Dict, List
-from urllib.parse import urljoin
 import requests
 
 from scripts.keyword_terms import (
@@ -208,7 +206,7 @@ def filter_projects_csv(
                     if stats["total_rows"] % 10000 == 0:
                         logger.info(f"Processed {stats['total_rows']:,} rows, found {stats['matched_rows']:,} matches...")
 
-        logger.info(f"Filtering complete:")
+        logger.info("Filtering complete:")
         logger.info(f"  Total rows processed: {stats['total_rows']:,}")
         logger.info(f"  Rows matching terms: {stats['matched_rows']:,}")
         logger.info(f"  Unique project-year records kept: {stats['unique_projects']:,}")
@@ -296,7 +294,7 @@ def filter_abstracts_csv(
                     if stats["total_rows"] % 10000 == 0:
                         logger.info(f"Processed {stats['total_rows']:,} abstracts...")
 
-        logger.info(f"Abstract filtering complete:")
+        logger.info("Abstract filtering complete:")
         logger.info(f"  Total abstracts: {stats['total_rows']:,}")
         logger.info(f"  Abstracts kept: {stats['matched_rows']:,}")
         logger.info(f"  Additional matches from abstract text: {stats['additional_matches']:,}")
@@ -444,7 +442,7 @@ Examples:
         # Construct URL for fiscal year
         # Note: This is a placeholder - actual NIH ExPORTER URLs may vary
         logger.warning("Year-based download is experimental.")
-        logger.info(f"For accurate downloads, visit: https://reporter.nih.gov/exporter")
+        logger.info("For accurate downloads, visit: https://reporter.nih.gov/exporter")
         logger.info(f"Download the Projects CSV for FY{args.year} manually")
         logger.info(f"Then run: {sys.argv[0]} --input-csv <downloaded-file> --output {args.output}")
         sys.exit(1)
