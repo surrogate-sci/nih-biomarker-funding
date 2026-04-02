@@ -1,5 +1,7 @@
 # Merge Worktrees & Code Quality Plan
 
+**Status:** Phase 1 complete (worktree merge); Inspect AI migration done via PR #18
+
 **Goal:** Consolidate diverged worktree branches into main, fix code quality issues
 identified by holistic code review, and prepare the codebase for Inspect AI migration
 and the 270K-grant production run.

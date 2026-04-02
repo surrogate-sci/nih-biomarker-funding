@@ -1,5 +1,7 @@
 # Codebase Cleanup & API Architecture Plan
 
+**Status:** Partially complete — API architecture superseded by Inspect AI; cleanup items remain
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Clean up dead code, consolidate duplicated patterns, fix critical API issues, and document design decisions — producing a PR that makes the codebase production-ready for the 270K-grant run.
