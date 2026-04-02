@@ -116,5 +116,56 @@ def main():
     plt.close(fig)
 
 
+def plot_cumulative():
+    """Cumulative NIH biomarker funding 2004–2024, both term sets."""
+    out_dir = Path(__file__).resolve().parent.parent / "visualizations"
+    out_dir.mkdir(exist_ok=True)
+
+    years = np.array(YEARS)
+    total = np.array(BIOMARKER_RELEVANT)
+    explicit = np.array(EXPLICIT_BIOMARKER)
+
+    cumulative_total = np.cumsum(total)
+    cumulative_explicit = np.cumsum(explicit)
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    ax.plot(years, cumulative_total, color="#d4a574", linewidth=2.5,
+            marker="o", markersize=4,
+            label=f"Expanded set — 10 terms (${cumulative_total[-1]:.0f}B by 2024)")
+    ax.plot(years, cumulative_explicit, color="#2e86ab", linewidth=2.5,
+            marker="o", markersize=4,
+            label=f"Core set — 4 terms (${cumulative_explicit[-1]:.0f}B by 2024)")
+
+    ax.fill_between(years, cumulative_explicit, cumulative_total,
+                    alpha=0.15, color="#d4a574")
+    ax.fill_between(years, 0, cumulative_explicit, alpha=0.2, color="#2e86ab")
+
+    ax.set_xlabel("NIH Fiscal Year", fontsize=12)
+    ax.set_ylabel("Cumulative Spending ($ Billions)", fontsize=12)
+    ax.set_title(
+        "Cumulative NIH Biomarker-Related Research Spending, FY2004\u20132024",
+        fontsize=13, fontweight="bold"
+    )
+    ax.legend(loc="upper left", fontsize=10)
+    ax.set_xlim(2004, 2024)
+    ax.set_ylim(0, 160)
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
+
+    ax.annotate(
+        "4 years have known NIH ExPORTER metadata gaps (FY2005\u201306, FY2013, FY2018) \u2014 "
+        "funding for those years is underestimated",
+        xy=(0.01, 0.01), xycoords="axes fraction",
+        fontsize=8, color="#888", style="italic"
+    )
+
+    plt.tight_layout()
+    path = out_dir / "cumulative_biomarker_funding_2004_2024.png"
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    print(f"Saved: {path}")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     main()
+    plot_cumulative()
