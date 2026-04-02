@@ -73,7 +73,7 @@ def analyze_keywords(keywords, input_file, output_dir, output_name=None):
 
     filtered_df = df[mask].copy()
     print(f"\nTotal projects matching any keyword: {len(filtered_df):,}")
-    print(f"Percentage of dataset: {len(filtered_df)/len(df)*100:.1f}%\n")
+    print(f"Percentage of dataset: {len(filtered_df) / len(df) * 100:.1f}%\n")
 
     # Summarize funding by year
     print("=" * 80)
@@ -115,7 +115,7 @@ def analyze_keywords(keywords, input_file, output_dir, output_name=None):
     avg_per_project = total_funding / total_projects if total_projects > 0 else 0
 
     print(f"Total Projects: {total_projects:,}")
-    print(f"Total Funding: ${total_funding/1_000_000:,.2f}M")
+    print(f"Total Funding: ${total_funding / 1_000_000:,.2f}M")
     print(f"Average per Project: ${avg_per_project:,.0f}")
     print(
         f"Years Covered: {int(yearly_summary['Fiscal Year'].min())} - {int(yearly_summary['Fiscal Year'].max())}"

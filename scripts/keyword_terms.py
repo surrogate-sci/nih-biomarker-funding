@@ -89,8 +89,8 @@ def find_matching_terms(text: str, terms: List[str]) -> List[str]:
     matched = []
 
     for term in terms:
-        if '+' in term:
-            parts = [part.strip().lower() for part in term.split('+')]
+        if "+" in term:
+            parts = [part.strip().lower() for part in term.split("+")]
             if all(part in text_lower for part in parts):
                 matched.append(term)
         else:
@@ -119,9 +119,9 @@ def contains_biomarker_terms(text: str, terms: List[str]) -> bool:
     text_lower = text.lower()
 
     for term in terms:
-        if '+' in term:
+        if "+" in term:
             # AND condition: all parts must be present
-            parts = [part.strip().lower() for part in term.split('+')]
+            parts = [part.strip().lower() for part in term.split("+")]
             if all(part in text_lower for part in parts):
                 return True
         else:

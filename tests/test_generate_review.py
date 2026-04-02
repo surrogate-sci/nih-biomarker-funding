@@ -8,7 +8,6 @@ Focused on bugs found in production:
 
 import csv
 import json
-import os
 import sys
 import tempfile
 import unittest
@@ -20,8 +19,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from generate_review import (
     build_review_data,
     load_disagreement_examples,
-    load_examples,
-    load_model_results,
 )
 
 

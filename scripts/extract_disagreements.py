@@ -115,9 +115,7 @@ def find_pattern_examples(
             example = {
                 "application_id": app_id,
                 "title": title,
-                "models": {
-                    m: build_model_entry(r) for m, r in model_grades.items()
-                },
+                "models": {m: build_model_entry(r) for m, r in model_grades.items()},
             }
             matches.append(example)
 
@@ -125,7 +123,9 @@ def find_pattern_examples(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Extract disagreement patterns from model grades")
+    parser = argparse.ArgumentParser(
+        description="Extract disagreement patterns from model grades"
+    )
     parser.add_argument(
         "--data-dir",
         default=str(DEFAULT_DATA_DIR),
@@ -150,7 +150,9 @@ def main():
 
     # Filter to grants with 2+ models
     multi_model = {k: v for k, v in grants.items() if len(v) >= 2}
-    print(f"Loaded {len(grants)} unique grants, {len(multi_model)} graded by 2+ models\n")
+    print(
+        f"Loaded {len(grants)} unique grants, {len(multi_model)} graded by 2+ models\n"
+    )
 
     results = {
         "extracted_at": datetime.now(timezone.utc).isoformat(),

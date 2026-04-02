@@ -220,7 +220,9 @@ def main():
     )
     parser.add_argument(
         "--abstracts",
-        default=str(DEFAULT_DATA_DIR / "reporter_test" / "RePORTER_PRJABS_C_FY2024.csv"),
+        default=str(
+            DEFAULT_DATA_DIR / "reporter_test" / "RePORTER_PRJABS_C_FY2024.csv"
+        ),
         help="Path to abstract CSV file (default: data/reporter_test/RePORTER_PRJABS_C_FY2024.csv)",
     )
     parser.add_argument(

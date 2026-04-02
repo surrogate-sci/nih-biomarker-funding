@@ -134,7 +134,9 @@ def run_batch(
             }
 
             try:
-                classification = grade_one(title, row["ABSTRACT_TEXT"], model, api_key, api)
+                classification = grade_one(
+                    title, row["ABSTRACT_TEXT"], model, api_key, api
+                )
                 record["classification"] = classification
                 dim1 = classification.get("biomarker_use", {}).get("primary", "?")
                 print(f"→ {dim1}")
@@ -172,8 +174,12 @@ def main():
         required=True,
         help="Output JSONL path",
     )
-    parser.add_argument("--delay", type=float, default=1.0, help="Seconds between API calls")
-    parser.add_argument("--limit", type=int, default=None, help="Max grants to grade (for testing)")
+    parser.add_argument(
+        "--delay", type=float, default=1.0, help="Seconds between API calls"
+    )
+    parser.add_argument(
+        "--limit", type=int, default=None, help="Max grants to grade (for testing)"
+    )
     parser.add_argument(
         "--api",
         choices=["openrouter", "openai"],
