@@ -49,7 +49,7 @@ def run_calibration(
     results = []
     for i, ex in enumerate(examples):
         title = ex["PROJECT_TITLE"]
-        abstract = ex["ABSTRACT"]
+        abstract = ex["ABSTRACT_TEXT"]
         matched_terms = ex["MATCHED_TERMS"]
         app_id = ex["APPLICATION_ID"]
 
