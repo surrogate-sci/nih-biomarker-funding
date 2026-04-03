@@ -33,12 +33,12 @@ class TestContainsBiomarkerTerms(unittest.TestCase):
 
     def test_core_terms_defined(self):
         from scripts.keyword_terms import CORE_BIOMARKER_TERMS
-        self.assertEqual(len(CORE_BIOMARKER_TERMS), 4)
+        self.assertEqual(len(CORE_BIOMARKER_TERMS), 13)
         self.assertIn("biomarker", CORE_BIOMARKER_TERMS)
 
     def test_expanded_terms_defined(self):
         from scripts.keyword_terms import EXPANDED_BIOMARKER_TERMS
-        self.assertEqual(len(EXPANDED_BIOMARKER_TERMS), 10)
+        self.assertEqual(len(EXPANDED_BIOMARKER_TERMS), 36)
         self.assertIn("endophenotype", EXPANDED_BIOMARKER_TERMS)
 
 

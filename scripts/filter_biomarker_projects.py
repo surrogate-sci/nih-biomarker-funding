@@ -17,13 +17,22 @@ from typing import Set, Dict, List
 from urllib.parse import urljoin
 import requests
 
-from scripts.keyword_terms import (
-    CORE_BIOMARKER_TERMS,
-    EXPANDED_BIOMARKER_TERMS,
-    FACILITY_TITLE_PATTERNS,
-    contains_biomarker_terms,
-    is_facility_grant,
-)
+try:
+    from scripts.keyword_terms import (
+        CORE_BIOMARKER_TERMS,
+        EXPANDED_BIOMARKER_TERMS,
+        FACILITY_TITLE_PATTERNS,
+        contains_biomarker_terms,
+        is_facility_grant,
+    )
+except ImportError:
+    from keyword_terms import (
+        CORE_BIOMARKER_TERMS,
+        EXPANDED_BIOMARKER_TERMS,
+        FACILITY_TITLE_PATTERNS,
+        contains_biomarker_terms,
+        is_facility_grant,
+    )
 
 # Default term set
 BIOMARKER_TERMS = EXPANDED_BIOMARKER_TERMS
