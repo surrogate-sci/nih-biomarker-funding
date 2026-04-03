@@ -9,36 +9,30 @@
 2. **Abstract filter** (`supplement_with_abstracts.py`): searches ABSTRACT_TEXT for grants NOT already caught by keywords → `data/filtered/abstracts/biomarker_abstract_FY*.csv`
 3. **Union** (`create_unified_dataset.py`): combines both sources with `MATCH_SOURCE` column → `data/nih_biomarker_unified_2004-2024.csv`
 
-**Important:** `supplement_with_abstracts.py` and the union logic in `create_unified_dataset.py` are on branch `claude/crazy-kilby` (PR #22), not yet on main. This branch needs to merge or cherry-pick those scripts before re-running abstract filtering.
+**Important:** `supplement_with_abstracts.py`, `keyword_terms.py`, and the updated `create_unified_dataset.py` merged to main via PRs #22 and #25, but AFTER this branch was created. Task 0 rebases onto `origin/main` to pick these up.
 
 **Tech Stack:** Python 3, csv, pandas
 
 ---
 
-### Task 0: Merge abstract filter scripts from PR #22
+### Task 0: Rebase onto origin/main
 
-The abstract filtering pipeline (`supplement_with_abstracts.py`, `keyword_terms.py`, updated `create_unified_dataset.py`) lives on `claude/crazy-kilby`. Our branch needs these.
+PRs #22 (abstract filter + union) and #25 (row fix + dataset v2.0) merged to main after this branch was created. Rebase to pick up `supplement_with_abstracts.py`, `keyword_terms.py`, and updated `create_unified_dataset.py`.
 
-**Step 1: Check PR #22 status**
+**Step 1: Rebase**
 
 ```bash
-gh pr view 22
+git fetch origin main
+git rebase origin/main
 ```
 
-**Step 2: Cherry-pick or merge the relevant scripts**
+**Step 2: Resolve conflicts**
 
-If PR #22 is closed/merged, rebase onto main. If still open, cherry-pick the script additions. The key files needed:
-- `scripts/supplement_with_abstracts.py`
-- `scripts/keyword_terms.py`
-- `scripts/create_unified_dataset.py` (updated with union logic)
-- `tests/test_keyword_terms.py`
-- `tests/test_supplement_with_abstracts.py`
+Likely conflicts in `filter_biomarker_projects.py` (our keyword changes vs PR #22's refactor) and possibly `create_unified_dataset.py`. Ensure our new term lists and facility screening survive the merge.
 
-**Step 3: Resolve any conflicts with our keyword term changes**
+Also check: `keyword_terms.py` may define its own term lists. If so, update them to match our new core/expanded terms, or ensure it imports from `filter_biomarker_projects.py`.
 
-`keyword_terms.py` may define its own term lists that need updating to match our new core/expanded terms. `supplement_with_abstracts.py` imports from `keyword_terms.py` or `filter_biomarker_projects.py` — verify which and ensure it uses the new terms.
-
-**Step 4: Run existing tests to verify merge is clean**
+**Step 3: Run all tests**
 
 ```bash
 python3 -m unittest discover tests -v
