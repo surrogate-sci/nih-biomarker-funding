@@ -119,6 +119,15 @@ def dw_upload_data(chart_id: str, csv_text: str, token: str) -> None:
     r.raise_for_status()
 
 
+def dw_patch_metadata(chart_id: str, patch: dict, token: str) -> None:
+    r = requests.patch(
+        f"{DW_API}/charts/{chart_id}",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        json=patch,
+    )
+    r.raise_for_status()
+
+
 def dw_publish(chart_id: str, token: str) -> str:
     r = requests.post(
         f"{DW_API}/charts/{chart_id}/publish",
@@ -157,24 +166,41 @@ def main():
     core_adj   = inflation_adjust(CORE_ANNUAL_B,     YEARS)
     expand_adj = inflation_adjust(EXPANDED_ANNUAL_B, YEARS)
 
+    # Shared visualize patch: dots at every data point + full x/y grid
+    viz_patch = {
+        "metadata": {
+            "visualize": {
+                "x-grid": "on",
+                "lines": {
+                    "Core":     {"symbols": {"enabled": True}},
+                    "Expanded": {"symbols": {"enabled": True}},
+                },
+                "line-widths": {"Core": 2.5, "Expanded": 2.5},
+                "custom-colors": {"Core": "#1a6b9c", "Expanded": "#e8a85f"},
+            }
+        }
+    }
+
     if not args.export_only:
         # --- Nominal chart ---
         nom_csv = build_csv(
             YEARS, CORE_ANNUAL_B, EXPANDED_ANNUAL_B,
-            "4 terms", "10 terms",
+            "Core", "Expanded",
         )
         print(f"Uploading nominal data to {DW_CHART_NOMINAL}...")
         dw_upload_data(DW_CHART_NOMINAL, nom_csv, token)
+        dw_patch_metadata(DW_CHART_NOMINAL, viz_patch, token)
         url_nom = dw_publish(DW_CHART_NOMINAL, token)
         print(f"Published: {url_nom}")
 
         # --- Inflation-adjusted chart ---
         adj_csv = build_csv(
             YEARS, core_adj, expand_adj,
-            "4 terms", "10 terms",
+            "Core", "Expanded",
         )
         print(f"Uploading CPI-adjusted data to {DW_CHART_ADJ}...")
         dw_upload_data(DW_CHART_ADJ, adj_csv, token)
+        dw_patch_metadata(DW_CHART_ADJ, viz_patch, token)
         url_adj = dw_publish(DW_CHART_ADJ, token)
         print(f"Published: {url_adj}")
 
