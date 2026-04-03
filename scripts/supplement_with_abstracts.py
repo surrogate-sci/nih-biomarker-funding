@@ -75,7 +75,9 @@ def find_new_grants_from_abstracts(
             continue
 
         # Check core terms for EXPLICIT_BIOMARKER flag
-        is_explicit = any(t in core_terms for t in matched) or bool(find_matching_terms(abstract_text, core_terms))
+        is_explicit = any(t in core_terms for t in matched) or bool(
+            find_matching_terms(abstract_text, core_terms)
+        )
 
         new_grants[app_id] = {
             "EXPLICIT_BIOMARKER": "TRUE" if is_explicit else "FALSE",
@@ -271,7 +273,9 @@ def process_year(
 
     # Step 1: Load existing keyword-filtered IDs (check keywords/ subdir first)
     kw_subdir = filtered_dir / "keywords" / f"biomarker_FY{year}.csv"
-    filtered_csv = kw_subdir if kw_subdir.exists() else filtered_dir / f"biomarker_FY{year}.csv"
+    filtered_csv = (
+        kw_subdir if kw_subdir.exists() else filtered_dir / f"biomarker_FY{year}.csv"
+    )
     existing_ids = load_existing_ids(filtered_csv)
     stats["existing_count"] = len(existing_ids)
 

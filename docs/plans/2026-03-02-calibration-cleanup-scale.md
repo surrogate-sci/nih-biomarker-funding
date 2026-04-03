@@ -1,5 +1,7 @@
 # Calibration, Cleanup & Scale-Up Plan
 
+**Status:** Partially complete — calibration done, scale-up superseded by Inspect AI migration
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Commit calibration infrastructure, clean up obsolete code, and prepare the pipeline for 270K-grant classification with a 3-model ensemble strategy.

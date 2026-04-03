@@ -9,6 +9,7 @@ Reads the unified NIH biomarker dataset and produces:
 Uses Datawrapper if DATAWRAPPER_API_TOKEN is set, else seaborn/matplotlib.
 Outputs: charts/ directory + funding_analysis.json
 """
+
 import json
 import sys
 from pathlib import Path
@@ -18,17 +19,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pandas as pd
 
 from charts import get_renderer
-from utils import DATA_QUALITY_YEARS, activity_category, load_dataset
+from utils import DATA_QUALITY_YEARS, load_dataset
 
 CHARTS_DIR = Path(__file__).parent / "charts"
 
 
 def spending_over_time(df: pd.DataFrame, renderer) -> dict:
     """Chart 1: Total biomarker spending per fiscal year."""
-    yearly = df.groupby("FY").agg(
-        total_funding=("TOTAL_COST", "sum"),
-        grant_count=("APPLICATION_ID", "count"),
-    ).reset_index()
+    yearly = (
+        df.groupby("FY")
+        .agg(
+            total_funding=("TOTAL_COST", "sum"),
+            grant_count=("APPLICATION_ID", "count"),
+        )
+        .reset_index()
+    )
 
     renderer.spending_over_time(yearly, "spending_over_time.png")
 
@@ -71,9 +76,7 @@ def institute_allocation(df: pd.DataFrame, renderer, n: int = 10) -> dict:
         "HD": "NICHD (Child Health)",
         "DC": "NIDCD (Deafness)",
     }
-    ic["label"] = ic["ADMINISTERING_IC"].map(
-        lambda x: name_map.get(x, x)
-    )
+    ic["label"] = ic["ADMINISTERING_IC"].map(lambda x: name_map.get(x, x))
 
     renderer.institute_allocation(ic, "institute_allocation.png")
 
@@ -95,8 +98,14 @@ def institute_over_time(df: pd.DataFrame, renderer, n_top: int = 8) -> dict:
     )
 
     name_map = {
-        "CA": "NCI", "AG": "NIA", "HL": "NHLBI", "AI": "NIAID",
-        "NS": "NINDS", "MH": "NIMH", "DK": "NIDDK", "LM": "NLM",
+        "CA": "NCI",
+        "AG": "NIA",
+        "HL": "NHLBI",
+        "AI": "NIAID",
+        "NS": "NINDS",
+        "MH": "NIMH",
+        "DK": "NIDDK",
+        "LM": "NLM",
     }
 
     df = df.copy()
@@ -104,15 +113,18 @@ def institute_over_time(df: pd.DataFrame, renderer, n_top: int = 8) -> dict:
         lambda x: name_map.get(x, x) if x in top_ics else "Other"
     )
 
-    yearly_ic = (
-        df.groupby(["FY", "ic_group"])["TOTAL_COST"]
-        .sum()
-        .reset_index()
+    yearly_ic = df.groupby(["FY", "ic_group"])["TOTAL_COST"].sum().reset_index()
+    pivot = yearly_ic.pivot(index="FY", columns="ic_group", values="TOTAL_COST").fillna(
+        0
     )
-    pivot = yearly_ic.pivot(index="FY", columns="ic_group", values="TOTAL_COST").fillna(0)
 
     # Order columns by total funding (largest first), but keep "Other" last
-    col_order = pivot.drop(columns=["Other"], errors="ignore").sum().sort_values(ascending=False).index.tolist()
+    col_order = (
+        pivot.drop(columns=["Other"], errors="ignore")
+        .sum()
+        .sort_values(ascending=False)
+        .index.tolist()
+    )
     if "Other" in pivot.columns:
         col_order.append("Other")
     pivot = pivot[col_order]

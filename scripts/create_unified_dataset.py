@@ -38,46 +38,37 @@ COLUMNS_TO_KEEP = [
     "APPLICATION_ID",
     "FY",
     "CORE_PROJECT_NUM",
-
     # Text content for analysis
     "PROJECT_TITLE",
     # PROJECT_TERMS - removed (too large, avg 1346 chars)
     # PHR - removed (29.7% empty, verbose)
-
     # Funding amounts
     "TOTAL_COST",
     "DIRECT_COST_AMT",
     "INDIRECT_COST_AMT",
     "TOTAL_COST_SUB_PROJECT",
-
     # Institute information
     "ADMINISTERING_IC",
     "IC_NAME",
     "FUNDING_ICs",
-
     # Timeline
     "PROJECT_START",
     "PROJECT_END",
-
     # People
     "PI_NAMEs",
-
     # Organization/Location
     "ORG_NAME",
     "ORG_STATE",
     "ORG_CITY",
     "ORG_COUNTRY",
-
     # Grant type
     "ACTIVITY",
     "APPLICATION_TYPE",
     "FUNDING_MECHANISM",
-
     # Categorization
     "NIH_SPENDING_CATS",
     "STUDY_SECTION",
     "STUDY_SECTION_NAME",
-
     # Our classification
     "EXPLICIT_BIOMARKER",
     "MATCHED_TERMS",
@@ -159,9 +150,7 @@ def combine_filtered_years(
         # Fallback: flat layout
         abs_files = sorted(filtered_dir.glob(abs_pattern))
 
-    logger.info(
-        f"Found {len(kw_files)} keyword files, {len(abs_files)} abstract files"
-    )
+    logger.info(f"Found {len(kw_files)} keyword files, {len(abs_files)} abstract files")
 
     all_data: list[pd.DataFrame] = []
 
@@ -208,7 +197,7 @@ def combine_filtered_years(
 
     # Report MATCH_SOURCE breakdown
     source_counts = combined_df["MATCH_SOURCE"].value_counts()
-    logger.info(f"\nMATCH_SOURCE breakdown:")
+    logger.info("\nMATCH_SOURCE breakdown:")
     for source, count in source_counts.items():
         logger.info(f"  {source}: {count:,}")
 

@@ -165,7 +165,9 @@ def print_summary(
     print(f"{'IC':<6} {'Pool':>8} {'Rate':>8} {'Sampled':>8}")
     print("-" * 34)
     for stat in ic_stats:
-        print(f"{stat['ic']:<6} {stat['pool']:>8,} {stat['rate']:>7.0%} {stat['sampled']:>8,}")
+        print(
+            f"{stat['ic']:<6} {stat['pool']:>8,} {stat['rate']:>7.0%} {stat['sampled']:>8,}"
+        )
 
     total_sampled = len(all_sampled)
     print(f"\nTotal sampled: {total_sampled:,}")
@@ -174,7 +176,7 @@ def print_summary(
     by_year: dict[str, int] = defaultdict(int)
     for row in all_sampled:
         by_year[row["FY"]] += 1
-    print(f"\nPer year:")
+    print("\nPer year:")
     for fy in sorted(by_year):
         note = " (abstracts missing)" if int(fy) in skip_years else ""
         print(f"  FY{fy}: {by_year[fy]:,}{note}")
@@ -292,12 +294,14 @@ def main():
             seed=args.seed,
         )
         all_sampled.extend(ic_sampled)
-        ic_stats.append({
-            "ic": ic,
-            "pool": pool_size,
-            "rate": rate,
-            "sampled": len(ic_sampled),
-        })
+        ic_stats.append(
+            {
+                "ic": ic,
+                "pool": pool_size,
+                "rate": rate,
+                "sampled": len(ic_sampled),
+            }
+        )
 
     if args.dry_run:
         print_summary(ic_stats, all_sampled, skip_years)

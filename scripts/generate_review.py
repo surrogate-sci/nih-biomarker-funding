@@ -19,25 +19,44 @@ from pathlib import Path
 
 # Code lists from grader_prompt.py OUTPUT_SCHEMA
 DIM1_CODES = [
-    "susceptibility_risk", "diagnostic", "monitoring",
-    "prognostic_risk", "prognostic_efficacy", "prognostic_enrichment",
-    "predictive_optimal", "predictive_enrichment", "predictive_ambiguous",
-    "pharmacodynamic", "safety", "surrogate_endpoint",
-    "stratification_treatment", "stratification_diagnostic",
-    "stratification_ambiguous", "methods_causal", "methods_correlational",
+    "susceptibility_risk",
+    "diagnostic",
+    "monitoring",
+    "prognostic_risk",
+    "prognostic_efficacy",
+    "prognostic_enrichment",
+    "predictive_optimal",
+    "predictive_enrichment",
+    "predictive_ambiguous",
+    "pharmacodynamic",
+    "safety",
+    "surrogate_endpoint",
+    "stratification_treatment",
+    "stratification_diagnostic",
+    "stratification_ambiguous",
+    "methods_causal",
+    "methods_correlational",
 ]
 
 DIM2_CODES = [
-    "observational_retrospective", "observational_crosssectional",
-    "observational_cohort", "observational_longitudinal",
-    "observational_case_cohort", "observational_quasi",
-    "experimental_singlearm", "experimental_rct", "experimental_perturbation",
+    "observational_retrospective",
+    "observational_crosssectional",
+    "observational_cohort",
+    "observational_longitudinal",
+    "observational_case_cohort",
+    "observational_quasi",
+    "experimental_singlearm",
+    "experimental_rct",
+    "experimental_perturbation",
     "methods_secondary_analysis",
 ]
 
 DIM3_CODES = [
-    "correlational", "experimental_weak", "causal_preclinical",
-    "causal_clinical", "methods_for_causal",
+    "correlational",
+    "experimental_weak",
+    "causal_preclinical",
+    "causal_clinical",
+    "methods_for_causal",
 ]
 
 
@@ -89,7 +108,7 @@ def build_review_data(
             "id": app_id,
             "year": ex.get("YEAR", ""),
             "title": ex.get("PROJECT_TITLE", ""),
-            "abstract": ex.get("ABSTRACT", ""),
+            "abstract": ex.get("ABSTRACT_TEXT", ""),
             "matched_terms": ex.get("MATCHED_TERMS", ""),
             "ic": ex.get("ADMINISTERING_IC", ""),
             "activity": ex.get("ACTIVITY", ""),
@@ -642,7 +661,7 @@ def load_disagreement_examples(
                 "id": app_id,
                 "year": sample_row.get("FY", ""),
                 "title": ex["title"],
-                "abstract": sample_row.get("ABSTRACT_TEXT", sample_row.get("ABSTRACT", "")),
+                "abstract": sample_row.get("ABSTRACT_TEXT", ""),
                 "matched_terms": f"[{pattern['dimension']}: {pattern['code_a']} vs {pattern['code_b']}]",
                 "ic": sample_row.get("ADMINISTERING_IC", ""),
                 "activity": sample_row.get("ACTIVITY", ""),
@@ -657,8 +676,13 @@ def load_disagreement_examples(
                 model_data = ex.get("models", {}).get(slug, {})
                 if model_data.get("reasoning"):
                     # Store reasoning in model_results if not already there
-                    if slug in item["model_results"] and "reasoning" not in item["model_results"][slug]:
-                        item["model_results"][slug]["reasoning"] = model_data["reasoning"]
+                    if (
+                        slug in item["model_results"]
+                        and "reasoning" not in item["model_results"][slug]
+                    ):
+                        item["model_results"][slug]["reasoning"] = model_data[
+                            "reasoning"
+                        ]
             review_items.append(item)
 
     return review_items, model_slugs
@@ -717,12 +741,17 @@ def main():
         results_dir = Path(args.results_dir)
         grade_files = {}
         import glob as glob_mod
+
         for f in sorted(glob_mod.glob(str(results_dir / "oncology_grades_*.jsonl"))):
             slug = Path(f).stem.replace("oncology_grades_", "")
             grade_files[slug] = Path(f)
         print(f"  Grade files: {', '.join(grade_files.keys())}")
         # Resolve sample CSV: explicit flag > default location in results_dir
-        sample_csv = Path(args.sample_csv) if args.sample_csv else results_dir / "oncology_sample_100per_year.csv"
+        sample_csv = (
+            Path(args.sample_csv)
+            if args.sample_csv
+            else results_dir / "oncology_sample_100per_year.csv"
+        )
         review_data, model_slugs = load_disagreement_examples(
             Path(args.disagreements), grade_files, sample_csv=sample_csv
         )
@@ -742,7 +771,8 @@ def main():
 
     print("Generating HTML...")
     html_content = generate_html(
-        review_data, model_slugs,
+        review_data,
+        model_slugs,
         page_title=args.title,
         storage_key=args.storage_key,
     )

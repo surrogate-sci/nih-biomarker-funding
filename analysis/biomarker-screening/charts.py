@@ -5,11 +5,11 @@ Uses Paul Tol's colorblind-safe qualitative palette throughout.
 Datawrapper charts are updated in place if chart IDs exist in .url files.
 """
 
-import json
 import os
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -72,7 +72,7 @@ def _billions(x, _pos=None):
     return f"${x / 1e9:.1f}B"
 
 
-def get_renderer(output_dir: Path) -> "ChartRenderer":
+def get_renderer(output_dir: Path) -> "ChartRenderer":  # noqa: F821
     """Return Datawrapper renderer if token is set, else seaborn fallback."""
     token = os.environ.get("DATAWRAPPER_API_TOKEN")
     if token:
@@ -98,18 +98,40 @@ class SeabornRenderer:
 
     def spending_over_time(self, df: pd.DataFrame, filename: str):
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(df["FY"], df["total_funding"], marker="o", linewidth=2.5,
-                color=SPENDING_LINE_COLOR, markersize=6)
-        ax.fill_between(df["FY"], df["total_funding"], alpha=0.1,
-                        color=SPENDING_LINE_COLOR)
+        ax.plot(
+            df["FY"],
+            df["total_funding"],
+            marker="o",
+            linewidth=2.5,
+            color=SPENDING_LINE_COLOR,
+            markersize=6,
+        )
+        ax.fill_between(
+            df["FY"], df["total_funding"], alpha=0.1, color=SPENDING_LINE_COLOR
+        )
         ax.yaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("")
         ax.set_title("NIH Biomarker-Related Spending (FY2004–2024)", fontsize=14)
-        ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
-                    fontsize=8, color="gray", fontstyle="italic")
-        ax.text(0.99, -0.08, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+        for yr in [2005, 2006]:
+            ax.axvspan(yr - 0.4, yr + 0.4, alpha=0.15, color="red")
+        ax.annotate(
+            DATA_CAVEAT,
+            xy=(0.02, 0.02),
+            xycoords="axes fraction",
+            fontsize=8,
+            color="red",
+            fontstyle="italic",
+        )
+        ax.text(
+            0.99,
+            -0.08,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
@@ -127,11 +149,23 @@ class SeabornRenderer:
         ax.set_title("Where Does NIH Biomarker Funding Go?", fontsize=14)
         for i, row in enumerate(df.itertuples()):
             pct = 100 * row.total_funding / total
-            ax.text(row.total_funding, i,
-                    f"  ${row.total_funding/1e9:.1f}B ({pct:.0f}%)",
-                    va="center", fontsize=9, fontweight="bold")
-        ax.text(0.99, -0.06, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+            ax.text(
+                row.total_funding,
+                i,
+                f"  ${row.total_funding / 1e9:.1f}B ({pct:.0f}%)",
+                va="center",
+                fontsize=9,
+                fontweight="bold",
+            )
+        ax.text(
+            0.99,
+            -0.06,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
@@ -140,14 +174,22 @@ class SeabornRenderer:
         colors = [INSTITUTE_COLORS.get(col, "#888888") for col in pivot.columns]
         pivot_b = pivot / 1e9
         pivot_b.plot.area(ax=ax, alpha=0.8, color=colors)
-        ax.yaxis.set_major_formatter(
-            mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("")
         ax.set_title("Biomarker Funding by Institute Over Time", fontsize=14)
         ax.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
-        ax.text(0.99, -0.06, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+        for yr in [2005, 2006]:
+            ax.axvspan(yr - 0.4, yr + 0.4, alpha=0.15, color="red")
+        ax.text(
+            0.99,
+            -0.06,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
@@ -160,6 +202,7 @@ class DatawrapperRenderer:
 
     def __init__(self, output_dir: Path, token: str):
         from datawrapper import Datawrapper
+
         self.dw = Datawrapper(access_token=token)
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -177,8 +220,14 @@ class DatawrapperRenderer:
                 return parts[-1]
         return None
 
-    def _upsert_chart(self, chart_type: str, title: str, data: pd.DataFrame,
-                      filename: str, metadata: dict | None = None) -> str:
+    def _upsert_chart(
+        self,
+        chart_type: str,
+        title: str,
+        data: pd.DataFrame,
+        filename: str,
+        metadata: dict | None = None,
+    ) -> str:
         """Create or update a Datawrapper chart. Reuses chart ID if .url exists."""
         chart_id = self._get_existing_chart_id(filename)
 
@@ -205,7 +254,7 @@ class DatawrapperRenderer:
                     "get-the-data": True,
                     "embed": True,
                 }
-            }
+            },
         }
         if metadata:
             for key in metadata:
@@ -232,11 +281,14 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-lines",
             "NIH Biomarker-Related Spending (FY2004–2024)",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("Biomarker-related NIH funding grew nearly "
-                              "8-fold over two decades"),
+                    "intro": (
+                        "Biomarker-related NIH funding grew nearly "
+                        "8-fold over two decades"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -266,11 +318,13 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-bars",
             "Where Does NIH Biomarker Funding Go?",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("NCI leads — cancer research drove "
-                              "early biomarker adoption"),
+                    "intro": (
+                        "NCI leads — cancer research drove early biomarker adoption"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -289,11 +343,14 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-area",
             "Biomarker Funding by Institute Over Time",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("NCI has led throughout, but NIA and NHLBI grew "
-                              "substantially after 2010"),
+                    "intro": (
+                        "NCI has led throughout, but NIA and NHLBI grew "
+                        "substantially after 2010"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
