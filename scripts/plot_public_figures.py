@@ -171,9 +171,11 @@ def main():
         "metadata": {
             "visualize": {
                 "x-grid": "on",
+                "line-symbols": True,
+                "line-symbol-size": 4.5,
                 "lines": {
-                    "Core":     {"symbols": {"enabled": True}},
-                    "Expanded": {"symbols": {"enabled": True}},
+                    "Core":     {"symbols": {"enabled": True, "size": 4.5}},
+                    "Expanded": {"symbols": {"enabled": True, "size": 4.5}},
                 },
                 "line-widths": {"Core": 2.5, "Expanded": 2.5},
                 "custom-colors": {"Core": "#1a6b9c", "Expanded": "#e8a85f"},
