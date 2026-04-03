@@ -285,8 +285,10 @@ class DatawrapperRenderer:
             filename,
             metadata={
                 "describe": {
-                    "intro": ("Biomarker-related NIH funding grew nearly "
-                              "8-fold over two decades"),
+                    "intro": (
+                        "Biomarker-related NIH funding grew nearly "
+                        "8-fold over two decades"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -316,11 +318,13 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-bars",
             "Where Does NIH Biomarker Funding Go?",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("NCI leads — cancer research drove "
-                              "early biomarker adoption"),
+                    "intro": (
+                        "NCI leads — cancer research drove early biomarker adoption"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
