@@ -62,8 +62,8 @@ INSTITUTE_LABELS = {
 
 sns.set_theme(style="whitegrid", font_scale=1.1)
 
-SOURCE_NOTE = "Source: NIH ExPORTER (FY2004–2024), keyword-filtered"
-DATA_CAVEAT = "FY2005–06 undercounted due to missing PROJECT_TERMS data"
+SOURCE_NOTE = "Source: NIH ExPORTER (FY2004–2024), keyword + abstract filtered"
+DATA_CAVEAT = "FY2005–06 likely undercounted despite title, term, and abstract search"
 
 SPENDING_LINE_COLOR = "#225588"
 
@@ -146,7 +146,7 @@ class SeabornRenderer:
         ax.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax.set_xlabel("")
         ax.set_ylabel("")
-        ax.set_title("Where Does $134.5B in NIH Biomarker Funding Go?", fontsize=14)
+        ax.set_title("Where Does NIH Biomarker Funding Go?", fontsize=14)
         for i, row in enumerate(df.itertuples()):
             pct = 100 * row.total_funding / total
             ax.text(
@@ -245,7 +245,7 @@ class DatawrapperRenderer:
 
         base_meta = {
             "describe": {
-                "source-name": "NIH ExPORTER (FY2004–2024), keyword-filtered",
+                "source-name": "NIH ExPORTER (FY2004–2024), keyword + abstract filtered",
                 "source-url": "https://reporter.nih.gov/",
                 "byline": "Surrogate Science Project",
             },
@@ -285,10 +285,8 @@ class DatawrapperRenderer:
             filename,
             metadata={
                 "describe": {
-                    "intro": (
-                        "Biomarker-related NIH funding grew from $1.7B "
-                        "to $13.6B over two decades"
-                    ),
+                    "intro": ("Biomarker-related NIH funding grew nearly "
+                              "8-fold over two decades"),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -317,15 +315,12 @@ class DatawrapperRenderer:
 
         return self._upsert_chart(
             "d3-bars",
-            "Where Does $134.5B in NIH Biomarker Funding Go?",
-            chart_df,
-            filename,
+            "Where Does NIH Biomarker Funding Go?",
+            chart_df, filename,
             metadata={
                 "describe": {
-                    "intro": (
-                        "NCI accounts for 21% — cancer research drove "
-                        "early biomarker adoption"
-                    ),
+                    "intro": ("NCI leads — cancer research drove "
+                              "early biomarker adoption"),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",

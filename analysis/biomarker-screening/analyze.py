@@ -142,7 +142,7 @@ def main():
     df = load_dataset()
     print(f"  {len(df):,} grants loaded")
 
-    assert len(df) > 250_000, f"Unexpected row count: {len(df)}"
+    assert abs(len(df) - 332_324) < 200, f"Unexpected row count: {len(df)}"
     total_b = df["TOTAL_COST"].sum()
     print(f"  Total funding: ${total_b / 1e9:.2f}B")
 
