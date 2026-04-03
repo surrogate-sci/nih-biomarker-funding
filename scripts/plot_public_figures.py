@@ -3,17 +3,20 @@ Produce public-facing figures for surrogate-sci/biomarker-funding.
 
 Reads per-year spending data from data/filtered/SUMMARY.md (hardcoded below
 from the FY2004-2024 run), computes cumulative totals in nominal and
-CPI-adjusted dollars, then creates/updates two Datawrapper line charts and
+CPI-adjusted dollars, then UPDATES existing Datawrapper line charts and
 exports their PNGs to visualizations/.
 
-Datawrapper chart IDs (created 2026-04-02):
-  ZOLb1 — nominal cumulative
-  pzYSe — inflation-adjusted cumulative (2024 dollars)
+IMPORTANT: Always update existing chart IDs — never create new ones.
+
+Datawrapper chart IDs:
+  VydiG — cumulative nominal (pre-existing, canonical)
+  pzYSe — cumulative 2024-dollar adjusted (created 2026-04-02, to be replaced
+           with pre-existing chart ID if one exists for inflation-adjusted)
 
 Usage:
     python3 scripts/plot_public_figures.py [--export-only]
 
-    --export-only  Skip data upload and metadata update; just re-export PNGs.
+    --export-only  Skip data upload; just re-export PNGs.
 
 Requirements:
     pip install requests
@@ -64,9 +67,9 @@ CPI_U = {
 }
 CPI_BASE_YEAR = 2024
 
-# Datawrapper chart IDs
-DW_CHART_NOMINAL = "ZOLb1"
-DW_CHART_ADJ     = "pzYSe"
+# Datawrapper chart IDs — update these in place, never create new ones
+DW_CHART_NOMINAL = "VydiG"   # NIH Biomarker-Related Spending (pre-existing)
+DW_CHART_ADJ     = "pzYSe"   # CPI-adjusted (created 2026-04-02)
 
 DW_API = "https://api.datawrapper.de/v3"
 
@@ -158,7 +161,7 @@ def main():
         # --- Nominal chart ---
         nom_csv = build_csv(
             YEARS, CORE_ANNUAL_B, EXPANDED_ANNUAL_B,
-            "Core set (4 terms)", "Expanded set (10 terms)",
+            "4 terms", "10 terms",
         )
         print(f"Uploading nominal data to {DW_CHART_NOMINAL}...")
         dw_upload_data(DW_CHART_NOMINAL, nom_csv, token)
@@ -168,7 +171,7 @@ def main():
         # --- Inflation-adjusted chart ---
         adj_csv = build_csv(
             YEARS, core_adj, expand_adj,
-            "Core set (4 terms)", "Expanded set (10 terms)",
+            "4 terms", "10 terms",
         )
         print(f"Uploading CPI-adjusted data to {DW_CHART_ADJ}...")
         dw_upload_data(DW_CHART_ADJ, adj_csv, token)
@@ -178,9 +181,11 @@ def main():
     # --- Export PNGs ---
     print("Exporting PNGs...")
     dw_export_png(DW_CHART_NOMINAL, token,
-                  out_dir / "cumulative_biomarker_funding_nominal.png")
+                  out_dir / "cumulative_biomarker_funding_nominal.png",
+                  width=1000)
     dw_export_png(DW_CHART_ADJ,    token,
-                  out_dir / "cumulative_biomarker_funding_2024dollars.png")
+                  out_dir / "cumulative_biomarker_funding_2024dollars.png",
+                  width=1000)
 
     # Also write the combined CSV for the public repo
     csv_path = Path(__file__).resolve().parent.parent / "data" / "biomarker_funding_2004_2024_with_cpi_adjustment.csv"
