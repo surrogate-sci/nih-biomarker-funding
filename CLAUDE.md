@@ -43,7 +43,7 @@ process_all_years.py  →  filter_biomarker_projects.py  →  data/filtered/biom
                                                               ↓
                                                        create_unified_dataset.py
                                                               ↓
-                                                       nih_biomarker_unified_2004-2024.csv (269,630 grants)
+                                                       nih_biomarker_unified_2004-2024.csv (344,550 grants)
 ```
 
 - **Term sets**: core (13 terms) and expanded (36 terms). Core includes explicit biomarker/marker language plus definite biomarker concepts (endophenotype, intermediate outcome/endpoint, digital endpoint) and decision-making terms (risk stratification, patient selection, companion diagnostic, predicting response, response to therapy). Expanded adds diagnostics, stratification, precision medicine, and signature terms.
@@ -122,7 +122,7 @@ gold-label calibration. See Issue #20 for full plan.
 | `scripts/process_all_years.py` | Batch download + filter FY2004-2024 |
 | `scripts/create_unified_dataset.py` | Merges filtered year CSVs into single dataset |
 | `data/grader_calibration_examples.csv` | 25 easy cases (explicit biomarker terms from 2012 & 2022) |
-| `data/nih_biomarker_unified_2004-2024.csv` | 269,630 grants, NO abstracts |
+| `data/nih_biomarker_unified_2004-2024.csv` | 344,550 grants (276K keyword + 68K abstract-only), 27 columns |
 
 ## Commands
 
