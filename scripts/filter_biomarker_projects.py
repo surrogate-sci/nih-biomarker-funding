@@ -20,11 +20,31 @@ import requests
 from scripts.keyword_terms import (
     CORE_BIOMARKER_TERMS,
     EXPANDED_BIOMARKER_TERMS,
+    FACILITY_TITLE_PATTERNS,
     contains_biomarker_terms,
+    is_facility_grant,
 )
 
 # Default term set
 BIOMARKER_TERMS = EXPANDED_BIOMARKER_TERMS
+
+
+# Facility grant screening - exclude infrastructure/admin sub-projects
+# These are center components (cores, shared resources) not independent research.
+# Note: center grants themselves (P30, P50) ARE often biomarker work.
+FACILITY_TITLE_PATTERNS = [
+    r"\bAdministrative Core\b",
+    r"\bBiostatistics Core\b",
+    r"\bBioinformatics Core\b",
+    r"\bData Core\b",
+    r"\bShared Resource\b",
+    r"\bShared Facility\b",
+    r"\bInformatics Core\b",
+    r"\bStatistics Core\b",
+    r"\bBiorepository Core\b",
+    r"\bTissue Procurement\b",
+    r"\bCore [A-Z]:",  # e.g., "Core C: Biostatistics and Bioinformatics Core"
+]
 
 
 # NIH ExPORTER CSV download base URL
@@ -131,6 +151,7 @@ def filter_projects_csv(
     stats = {
         "total_rows": 0,
         "matched_rows": 0,
+        "facility_excluded": 0,
         "unique_projects": 0,
         "duplicates_removed": 0,
     }
@@ -178,6 +199,12 @@ def filter_projects_csv(
                             break
 
                     if has_match:
+                        # Screen out facility/infrastructure grants
+                        title = row.get("PROJECT_TITLE", "")
+                        if is_facility_grant(title):
+                            stats["facility_excluded"] += 1
+                            continue
+
                         stats["matched_rows"] += 1
 
                         # Check if this also matches core/explicit biomarker terms
@@ -211,6 +238,7 @@ def filter_projects_csv(
         logger.info(f"Filtering complete:")
         logger.info(f"  Total rows processed: {stats['total_rows']:,}")
         logger.info(f"  Rows matching terms: {stats['matched_rows']:,}")
+        logger.info(f"  Facility grants excluded: {stats['facility_excluded']:,}")
         logger.info(f"  Unique project-year records kept: {stats['unique_projects']:,}")
         logger.info(f"  Duplicates removed: {stats['duplicates_removed']:,}")
         logger.info(f"  Output saved to: {output_path}")
