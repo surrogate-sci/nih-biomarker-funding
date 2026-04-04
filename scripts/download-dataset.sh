@@ -11,7 +11,7 @@ CSV_FILE="$DATA_DIR/nih_biomarker_unified_2004-2024.csv"
 ZIP_FILE="$DATA_DIR/nih_biomarker_unified_2004-2024.zip"
 REPO="surrogate-sci/nih-biomarker-funding"
 TAG="dataset-release-v3.1"
-EXPECTED_SHA="cfb6ff695d3fa4fc21da862e6a864a0053801a74b8d9d08aa6d7f4bcf4adfab2"
+EXPECTED_SHA="899e8e20f3f5a44d30dacc932cf39b1b7960484999c1db13ed3c10ff1b662b5b"
 
 if [ -f "$CSV_FILE" ]; then
     echo "Dataset already present at $CSV_FILE, skipping download."
