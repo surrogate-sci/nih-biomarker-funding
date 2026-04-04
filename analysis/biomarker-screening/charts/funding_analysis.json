@@ -982,268 +982,268 @@
   "keyword_funding": {
     "terms": [
       {
-        "PRIMARY_TERM": "clinical+omics",
-        "total_funding": 66210141312.0,
-        "grant_count": 117652
+        "PRIMARY_TERM": "biomarker",
+        "total_funding": 13729451265.0,
+        "grant_count": 28294
       },
       {
         "PRIMARY_TERM": "clinical+imaging",
-        "total_funding": 47036946581.0,
-        "grant_count": 100366
+        "total_funding": 10405890827.0,
+        "grant_count": 20543
       },
       {
-        "PRIMARY_TERM": "biomarker",
-        "total_funding": 26788968624.0,
-        "grant_count": 61015
-      },
-      {
-        "PRIMARY_TERM": "genetic marker",
-        "total_funding": 5578903908.0,
-        "grant_count": 10452
-      },
-      {
-        "PRIMARY_TERM": "risk stratification",
-        "total_funding": 3060916406.0,
-        "grant_count": 6380
-      },
-      {
-        "PRIMARY_TERM": "endophenotype",
-        "total_funding": 2843317467.0,
-        "grant_count": 5068
-      },
-      {
-        "PRIMARY_TERM": "clinical diagnostics",
-        "total_funding": 2599613698.0,
-        "grant_count": 2080
+        "PRIMARY_TERM": "clinical+omics",
+        "total_funding": 6218922759.0,
+        "grant_count": 11279
       },
       {
         "PRIMARY_TERM": "response to therapy",
-        "total_funding": 2554546792.0,
-        "grant_count": 4612
+        "total_funding": 1452282751.0,
+        "grant_count": 2342
       },
       {
-        "PRIMARY_TERM": "predicting response",
-        "total_funding": 2490533260.0,
-        "grant_count": 5397
+        "PRIMARY_TERM": "risk stratification",
+        "total_funding": 504222381.0,
+        "grant_count": 928
       },
       {
-        "PRIMARY_TERM": "patient selection",
-        "total_funding": 1896679795.0,
-        "grant_count": 4225
+        "PRIMARY_TERM": "genetic marker",
+        "total_funding": 403150226.0,
+        "grant_count": 829
+      },
+      {
+        "PRIMARY_TERM": "endophenotype",
+        "total_funding": 295876859.0,
+        "grant_count": 480
+      },
+      {
+        "PRIMARY_TERM": "intermediate outcome",
+        "total_funding": 241681154.0,
+        "grant_count": 547
+      },
+      {
+        "PRIMARY_TERM": "prognostic value",
+        "total_funding": 151052009.0,
+        "grant_count": 434
+      },
+      {
+        "PRIMARY_TERM": "genomic signature",
+        "total_funding": 133549126.0,
+        "grant_count": 182
       },
       {
         "PRIMARY_TERM": "diagnostic accuracy",
-        "total_funding": 1781748312.0,
-        "grant_count": 3613
+        "total_funding": 131205863.0,
+        "grant_count": 325
       },
       {
-        "PRIMARY_TERM": "clinical predictors",
-        "total_funding": 1355383067.0,
-        "grant_count": 2934
-      },
-      {
-        "PRIMARY_TERM": "surrogate endpoint",
-        "total_funding": 1050989932.0,
-        "grant_count": 1471
-      },
-      {
-        "PRIMARY_TERM": "patient stratification",
-        "total_funding": 1025904196.0,
-        "grant_count": 2076
+        "PRIMARY_TERM": "clinical diagnostics",
+        "total_funding": 111268501.0,
+        "grant_count": 217
       },
       {
         "PRIMARY_TERM": "imaging marker",
-        "total_funding": 969614102.0,
-        "grant_count": 1685
+        "total_funding": 109003270.0,
+        "grant_count": 186
+      },
+      {
+        "PRIMARY_TERM": "clinical marker",
+        "total_funding": 106345373.0,
+        "grant_count": 276
+      },
+      {
+        "PRIMARY_TERM": "predicting response",
+        "total_funding": 105083135.0,
+        "grant_count": 141
       }
     ],
-    "total_with_term": 344550,
-    "total_without_term": 0
+    "total_with_term": 68389,
+    "total_without_term": 276161
   },
   "core_vs_expanded_terms": {
     "core_terms": [
       {
         "PRIMARY_TERM": "biomarker",
-        "total_funding": 26788968624.0,
-        "grant_count": 61015
-      },
-      {
-        "PRIMARY_TERM": "risk stratification",
-        "total_funding": 3060916406.0,
-        "grant_count": 6380
-      },
-      {
-        "PRIMARY_TERM": "endophenotype",
-        "total_funding": 2843317467.0,
-        "grant_count": 5068
+        "total_funding": 13729451265.0,
+        "grant_count": 28294
       },
       {
         "PRIMARY_TERM": "response to therapy",
-        "total_funding": 2554546792.0,
-        "grant_count": 4612
+        "total_funding": 1452282751.0,
+        "grant_count": 2342
       },
       {
-        "PRIMARY_TERM": "predicting response",
-        "total_funding": 2490533260.0,
-        "grant_count": 5397
+        "PRIMARY_TERM": "risk stratification",
+        "total_funding": 504222381.0,
+        "grant_count": 928
       },
       {
-        "PRIMARY_TERM": "patient selection",
-        "total_funding": 1896679795.0,
-        "grant_count": 4225
-      },
-      {
-        "PRIMARY_TERM": "surrogate endpoint",
-        "total_funding": 1050989932.0,
-        "grant_count": 1471
-      },
-      {
-        "PRIMARY_TERM": "imaging marker",
-        "total_funding": 969614102.0,
-        "grant_count": 1685
-      },
-      {
-        "PRIMARY_TERM": "clinical marker",
-        "total_funding": 897386600.0,
-        "grant_count": 2255
-      },
-      {
-        "PRIMARY_TERM": "companion diagnostic",
-        "total_funding": 306808655.0,
-        "grant_count": 650
+        "PRIMARY_TERM": "endophenotype",
+        "total_funding": 295876859.0,
+        "grant_count": 480
       },
       {
         "PRIMARY_TERM": "intermediate outcome",
-        "total_funding": 260203050.0,
-        "grant_count": 569
+        "total_funding": 241681154.0,
+        "grant_count": 547
+      },
+      {
+        "PRIMARY_TERM": "imaging marker",
+        "total_funding": 109003270.0,
+        "grant_count": 186
+      },
+      {
+        "PRIMARY_TERM": "clinical marker",
+        "total_funding": 106345373.0,
+        "grant_count": 276
+      },
+      {
+        "PRIMARY_TERM": "predicting response",
+        "total_funding": 105083135.0,
+        "grant_count": 141
+      },
+      {
+        "PRIMARY_TERM": "patient selection",
+        "total_funding": 104245945.0,
+        "grant_count": 200
       },
       {
         "PRIMARY_TERM": "intermediate endpoint",
-        "total_funding": 121600431.0,
-        "grant_count": 196
+        "total_funding": 93957060.0,
+        "grant_count": 164
+      },
+      {
+        "PRIMARY_TERM": "surrogate endpoint",
+        "total_funding": 36311941.0,
+        "grant_count": 113
+      },
+      {
+        "PRIMARY_TERM": "companion diagnostic",
+        "total_funding": 21101387.0,
+        "grant_count": 58
       }
     ],
     "expanded_terms": [
       {
-        "PRIMARY_TERM": "clinical+omics",
-        "total_funding": 66210141312.0,
-        "grant_count": 117652
+        "PRIMARY_TERM": "clinical+imaging",
+        "total_funding": 10405890827.0,
+        "grant_count": 20543
       },
       {
-        "PRIMARY_TERM": "clinical+imaging",
-        "total_funding": 47036946581.0,
-        "grant_count": 100366
+        "PRIMARY_TERM": "clinical+omics",
+        "total_funding": 6218922759.0,
+        "grant_count": 11279
       },
       {
         "PRIMARY_TERM": "genetic marker",
-        "total_funding": 5578903908.0,
-        "grant_count": 10452
-      },
-      {
-        "PRIMARY_TERM": "clinical diagnostics",
-        "total_funding": 2599613698.0,
-        "grant_count": 2080
-      },
-      {
-        "PRIMARY_TERM": "diagnostic accuracy",
-        "total_funding": 1781748312.0,
-        "grant_count": 3613
-      },
-      {
-        "PRIMARY_TERM": "clinical predictors",
-        "total_funding": 1355383067.0,
-        "grant_count": 2934
-      },
-      {
-        "PRIMARY_TERM": "patient stratification",
-        "total_funding": 1025904196.0,
-        "grant_count": 2076
-      },
-      {
-        "PRIMARY_TERM": "precision oncology",
-        "total_funding": 910310149.0,
-        "grant_count": 1219
+        "total_funding": 403150226.0,
+        "grant_count": 829
       },
       {
         "PRIMARY_TERM": "prognostic value",
-        "total_funding": 690820602.0,
-        "grant_count": 1899
-      },
-      {
-        "PRIMARY_TERM": "clinically actionable",
-        "total_funding": 690583294.0,
-        "grant_count": 1248
-      },
-      {
-        "PRIMARY_TERM": "disease heterogeneity",
-        "total_funding": 678349287.0,
-        "grant_count": 1073
-      },
-      {
-        "PRIMARY_TERM": "theranostics",
-        "total_funding": 525457232.0,
-        "grant_count": 1293
-      },
-      {
-        "PRIMARY_TERM": "predictive signature",
-        "total_funding": 493514193.0,
-        "grant_count": 798
+        "total_funding": 151052009.0,
+        "grant_count": 434
       },
       {
         "PRIMARY_TERM": "genomic signature",
-        "total_funding": 392000265.0,
-        "grant_count": 787
+        "total_funding": 133549126.0,
+        "grant_count": 182
       },
       {
-        "PRIMARY_TERM": "personalized diagnostics",
-        "total_funding": 370765099.0,
-        "grant_count": 591
+        "PRIMARY_TERM": "diagnostic accuracy",
+        "total_funding": 131205863.0,
+        "grant_count": 325
+      },
+      {
+        "PRIMARY_TERM": "clinical diagnostics",
+        "total_funding": 111268501.0,
+        "grant_count": 217
       },
       {
         "PRIMARY_TERM": "biosignature",
-        "total_funding": 356680668.0,
-        "grant_count": 604
+        "total_funding": 96776783.0,
+        "grant_count": 66
+      },
+      {
+        "PRIMARY_TERM": "clinical predictors",
+        "total_funding": 52827058.0,
+        "grant_count": 148
+      },
+      {
+        "PRIMARY_TERM": "patient stratification",
+        "total_funding": 46864930.0,
+        "grant_count": 86
       },
       {
         "PRIMARY_TERM": "proteomic signature",
-        "total_funding": 306568884.0,
-        "grant_count": 538
-      },
-      {
-        "PRIMARY_TERM": "digital biomarker",
-        "total_funding": 237559510.0,
-        "grant_count": 239
-      },
-      {
-        "PRIMARY_TERM": "diagnostic sensitivity",
-        "total_funding": 216112321.0,
-        "grant_count": 491
-      },
-      {
-        "PRIMARY_TERM": "diagnostic specificity",
-        "total_funding": 162283843.0,
-        "grant_count": 384
-      },
-      {
-        "PRIMARY_TERM": "clinical subtypes",
-        "total_funding": 131645438.0,
-        "grant_count": 281
-      },
-      {
-        "PRIMARY_TERM": "prognostic assays",
-        "total_funding": 119310988.0,
-        "grant_count": 279
+        "total_funding": 37551731.0,
+        "grant_count": 78
       },
       {
         "PRIMARY_TERM": "disease stratification",
-        "total_funding": 103721202.0,
-        "grant_count": 130
+        "total_funding": 35105798.0,
+        "grant_count": 16
+      },
+      {
+        "PRIMARY_TERM": "disease heterogeneity",
+        "total_funding": 21426654.0,
+        "grant_count": 86
+      },
+      {
+        "PRIMARY_TERM": "clinically actionable",
+        "total_funding": 21080755.0,
+        "grant_count": 35
+      },
+      {
+        "PRIMARY_TERM": "diagnostic specificity",
+        "total_funding": 19402452.0,
+        "grant_count": 46
+      },
+      {
+        "PRIMARY_TERM": "clinical subtypes",
+        "total_funding": 16996792.0,
+        "grant_count": 61
+      },
+      {
+        "PRIMARY_TERM": "theranostics",
+        "total_funding": 15916174.0,
+        "grant_count": 45
+      },
+      {
+        "PRIMARY_TERM": "predictive signature",
+        "total_funding": 14341539.0,
+        "grant_count": 47
+      },
+      {
+        "PRIMARY_TERM": "precision oncology",
+        "total_funding": 10202984.0,
+        "grant_count": 46
+      },
+      {
+        "PRIMARY_TERM": "personalized diagnostics",
+        "total_funding": 10009597.0,
+        "grant_count": 5
+      },
+      {
+        "PRIMARY_TERM": "diagnostic sensitivity",
+        "total_funding": 9769611.0,
+        "grant_count": 28
+      },
+      {
+        "PRIMARY_TERM": "digital biomarker",
+        "total_funding": 8690402.0,
+        "grant_count": 45
+      },
+      {
+        "PRIMARY_TERM": "prognostic assays",
+        "total_funding": 7106993.0,
+        "grant_count": 13
       }
     ],
-    "core_total_funding": 43241565114.0,
-    "expanded_total_funding": 131974324049.0,
-    "core_total_grants": 93523,
-    "expanded_total_grants": 251027
+    "core_total_funding": 16799562521.0,
+    "expanded_total_funding": 17979109564.0,
+    "core_total_grants": 33729,
+    "expanded_total_grants": 34660
   },
   "summary": {
     "total_grants": 344550,
@@ -1269,6 +1269,6 @@
     ],
     "core_terms": 13,
     "expanded_terms": 36,
-    "renderer": "seaborn"
+    "renderer": "datawrapper"
   }
 }
