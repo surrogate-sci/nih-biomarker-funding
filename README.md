@@ -41,8 +41,10 @@ python3 scripts/filter_biomarker_projects.py \
 ```
 
 **Search term sets:**
-- `--term-set core`: 4 explicit biomarker terms (biomarker, clinical marker, surrogate endpoint, imaging marker)
-- `--term-set expanded`: 10 terms including digital biomarker, endophenotype, genetic marker, clinical+omics, clinical+imaging
+- `--term-set core`: 13 definite biomarker terms (biomarker, clinical marker, surrogate endpoint, imaging marker, endophenotype, intermediate outcome/endpoint, digital endpoint, risk stratification, patient selection, companion diagnostic, predicting response, response to therapy)
+- `--term-set expanded`: 36 terms (all core + diagnostics, stratification, precision medicine, and signature terms)
+
+**Facility screening:** Infrastructure sub-projects (Administrative Core, Shared Resource, etc.) are excluded by title pattern. Center grants (P30, P50) are preserved.
 
 **Output:** Adds `EXPLICIT_BIOMARKER` column (TRUE/FALSE) to flag projects matching core terms. Deduplicates by (APPLICATION_ID, FY) to preserve yearly funding records.
 
@@ -236,12 +238,13 @@ python3 scripts/analyze_keywords.py --input data/nih_biomarker_unified_2004-2024
 ## Data
 
 **Downloads**:
+- [GitHub Release (v3.0)](https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v3.0/nih_biomarker_unified_2004-2024.zip) — 39MB zip (expanded keywords + facility screening, 344K grants)
 - [GitHub Release (v2.0)](https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v2.0/nih_biomarker_unified_2004-2024.zip) — 38MB zip (keyword + abstract union, 332K grants)
 - [GitHub Release (v1.0)](https://github.com/surrogate-sci/nih-biomarker-funding/releases/download/dataset-release-v1.0/nih_biomarker_unified_2004-2024.zip) — 130MB zip (keywords only, 270K grants)
 - [Google Drive](https://drive.google.com/file/d/1izm9E7S2KFZSeVcRbD40n-BWVEz9oIPS/view?usp=drivesdk) — v1.0
 
 **Current Dataset**: `data/nih_biomarker_unified_2004-2024.csv`
-- 332,324 unique project-year records (union of keyword + abstract text filters)
+- 344,550 unique project-year records (union of keyword + abstract text filters)
 - Spans FY2004 - FY2024 (21 years)
 - Sourced from NIH ExPORTER bulk data filtered by biomarker-related keywords in PROJECT_TITLE, PROJECT_TERMS, and ABSTRACT_TEXT
 
@@ -252,7 +255,7 @@ python3 scripts/analyze_keywords.py --input data/nih_biomarker_unified_2004-2024
 | `MATCH_SOURCE` | `keywords_only` or `abstract_only` — where the keyword matched |
 | `MATCHED_TERMS` | Semicolon-delimited list of all matching terms |
 | `PRIMARY_TERM` | Single most-specific term per grant (non-overlapping) |
-| `EXPLICIT_BIOMARKER` | TRUE if any core (4) term matched |
+| `EXPLICIT_BIOMARKER` | TRUE if any core (13) term matched |
 
 **Individual Year Files**:
 
@@ -264,13 +267,13 @@ data/filtered/
 ```
 
 **Summary Statistics** (from `data/filtered/SUMMARY.md`):
-- **Total Matched Projects**: 332,324 (keywords: 269,630 + abstract-only: 62,694)
-- **Core Biomarker Term Matches**: 109,234
-- **Total Biomarker Relevant Spending**: $168.05B
+- **Total Matched Projects**: 344,550 (keywords: 276,161 + abstract-only: 68,389)
+- **Core Biomarker Term Matches (EXPLICIT_BIOMARKER=TRUE)**: 127,394
+- **Total Biomarker Relevant Spending**: $175.2B
 
 **Search Terms Used**:
-- **Core terms (4)**: biomarker, clinical marker, surrogate endpoint, imaging marker
-- **Expanded terms (10)**: core + digital biomarker, intermediate outcome, endophenotype, genetic marker, clinical+omics, clinical+imaging
+- **Core terms (13)**: biomarker, clinical marker, surrogate endpoint, imaging marker, endophenotype, intermediate outcome, intermediate endpoint, digital endpoint, risk stratification, patient selection, companion diagnostic, predicting response, response to therapy
+- **Expanded terms (36)**: core + digital biomarker, genetic marker, clinical+omics, clinical+imaging, diagnostic accuracy/sensitivity/specificity, clinical diagnostics, personalized diagnostics, clinical predictors, prognostic value/assays, clinically actionable, patient/disease stratification, disease heterogeneity, clinical subtypes, theranostics, precision oncology, predictive/genomic/proteomic signature, biosignature
 
 **Data Quality Notes**:
 - FY2005-06 and FY2013/2018 had sparse PROJECT_TERMS — now mitigated by abstract text search
@@ -281,11 +284,12 @@ data/filtered/
 
 For current summary statistics and per-year funding breakdowns, see `data/filtered/SUMMARY.md`.
 
-**Key Findings** (FY2004-2024, unified dataset v2.0):
-- 332,324 biomarker-related grants totaling $168.05B over 21 years
-- 19% of grants (62,694) were only discoverable via abstract text search
-- Non-overlapping PRIMARY_TERM distribution: clinical+omics 39.8%, clinical+imaging 33.3%, biomarker 20.0%, with specific terms (surrogate endpoint, digital biomarker, etc.) at <4% each
-- Sparse years (FY2005-06, FY2013, FY2018) recovered via abstract search (e.g., FY2006: 336 → 4,323 grants)
+**Key Findings** (FY2004-2024, unified dataset v3.0):
+- 344,550 biomarker-related grants totaling $175.2B over 21 years
+- 20% of grants (68,389) were only discoverable via abstract text search
+- 37% of grants (127,394) match core biomarker terms (EXPLICIT_BIOMARKER=TRUE)
+- Sparse years (FY2005-06, FY2013, FY2018) recovered via abstract search
+- NCI (CA) accounts for 84K grants; NIEHS (ES) has highest explicit-biomarker rate (69%)
 
 **Oct-2024 Dataset**: 
 The `data/oct-2024/` directory contains analysis results from October 2024 using different search strategies and keyword filters. This is a separate analysis from the current FY2004-2024 workflow which uses the expanded term set.
