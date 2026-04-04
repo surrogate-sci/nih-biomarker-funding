@@ -99,18 +99,20 @@ def join_abstracts(
             has_abstract = bool(abstract)
             if has_abstract:
                 found += 1
-            output_rows.append({
-                "FY": row["FY"],
-                "APPLICATION_ID": app_id,
-                "ADMINISTERING_IC": row.get("ADMINISTERING_IC", ""),
-                "IC_NAME": row.get("IC_NAME", ""),
-                "ACTIVITY": row.get("ACTIVITY", ""),
-                "TOTAL_COST": row.get("TOTAL_COST", ""),
-                "EXPLICIT_BIOMARKER": row.get("EXPLICIT_BIOMARKER", ""),
-                "PROJECT_TITLE": row.get("PROJECT_TITLE", ""),
-                "ABSTRACT_TEXT": abstract,
-                "HAS_ABSTRACT": str(has_abstract),
-            })
+            output_rows.append(
+                {
+                    "FY": row["FY"],
+                    "APPLICATION_ID": app_id,
+                    "ADMINISTERING_IC": row.get("ADMINISTERING_IC", ""),
+                    "IC_NAME": row.get("IC_NAME", ""),
+                    "ACTIVITY": row.get("ACTIVITY", ""),
+                    "TOTAL_COST": row.get("TOTAL_COST", ""),
+                    "EXPLICIT_BIOMARKER": row.get("EXPLICIT_BIOMARKER", ""),
+                    "PROJECT_TITLE": row.get("PROJECT_TITLE", ""),
+                    "ABSTRACT_TEXT": abstract,
+                    "HAS_ABSTRACT": str(has_abstract),
+                }
+            )
         print(f"    → {found}/{len(sampled[fy])} abstracts found")
 
     return output_rows

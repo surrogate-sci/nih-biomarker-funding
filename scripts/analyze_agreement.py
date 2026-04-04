@@ -136,7 +136,9 @@ def print_disagreements(disagree_counter, label_a, label_b, dim_name, top_n=5):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze inter-rater agreement between LLM graders")
+    parser = argparse.ArgumentParser(
+        description="Analyze inter-rater agreement between LLM graders"
+    )
     parser.add_argument(
         "--data-dir",
         default=str(DEFAULT_DATA_DIR),
@@ -152,7 +154,10 @@ def main():
         print(f"ERROR: No grade files found in {data_dir}", file=sys.stderr)
         sys.exit(1)
     for key in missing:
-        print(f"WARNING: {files[key]} not found, skipping {MODEL_LABELS[key]}", file=sys.stderr)
+        print(
+            f"WARNING: {files[key]} not found, skipping {MODEL_LABELS[key]}",
+            file=sys.stderr,
+        )
 
     # Load all available files
     all_grades = {}
@@ -166,7 +171,9 @@ def main():
             continue
         grades, errors = load_grades(path)
         all_grades[key] = grades
-        print(f"  {MODEL_LABELS[key]:30s}: {len(grades):5d} valid grades, {errors} errors")
+        print(
+            f"  {MODEL_LABELS[key]:30s}: {len(grades):5d} valid grades, {errors} errors"
+        )
 
     print()
 
@@ -186,14 +193,18 @@ def main():
     print("-" * 50)
     if len(model_keys) >= 2:
         if len(model_keys) >= 3:
-            print(f"  All {len(model_keys)} models:{' ' * (21 - len(str(len(model_keys))))} {len(nway_overlap):5d}")
+            print(
+                f"  All {len(model_keys)} models:{' ' * (21 - len(str(len(model_keys))))} {len(nway_overlap):5d}"
+            )
         for (ka, kb), common in pairwise_overlaps.items():
             la = MODEL_LABELS.get(ka, ka)
             lb = MODEL_LABELS.get(kb, kb)
             label = f"{la} + {lb}:"
             print(f"  {label:35s} {len(common):5d}")
     else:
-        print(f"  Only one model loaded ({MODEL_LABELS.get(model_keys[0], model_keys[0])}), no overlaps to compute.")
+        print(
+            f"  Only one model loaded ({MODEL_LABELS.get(model_keys[0], model_keys[0])}), no overlaps to compute."
+        )
     print()
 
     # Pairwise agreement
@@ -202,16 +213,22 @@ def main():
         print("PAIRWISE AGREEMENT RATES")
         print("=" * 80)
         print()
-        print(f"  {'Pair':42s}   {'N':>5s}   {'Dim1':>6s}   {'Dim2':>6s}   {'Dim3':>6s}")
-        print(f"  {'-'*42}   {'-----':>5s}   {'------':>6s}   {'------':>6s}   {'------':>6s}")
+        print(
+            f"  {'Pair':42s}   {'N':>5s}   {'Dim1':>6s}   {'Dim2':>6s}   {'Dim3':>6s}"
+        )
+        print(
+            f"  {'-' * 42}   {'-----':>5s}   {'------':>6s}   {'------':>6s}   {'------':>6s}"
+        )
 
         pair_results = {}
         for (ka, kb), common in pairwise_overlaps.items():
             la = MODEL_LABELS.get(ka, ka)
             lb = MODEL_LABELS.get(kb, kb)
             res = compute_agreement(
-                all_grades[ka], all_grades[kb],
-                la, lb,
+                all_grades[ka],
+                all_grades[kb],
+                la,
+                lb,
                 common,
             )
             pair_results[(ka, kb)] = res
@@ -221,7 +238,9 @@ def main():
                     f"  {label:42s}   {res['n']:5d}   {res['dim1_rate']:5.1%}   {res['dim2_rate']:5.1%}   {res['dim3_rate']:5.1%}"
                 )
             else:
-                print(f"  {label:42s}   {'0':>5s}   {'N/A':>6s}   {'N/A':>6s}   {'N/A':>6s}")
+                print(
+                    f"  {label:42s}   {'0':>5s}   {'N/A':>6s}   {'N/A':>6s}   {'N/A':>6s}"
+                )
 
         print()
 
@@ -251,17 +270,33 @@ def main():
             print(f"\n  --- {la} vs {lb} (N={res['n']}) ---")
             print_disagreements(res["dim1_disagree"], la, lb, "Dim1 (biomarker use)")
             print_disagreements(res["dim2_disagree"], la, lb, "Dim2 (research design)")
-            print_disagreements(res["dim3_disagree"], la, lb, "Dim3 (evidence strength)")
+            print_disagreements(
+                res["dim3_disagree"], la, lb, "Dim3 (evidence strength)"
+            )
 
     # Distribution of codes across models (on N-way overlap set)
-    overlap_set = nway_overlap if len(model_keys) >= 2 else set(next(iter(ids.values()))) if ids else set()
+    overlap_set = (
+        nway_overlap
+        if len(model_keys) >= 2
+        else set(next(iter(ids.values())))
+        if ids
+        else set()
+    )
     if overlap_set:
         print()
         print("=" * 80)
-        overlap_label = f"{len(model_keys)}-WAY" if len(model_keys) >= 2 else "SINGLE-MODEL"
-        print(f"CODE DISTRIBUTIONS ON {overlap_label} OVERLAP SET (N={len(overlap_set)})")
+        overlap_label = (
+            f"{len(model_keys)}-WAY" if len(model_keys) >= 2 else "SINGLE-MODEL"
+        )
+        print(
+            f"CODE DISTRIBUTIONS ON {overlap_label} OVERLAP SET (N={len(overlap_set)})"
+        )
         print("=" * 80)
-        for dim_key, dim_label in [("dim1", "Dim1 (biomarker use)"), ("dim2", "Dim2 (research design)"), ("dim3", "Dim3 (evidence strength)")]:
+        for dim_key, dim_label in [
+            ("dim1", "Dim1 (biomarker use)"),
+            ("dim2", "Dim2 (research design)"),
+            ("dim3", "Dim3 (evidence strength)"),
+        ]:
             print(f"\n  {dim_label}:")
             for mk in model_keys:
                 dist = Counter(all_grades[mk][aid][dim_key] for aid in overlap_set)

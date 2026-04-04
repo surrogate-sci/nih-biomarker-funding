@@ -183,9 +183,7 @@ def make_year_chart(df, title_prefix, output_dir, filename_prefix):
 def make_institute_chart(df, title_prefix, output_dir, filename_prefix):
     """Create a by-institute funding chart for a dataset."""
     df["Total Cost Numeric"] = pd.to_numeric(df["Total Cost"], errors="coerce")
-    institute = (
-        df.groupby("Administering IC")["Total Cost Numeric"].sum() / 1_000_000
-    )
+    institute = df.groupby("Administering IC")["Total Cost Numeric"].sum() / 1_000_000
     institute = institute.sort_values(ascending=False).head(10)
     create_chart_html(
         f"{title_prefix}: Top 10 Institutes by Total Funding",

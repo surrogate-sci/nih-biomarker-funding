@@ -44,7 +44,9 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def download_file(url: str, output_path: Path, logger: logging.Logger, max_retries: int = 4) -> bool:
+def download_file(
+    url: str, output_path: Path, logger: logging.Logger, max_retries: int = 4
+) -> bool:
     """Download a file with exponential backoff retry logic."""
     for attempt in range(max_retries):
         try:
@@ -54,22 +56,28 @@ def download_file(url: str, output_path: Path, logger: logging.Logger, max_retri
 
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
-            total_size = int(response.headers.get('content-length', 0))
+            total_size = int(response.headers.get("content-length", 0))
             downloaded = 0
 
-            with open(output_path, 'wb') as f:
+            with open(output_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
-                        if total_size > 0 and downloaded % (10 * 1024 * 1024) == 0:  # Log every 10MB
-                            logger.debug(f"Downloaded {downloaded / (1024*1024):.1f} MB / {total_size / (1024*1024):.1f} MB")
+                        if (
+                            total_size > 0 and downloaded % (10 * 1024 * 1024) == 0
+                        ):  # Log every 10MB
+                            logger.debug(
+                                f"Downloaded {downloaded / (1024 * 1024):.1f} MB / {total_size / (1024 * 1024):.1f} MB"
+                            )
 
-            logger.info(f"Successfully downloaded {output_path.name} ({output_path.stat().st_size / (1024*1024):.1f} MB)")
+            logger.info(
+                f"Successfully downloaded {output_path.name} ({output_path.stat().st_size / (1024 * 1024):.1f} MB)"
+            )
             return True
 
         except Exception as e:
-            wait_time = 2 ** attempt
+            wait_time = 2**attempt
             if attempt < max_retries - 1:
                 logger.warning(f"Download failed: {e}. Retrying in {wait_time}s...")
                 time.sleep(wait_time)
@@ -80,21 +88,25 @@ def download_file(url: str, output_path: Path, logger: logging.Logger, max_retri
     return False
 
 
-def extract_zip(zip_path: Path, extract_dir: Path, logger: logging.Logger) -> List[Path]:
+def extract_zip(
+    zip_path: Path, extract_dir: Path, logger: logging.Logger
+) -> List[Path]:
     """Extract a ZIP file and return paths to extracted CSV files."""
     logger.info(f"Extracting {zip_path.name}...")
     extracted_files = []
 
     try:
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
             # Get list of CSV files in the ZIP
-            csv_files = [f for f in zip_ref.namelist() if f.endswith('.csv')]
+            csv_files = [f for f in zip_ref.namelist() if f.endswith(".csv")]
 
             for csv_file in csv_files:
                 extract_path = extract_dir / csv_file
                 zip_ref.extract(csv_file, extract_dir)
                 extracted_files.append(extract_path)
-                logger.info(f"  Extracted: {csv_file} ({extract_path.stat().st_size / (1024*1024):.1f} MB)")
+                logger.info(
+                    f"  Extracted: {csv_file} ({extract_path.stat().st_size / (1024 * 1024):.1f} MB)"
+                )
 
         return extracted_files
     except Exception as e:
@@ -157,7 +169,9 @@ def process_fiscal_year(
             # Find the projects CSV
             csv_path = next((f for f in extracted_files if "PRJ_C" in f.name), None)
             if not csv_path or not csv_path.exists():
-                logger.error(f"Projects CSV not found in extracted files: {extracted_files}")
+                logger.error(
+                    f"Projects CSV not found in extracted files: {extracted_files}"
+                )
                 return {
                     "year": year,
                     "success": False,
@@ -178,15 +192,20 @@ def process_fiscal_year(
         }
 
     # Filter using the existing filter script via subprocess
-    logger.info(f"Filtering FY{year} for biomarker projects using '{term_set}' term set...")
+    logger.info(
+        f"Filtering FY{year} for biomarker projects using '{term_set}' term set..."
+    )
     filter_script = Path(__file__).parent / "filter_biomarker_projects.py"
 
     cmd = [
         "python3",
         str(filter_script),
-        "--input-csv", str(csv_path),
-        "--output", str(filtered_path),
-        "--term-set", term_set,
+        "--input-csv",
+        str(csv_path),
+        "--output",
+        str(filtered_path),
+        "--term-set",
+        term_set,
     ]
 
     if verbose:
@@ -316,12 +335,14 @@ def main():
         year_stats.append(stats)
 
     # Check if any years succeeded
-    successful_years = [s for s in year_stats if s['success']]
+    successful_years = [s for s in year_stats if s["success"]]
     if not successful_years:
         logger.error("No fiscal years were successfully processed!")
         sys.exit(1)
 
-    logger.info(f"Successfully processed {len(successful_years)}/{len(years)} fiscal years")
+    logger.info(
+        f"Successfully processed {len(successful_years)}/{len(years)} fiscal years"
+    )
 
     logger.info("Processing complete!")
     logger.info(f"Filtered data saved to: {args.filtered_dir}")

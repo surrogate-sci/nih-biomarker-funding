@@ -107,11 +107,7 @@ def build_system_prompt(rubric_text: str) -> str:
     3. Output-format instructions and classification rules.
     """
     rubric_text = _strip_rubric_for_prompt(rubric_text)
-    return (
-        f"{_SYSTEM_PROMPT_PREAMBLE}\n\n"
-        f"{rubric_text}\n"
-        f"{_SYSTEM_PROMPT_OUTPUT_FORMAT}"
-    )
+    return f"{_SYSTEM_PROMPT_PREAMBLE}\n\n{rubric_text}\n{_SYSTEM_PROMPT_OUTPUT_FORMAT}"
 
 
 # ---------------------------------------------------------------------------
@@ -132,7 +128,10 @@ def create_grading_prompt(title: str, abstract: str) -> list:
     system_prompt = build_system_prompt(load_rubric())
     return [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": USER_PROMPT_TEMPLATE.format(title=title, abstract=abstract)}
+        {
+            "role": "user",
+            "content": USER_PROMPT_TEMPLATE.format(title=title, abstract=abstract),
+        },
     ]
 
 
@@ -149,18 +148,18 @@ def call_openrouter(messages: list, model: str, api_key: str) -> dict:
         "model": model,
         "messages": messages,
         "temperature": 0.1,
-        "max_tokens": 500
+        "max_tokens": 500,
     }
 
     req = urllib.request.Request(
         "https://openrouter.ai/api/v1/chat/completions",
-        data=json.dumps(payload).encode('utf-8'),
+        data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
             "HTTP-Referer": "https://github.com/nih-biomarker-funding",
-            "X-Title": "NIH Biomarker Grader"
-        }
+            "X-Title": "NIH Biomarker Grader",
+        },
     )
 
     with urllib.request.urlopen(req) as response:
@@ -177,16 +176,16 @@ def call_openai(messages: list, model: str, api_key: str) -> dict:
         "model": model,
         "messages": messages,
         "temperature": 0.1,
-        "max_tokens": 500
+        "max_tokens": 500,
     }
 
     req = urllib.request.Request(
         "https://api.openai.com/v1/chat/completions",
-        data=json.dumps(payload).encode('utf-8'),
+        data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        }
+            "Authorization": f"Bearer {api_key}",
+        },
     )
 
     with urllib.request.urlopen(req) as response:

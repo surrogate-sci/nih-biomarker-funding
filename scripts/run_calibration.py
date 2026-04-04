@@ -49,11 +49,11 @@ def run_calibration(
     results = []
     for i, ex in enumerate(examples):
         title = ex["PROJECT_TITLE"]
-        abstract = ex["ABSTRACT"]
+        abstract = ex["ABSTRACT_TEXT"]
         matched_terms = ex["MATCHED_TERMS"]
         app_id = ex["APPLICATION_ID"]
 
-        print(f"\n[{i+1}/{len(examples)}] {app_id}: {title[:60]}...")
+        print(f"\n[{i + 1}/{len(examples)}] {app_id}: {title[:60]}...")
         print(f"  Matched terms: {matched_terms}")
 
         messages = create_grading_prompt(title, abstract)
@@ -63,31 +63,41 @@ def run_calibration(
             content = response["choices"][0]["message"]["content"]
             parsed = parse_llm_json(content)
 
-            print(f"  biomarker_use: {parsed.get('biomarker_use', {}).get('primary', '?')}"
-                  f" (conf: {parsed.get('biomarker_use', {}).get('confidence', '?')})")
-            print(f"  research_design: {parsed.get('research_design', {}).get('primary', '?')}")
-            print(f"  evidence_strength: {parsed.get('evidence_strength', {}).get('code', '?')}")
+            print(
+                f"  biomarker_use: {parsed.get('biomarker_use', {}).get('primary', '?')}"
+                f" (conf: {parsed.get('biomarker_use', {}).get('confidence', '?')})"
+            )
+            print(
+                f"  research_design: {parsed.get('research_design', {}).get('primary', '?')}"
+            )
+            print(
+                f"  evidence_strength: {parsed.get('evidence_strength', {}).get('code', '?')}"
+            )
             print(f"  reasoning: {parsed.get('reasoning', '')[:100]}...")
 
-            results.append({
-                "application_id": app_id,
-                "year": ex["YEAR"],
-                "title": title,
-                "matched_terms": matched_terms,
-                "model": model,
-                "classification": parsed,
-            })
+            results.append(
+                {
+                    "application_id": app_id,
+                    "year": ex["YEAR"],
+                    "title": title,
+                    "matched_terms": matched_terms,
+                    "model": model,
+                    "classification": parsed,
+                }
+            )
 
         except Exception as e:
             print(f"  ERROR: {e}")
-            results.append({
-                "application_id": app_id,
-                "year": ex["YEAR"],
-                "title": title,
-                "matched_terms": matched_terms,
-                "model": model,
-                "error": str(e),
-            })
+            results.append(
+                {
+                    "application_id": app_id,
+                    "year": ex["YEAR"],
+                    "title": title,
+                    "matched_terms": matched_terms,
+                    "model": model,
+                    "error": str(e),
+                }
+            )
 
         # Rate limiting
         if i < len(examples) - 1:
@@ -95,7 +105,9 @@ def run_calibration(
 
     # Save results
     model_slug = model.split("/")[-1]
-    output_path = Path(__file__).parent.parent / "data" / f"calibration_results_{model_slug}.json"
+    output_path = (
+        Path(__file__).parent.parent / "data" / f"calibration_results_{model_slug}.json"
+    )
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)
     print(f"\n{'=' * 70}")
