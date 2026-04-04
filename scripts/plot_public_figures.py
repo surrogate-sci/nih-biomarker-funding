@@ -8,7 +8,7 @@ Datawrapper line charts and exports their PNGs to visualizations/.
 IMPORTANT: Always update existing chart IDs — never create new ones.
 
 Datawrapper chart IDs:
-  VydiG — annual spending, 2024-dollar adjusted
+  ZOLb1 — annual spending, 2024-dollar adjusted
   pzYSe — cumulative spending, 2024-dollar adjusted
 
 Dataset: nih_biomarker_unified_2004-2024.csv, v3.0 (generated 2026-04-03)
@@ -86,7 +86,7 @@ CPI_U = {
 CPI_BASE_YEAR = 2024
 
 # Datawrapper chart IDs — update these in place, never create new ones
-DW_CHART_ANNUAL = "VydiG"   # Annual spending, 2024-dollar adjusted (pre-existing chart ID)
+DW_CHART_ANNUAL = "ZOLb1"   # Annual spending, 2024-dollar adjusted
 DW_CHART_CUM    = "pzYSe"   # Cumulative spending, 2024-dollar adjusted
 
 DW_API = "https://api.datawrapper.de/v3"
