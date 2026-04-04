@@ -64,7 +64,7 @@ class TestPrimaryTerm(unittest.TestCase):
         self.assertEqual(primary_term([]), "")
 
     def test_biomarker_is_lowest_priority(self):
-        from scripts.keyword_terms import primary_term, TERM_PRIORITY
+        from scripts.keyword_terms import TERM_PRIORITY
         # biomarker should be last in priority
         self.assertEqual(TERM_PRIORITY[-1], "biomarker")
 

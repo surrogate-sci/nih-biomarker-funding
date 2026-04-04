@@ -101,8 +101,8 @@ def generate_summary_markdown(
 
                 # Count explicit biomarker projects
                 if 'EXPLICIT_BIOMARKER' in df.columns:
-                    explicit_count = ((df['EXPLICIT_BIOMARKER'] == True) | (df['EXPLICIT_BIOMARKER'] == 'TRUE')).sum()
-                    year_explicit_funding = df[df['EXPLICIT_BIOMARKER'] == True]['TOTAL_COST_NUM'].sum()
+                    explicit_count = ((df['EXPLICIT_BIOMARKER'] == True) | (df['EXPLICIT_BIOMARKER'] == 'TRUE')).sum()  # noqa: E712
+                    year_explicit_funding = df[df['EXPLICIT_BIOMARKER'] == True]['TOTAL_COST_NUM'].sum()  # noqa: E712
                 else:
                     explicit_count = 0
                     year_explicit_funding = 0

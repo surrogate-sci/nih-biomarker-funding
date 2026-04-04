@@ -10,7 +10,7 @@ import argparse
 import itertools
 import json
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 
 DEFAULT_DATA_DIR = Path(__file__).parent.parent / "data"

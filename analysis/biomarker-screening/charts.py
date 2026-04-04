@@ -5,7 +5,6 @@ Uses Paul Tol's colorblind-safe qualitative palette throughout.
 Datawrapper charts are updated in place if chart IDs exist in .url files.
 """
 
-import json
 import os
 from pathlib import Path
 from typing import Optional
@@ -94,7 +93,7 @@ def _billions(x, _pos=None):
     return f"${x / 1e9:.1f}B"
 
 
-def get_renderer(output_dir: Path) -> "ChartRenderer":
+def get_renderer(output_dir: Path):  # -> SeabornRenderer | DatawrapperRenderer
     """Return Datawrapper renderer if token is set, else seaborn fallback."""
     token = os.environ.get("DATAWRAPPER_API_TOKEN")
     if token:
@@ -298,9 +297,7 @@ class SeabornRenderer:
             "Each grant assigned its most specific matching term",
             fontsize=14,
         )
-        total = df["total_funding"].sum()
         for i, row in enumerate(df.itertuples()):
-            pct = 100 * row.total_funding / total
             ax.text(row.total_funding, i,
                     f"  ${row.total_funding/1e9:.1f}B ({row.grant_count:,} grants)",
                     va="center", fontsize=8)

@@ -210,7 +210,7 @@ def combine_filtered_years(
 
     # Report MATCH_SOURCE breakdown
     source_counts = combined_df["MATCH_SOURCE"].value_counts()
-    logger.info(f"\nMATCH_SOURCE breakdown:")
+    logger.info("\nMATCH_SOURCE breakdown:")
     for source, count in source_counts.items():
         logger.info(f"  {source}: {count:,}")
 

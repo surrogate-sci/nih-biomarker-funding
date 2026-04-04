@@ -116,9 +116,9 @@ def process_fiscal_year(
 
     Returns dict with statistics about the processing.
     """
-    logger.info(f"=" * 80)
+    logger.info("=" * 80)
     logger.info(f"Processing fiscal year {year}...")
-    logger.info(f"=" * 80)
+    logger.info("=" * 80)
 
     # Define paths
     zip_path = raw_dir / f"RePORTER_PRJ_C_FY{year}.zip"
@@ -325,9 +325,9 @@ def main():
 
     logger.info("Processing complete!")
     logger.info(f"Filtered data saved to: {args.filtered_dir}")
-    logger.info(f"")
-    logger.info(f"To generate summary report and visualizations, run:")
-    logger.info(f"  python3 scripts/generate_summary.py")
+    logger.info("")
+    logger.info("To generate summary report and visualizations, run:")
+    logger.info("  python3 scripts/generate_summary.py")
 
 
 if __name__ == "__main__":

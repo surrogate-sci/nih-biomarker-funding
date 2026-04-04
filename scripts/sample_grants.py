@@ -174,7 +174,7 @@ def print_summary(
     by_year: dict[str, int] = defaultdict(int)
     for row in all_sampled:
         by_year[row["FY"]] += 1
-    print(f"\nPer year:")
+    print("\nPer year:")
     for fy in sorted(by_year):
         note = " (abstracts missing)" if int(fy) in skip_years else ""
         print(f"  FY{fy}: {by_year[fy]:,}{note}")

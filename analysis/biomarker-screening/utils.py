@@ -15,9 +15,6 @@ DATASET_PATH = PROJECT_ROOT / "data" / "nih_biomarker_unified_2004-2024.csv"
 # Make scripts/ importable so we can use keyword_terms
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 from keyword_terms import (  # noqa: E402
-    EXPANDED_BIOMARKER_TERMS,
-    TERM_PRIORITY,
-    find_matching_terms,
     primary_term,
 )
 
