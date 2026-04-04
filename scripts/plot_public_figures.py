@@ -64,9 +64,12 @@ CORE_ANNUAL_B = [
     1.73, 1.89, 2.96, 3.50, 3.57, 4.39, 4.76, 5.19, 5.50, 6.04, 5.95,
 ]
 
-# Years with known PROJECT_TERMS metadata gaps in NIH ExPORTER source files
-# TODO: confirm whether 2005/2006 still apply after v3 abstract-based recovery
-BAD_YEARS = {2005, 2006, 2013, 2018}
+# Years with known PROJECT_TERMS metadata gaps in NIH ExPORTER source files.
+# FY2005: PROJECT_TERMS 68% populated; FY2006: PROJECT_TERMS completely empty.
+# v3 abstract-based matching partially recovered these years, but they are
+# still likely undercounted relative to fully-populated years.
+# FY2013 and FY2018 dips reflect budget sequestration, not metadata gaps.
+BAD_YEARS = {2005, 2006}
 
 # ---------------------------------------------------------------------------
 # BLS CPI-U annual averages — used for inflation adjustment
