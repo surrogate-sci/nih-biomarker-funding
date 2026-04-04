@@ -21,6 +21,8 @@ from keyword_terms import (  # noqa: E402
     primary_term,
 )
 
+ALL_TERMS = EXPANDED_BIOMARKER_TERMS
+
 # Functional categories for biomarker terms — grouped by research PURPOSE.
 # Maps each of the 36 expanded terms to one of 6 purpose categories.
 # These categories address the core question: what kind of biomarker work
@@ -119,36 +121,27 @@ def load_dataset(path: Path = DATASET_PATH) -> pd.DataFrame:
     df["TOTAL_COST"] = pd.to_numeric(df["TOTAL_COST"], errors="coerce")
     df["FY"] = df["FY"].astype(int)
 
-    # Ensure PRIMARY_TERM column exists — compute from available data
-    if "PRIMARY_TERM" not in df.columns:
-        if "MATCHED_TERMS" in df.columns:
-            # Dataset has MATCHED_TERMS from enriched filter pipeline
-            df["PRIMARY_TERM"] = ""
-            mask = df["PRIMARY_TERM"].isna() | (df["PRIMARY_TERM"] == "")
-            has_matched = (
-                mask & df["MATCHED_TERMS"].notna() & (df["MATCHED_TERMS"] != "")
-            )
-            if has_matched.any():
-                df.loc[has_matched, "PRIMARY_TERM"] = df.loc[
-                    has_matched, "MATCHED_TERMS"
-                ].apply(lambda mt: primary_term(mt.split(";")))
-        else:
-            # Older dataset without MATCHED_TERMS — derive from PROJECT_TITLE
-            print("  Computing PRIMARY_TERM from PROJECT_TITLE (no MATCHED_TERMS column)...")
-            df["PRIMARY_TERM"] = df["PROJECT_TITLE"].fillna("").apply(
-                lambda t: primary_term(find_matching_terms(t, EXPANDED_BIOMARKER_TERMS))
-            )
-    else:
-        # Fill blanks from MATCHED_TERMS if available
-        mask = df["PRIMARY_TERM"].isna() | (df["PRIMARY_TERM"] == "")
-        if "MATCHED_TERMS" in df.columns:
-            has_matched = (
-                mask & df["MATCHED_TERMS"].notna() & (df["MATCHED_TERMS"] != "")
-            )
-            if has_matched.any():
-                df.loc[has_matched, "PRIMARY_TERM"] = df.loc[
-                    has_matched, "MATCHED_TERMS"
-                ].apply(lambda mt: primary_term(mt.split(";")))
+    # Enrich MATCHED_TERMS: the v3.1 dataset was filtered with only 10 terms,
+    # but keyword_terms.py now has 36. Re-scan PROJECT_TITLE to pick up the
+    # 26 additional terms for grants already in the dataset.
+    print("  Enriching MATCHED_TERMS from PROJECT_TITLE (all 36 terms)...")
+    existing_mt = df["MATCHED_TERMS"].fillna("") if "MATCHED_TERMS" in df.columns else pd.Series("", index=df.index)
+
+    def _enrich(row_title, row_mt):
+        existing = set(row_mt.split(";")) if row_mt else set()
+        existing.discard("")
+        title_matches = set(find_matching_terms(row_title or "", ALL_TERMS))
+        merged = existing | title_matches
+        return ";".join(sorted(merged)) if merged else ""
+
+    df["MATCHED_TERMS"] = [
+        _enrich(t, m) for t, m in zip(df["PROJECT_TITLE"].fillna(""), existing_mt)
+    ]
+
+    # Recompute PRIMARY_TERM from enriched MATCHED_TERMS
+    df["PRIMARY_TERM"] = df["MATCHED_TERMS"].apply(
+        lambda mt: primary_term(mt.split(";")) if mt else ""
+    )
 
     return df
 
