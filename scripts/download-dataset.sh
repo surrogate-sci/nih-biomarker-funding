@@ -11,6 +11,7 @@ CSV_FILE="$DATA_DIR/nih_biomarker_unified_2004-2024.csv"
 ZIP_FILE="$DATA_DIR/nih_biomarker_unified_2004-2024.zip"
 REPO="surrogate-sci/nih-biomarker-funding"
 TAG="dataset-release-v3.1"
+EXPECTED_SHA="cfb6ff695d3fa4fc21da862e6a864a0053801a74b8d9d08aa6d7f4bcf4adfab2"
 
 if [ -f "$CSV_FILE" ]; then
     echo "Dataset already present at $CSV_FILE, skipping download."
@@ -41,7 +42,16 @@ if [ -f "$ZIP_FILE" ]; then
 fi
 
 if [ -f "$CSV_FILE" ]; then
-    echo "Dataset ready: $(wc -l < "$CSV_FILE") rows in $CSV_FILE"
+    ACTUAL_SHA=$(shasum -a 256 "$CSV_FILE" 2>/dev/null || sha256sum "$CSV_FILE" 2>/dev/null)
+    ACTUAL_SHA="${ACTUAL_SHA%% *}"
+    if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]; then
+        echo "ERROR: SHA256 mismatch!"
+        echo "  Expected: $EXPECTED_SHA"
+        echo "  Got:      $ACTUAL_SHA"
+        echo "  Update EXPECTED_SHA in this script if the dataset was intentionally changed."
+        exit 1
+    fi
+    echo "Dataset ready: $(wc -l < "$CSV_FILE") rows, SHA256 verified."
 else
     echo "ERROR: Dataset download failed. Options:"
     echo "  1. Set GITHUB_TOKEN env var and retry"
