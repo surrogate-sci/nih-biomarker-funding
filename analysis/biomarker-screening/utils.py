@@ -3,6 +3,7 @@
 Loads and cleans the unified NIH biomarker dataset.
 Computes per-grant PRIMARY_TERM from keyword_terms.py when not present.
 """
+
 import sys
 from pathlib import Path
 
@@ -52,9 +53,9 @@ def load_dataset(path: Path = DATASET_PATH) -> pd.DataFrame:
     mask = df["PRIMARY_TERM"].isna() | (df["PRIMARY_TERM"] == "")
     has_matched = mask & df["MATCHED_TERMS"].notna() & (df["MATCHED_TERMS"] != "")
     if has_matched.any():
-        df.loc[has_matched, "PRIMARY_TERM"] = df.loc[has_matched, "MATCHED_TERMS"].apply(
-            lambda mt: primary_term(mt.split(";"))
-        )
+        df.loc[has_matched, "PRIMARY_TERM"] = df.loc[
+            has_matched, "MATCHED_TERMS"
+        ].apply(lambda mt: primary_term(mt.split(";")))
 
     return df
 

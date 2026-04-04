@@ -30,30 +30,40 @@ class TestTermSets(unittest.TestCase):
     def test_core_is_subset_of_expanded(self):
         core = set(CORE_BIOMARKER_TERMS)
         expanded = set(EXPANDED_BIOMARKER_TERMS)
-        self.assertTrue(core.issubset(expanded), "Core terms must be a subset of expanded")
+        self.assertTrue(
+            core.issubset(expanded), "Core terms must be a subset of expanded"
+        )
 
     def test_no_duplicate_terms_in_core(self):
         self.assertEqual(len(CORE_BIOMARKER_TERMS), len(set(CORE_BIOMARKER_TERMS)))
 
     def test_no_duplicate_terms_in_expanded(self):
-        self.assertEqual(len(EXPANDED_BIOMARKER_TERMS), len(set(EXPANDED_BIOMARKER_TERMS)))
+        self.assertEqual(
+            len(EXPANDED_BIOMARKER_TERMS), len(set(EXPANDED_BIOMARKER_TERMS))
+        )
 
 
 class TestContainsBiomarkerTerms(unittest.TestCase):
     """Test the substring and AND-condition matching logic."""
 
     def test_simple_match(self):
-        self.assertTrue(contains_biomarker_terms("Study of a novel biomarker", ["biomarker"]))
+        self.assertTrue(
+            contains_biomarker_terms("Study of a novel biomarker", ["biomarker"])
+        )
 
     def test_case_insensitive(self):
         self.assertTrue(contains_biomarker_terms("BIOMARKER DISCOVERY", ["biomarker"]))
 
     def test_substring_match(self):
         """'biomarker' matches 'predictive biomarker', 'biomarkers', etc."""
-        self.assertTrue(contains_biomarker_terms("predictive biomarkers in cancer", ["biomarker"]))
+        self.assertTrue(
+            contains_biomarker_terms("predictive biomarkers in cancer", ["biomarker"])
+        )
 
     def test_no_match(self):
-        self.assertFalse(contains_biomarker_terms("Gene regulation in mice", ["biomarker"]))
+        self.assertFalse(
+            contains_biomarker_terms("Gene regulation in mice", ["biomarker"])
+        )
 
     def test_empty_text(self):
         self.assertFalse(contains_biomarker_terms("", ["biomarker"]))
@@ -62,56 +72,78 @@ class TestContainsBiomarkerTerms(unittest.TestCase):
         self.assertFalse(contains_biomarker_terms(None, ["biomarker"]))
 
     def test_and_condition_both_present(self):
-        self.assertTrue(contains_biomarker_terms(
-            "clinical proteomics and metabolomics study", ["clinical+omics"]
-        ))
+        self.assertTrue(
+            contains_biomarker_terms(
+                "clinical proteomics and metabolomics study", ["clinical+omics"]
+            )
+        )
 
     def test_and_condition_only_one_present(self):
-        self.assertFalse(contains_biomarker_terms(
-            "proteomics and metabolomics study", ["clinical+omics"]
-        ))
+        self.assertFalse(
+            contains_biomarker_terms(
+                "proteomics and metabolomics study", ["clinical+omics"]
+            )
+        )
 
     def test_multiple_terms_or_logic(self):
         """Any term matching is sufficient."""
         terms = ["biomarker", "surrogate endpoint"]
-        self.assertTrue(contains_biomarker_terms("surrogate endpoint validation", terms))
+        self.assertTrue(
+            contains_biomarker_terms("surrogate endpoint validation", terms)
+        )
         self.assertTrue(contains_biomarker_terms("novel biomarker panel", terms))
 
     def test_marker_does_not_match_market(self):
         """'clinical marker' should not match 'marketing' or 'market'."""
-        self.assertFalse(contains_biomarker_terms(
-            "tobacco marketing study", ["clinical marker"]
-        ))
+        self.assertFalse(
+            contains_biomarker_terms("tobacco marketing study", ["clinical marker"])
+        )
 
     def test_new_core_terms(self):
         """New core decision-making terms match correctly."""
-        self.assertTrue(contains_biomarker_terms(
-            "risk stratification in lung cancer", ["risk stratification"]
-        ))
-        self.assertTrue(contains_biomarker_terms(
-            "patient selection for immunotherapy", ["patient selection"]
-        ))
-        self.assertTrue(contains_biomarker_terms(
-            "companion diagnostic for HER2", ["companion diagnostic"]
-        ))
-        self.assertTrue(contains_biomarker_terms(
-            "predicting response to chemotherapy", ["predicting response"]
-        ))
-        self.assertTrue(contains_biomarker_terms(
-            "tumor response to therapy", ["response to therapy"]
-        ))
+        self.assertTrue(
+            contains_biomarker_terms(
+                "risk stratification in lung cancer", ["risk stratification"]
+            )
+        )
+        self.assertTrue(
+            contains_biomarker_terms(
+                "patient selection for immunotherapy", ["patient selection"]
+            )
+        )
+        self.assertTrue(
+            contains_biomarker_terms(
+                "companion diagnostic for HER2", ["companion diagnostic"]
+            )
+        )
+        self.assertTrue(
+            contains_biomarker_terms(
+                "predicting response to chemotherapy", ["predicting response"]
+            )
+        )
+        self.assertTrue(
+            contains_biomarker_terms(
+                "tumor response to therapy", ["response to therapy"]
+            )
+        )
 
     def test_new_expanded_terms(self):
         """New expanded terms match correctly."""
-        self.assertTrue(contains_biomarker_terms(
-            "diagnostic accuracy of screening test", ["diagnostic accuracy"]
-        ))
-        self.assertTrue(contains_biomarker_terms(
-            "theranostics in nuclear medicine", ["theranostics"]
-        ))
-        self.assertTrue(contains_biomarker_terms(
-            "precision oncology trial design", ["precision oncology"]
-        ))
+        self.assertTrue(
+            contains_biomarker_terms(
+                "diagnostic accuracy of screening test", ["diagnostic accuracy"]
+            )
+        )
+        self.assertTrue(
+            contains_biomarker_terms(
+                "theranostics in nuclear medicine", ["theranostics"]
+            )
+        )
+        self.assertTrue(
+            contains_biomarker_terms(
+                "precision oncology trial design", ["precision oncology"]
+            )
+        )
 
 
 class TestFacilityScreening(unittest.TestCase):
@@ -139,7 +171,9 @@ class TestFacilityScreening(unittest.TestCase):
         self.assertFalse(is_facility_grant("Risk Stratification in Lung Cancer"))
 
     def test_biomarker_in_title_not_excluded(self):
-        self.assertFalse(is_facility_grant("Biomarker Discovery for Alzheimer's Disease"))
+        self.assertFalse(
+            is_facility_grant("Biomarker Discovery for Alzheimer's Disease")
+        )
 
     def test_core_biopsy_not_excluded(self):
         """'core' in scientific context should not trigger exclusion."""
@@ -170,19 +204,27 @@ class TestFilterNoDoubleCounting(unittest.TestCase):
     def test_grant_matching_core_appears_once(self):
         """A grant with 'biomarker' in title should appear exactly once."""
         import logging
+
         logger = logging.getLogger("test")
 
-        input_csv = self._make_csv([
-            {"APPLICATION_ID": "1001", "FY": "2022",
-             "PROJECT_TITLE": "Novel biomarker for cancer",
-             "PROJECT_TERMS": "biomarker;cancer;genomics",
-             "TOTAL_COST": "500000"},
-        ])
+        input_csv = self._make_csv(
+            [
+                {
+                    "APPLICATION_ID": "1001",
+                    "FY": "2022",
+                    "PROJECT_TITLE": "Novel biomarker for cancer",
+                    "PROJECT_TERMS": "biomarker;cancer;genomics",
+                    "TOTAL_COST": "500000",
+                },
+            ]
+        )
         output_csv = Path(tempfile.mktemp(suffix=".csv"))
 
         try:
             stats = filter_projects_csv(
-                input_csv, output_csv, logger,
+                input_csv,
+                output_csv,
+                logger,
                 search_terms=EXPANDED_BIOMARKER_TERMS,
             )
             self.assertEqual(stats["unique_projects"], 1)
@@ -198,19 +240,27 @@ class TestFilterNoDoubleCounting(unittest.TestCase):
     def test_grant_matching_only_expanded_flagged_false(self):
         """A grant matching expanded but not core gets EXPLICIT_BIOMARKER=FALSE."""
         import logging
+
         logger = logging.getLogger("test")
 
-        input_csv = self._make_csv([
-            {"APPLICATION_ID": "2001", "FY": "2022",
-             "PROJECT_TITLE": "Theranostics in nuclear medicine",
-             "PROJECT_TERMS": "theranostics;nuclear medicine",
-             "TOTAL_COST": "300000"},
-        ])
+        input_csv = self._make_csv(
+            [
+                {
+                    "APPLICATION_ID": "2001",
+                    "FY": "2022",
+                    "PROJECT_TITLE": "Theranostics in nuclear medicine",
+                    "PROJECT_TERMS": "theranostics;nuclear medicine",
+                    "TOTAL_COST": "300000",
+                },
+            ]
+        )
         output_csv = Path(tempfile.mktemp(suffix=".csv"))
 
         try:
             stats = filter_projects_csv(
-                input_csv, output_csv, logger,
+                input_csv,
+                output_csv,
+                logger,
                 search_terms=EXPANDED_BIOMARKER_TERMS,
             )
             self.assertEqual(stats["unique_projects"], 1)
@@ -226,19 +276,27 @@ class TestFilterNoDoubleCounting(unittest.TestCase):
     def test_facility_grant_excluded(self):
         """A facility grant matching biomarker terms should be excluded."""
         import logging
+
         logger = logging.getLogger("test")
 
-        input_csv = self._make_csv([
-            {"APPLICATION_ID": "3001", "FY": "2022",
-             "PROJECT_TITLE": "Biostatistics Core",
-             "PROJECT_TERMS": "biomarker;statistics;data management",
-             "TOTAL_COST": "200000"},
-        ])
+        input_csv = self._make_csv(
+            [
+                {
+                    "APPLICATION_ID": "3001",
+                    "FY": "2022",
+                    "PROJECT_TITLE": "Biostatistics Core",
+                    "PROJECT_TERMS": "biomarker;statistics;data management",
+                    "TOTAL_COST": "200000",
+                },
+            ]
+        )
         output_csv = Path(tempfile.mktemp(suffix=".csv"))
 
         try:
             stats = filter_projects_csv(
-                input_csv, output_csv, logger,
+                input_csv,
+                output_csv,
+                logger,
                 search_terms=EXPANDED_BIOMARKER_TERMS,
             )
             self.assertEqual(stats["unique_projects"], 0)
@@ -250,23 +308,34 @@ class TestFilterNoDoubleCounting(unittest.TestCase):
     def test_duplicate_application_id_fy_counted_once(self):
         """Same (APPLICATION_ID, FY) appearing twice should be deduplicated."""
         import logging
+
         logger = logging.getLogger("test")
 
-        input_csv = self._make_csv([
-            {"APPLICATION_ID": "4001", "FY": "2022",
-             "PROJECT_TITLE": "Biomarker study",
-             "PROJECT_TERMS": "biomarker",
-             "TOTAL_COST": "100000"},
-            {"APPLICATION_ID": "4001", "FY": "2022",
-             "PROJECT_TITLE": "Biomarker study",
-             "PROJECT_TERMS": "biomarker",
-             "TOTAL_COST": "100000"},
-        ])
+        input_csv = self._make_csv(
+            [
+                {
+                    "APPLICATION_ID": "4001",
+                    "FY": "2022",
+                    "PROJECT_TITLE": "Biomarker study",
+                    "PROJECT_TERMS": "biomarker",
+                    "TOTAL_COST": "100000",
+                },
+                {
+                    "APPLICATION_ID": "4001",
+                    "FY": "2022",
+                    "PROJECT_TITLE": "Biomarker study",
+                    "PROJECT_TERMS": "biomarker",
+                    "TOTAL_COST": "100000",
+                },
+            ]
+        )
         output_csv = Path(tempfile.mktemp(suffix=".csv"))
 
         try:
             stats = filter_projects_csv(
-                input_csv, output_csv, logger,
+                input_csv,
+                output_csv,
+                logger,
                 search_terms=EXPANDED_BIOMARKER_TERMS,
             )
             self.assertEqual(stats["unique_projects"], 1)

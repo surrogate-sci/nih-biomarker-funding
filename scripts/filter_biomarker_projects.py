@@ -74,7 +74,9 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def download_file(url: str, output_path: Path, logger: logging.Logger, max_retries: int = 4) -> bool:
+def download_file(
+    url: str, output_path: Path, logger: logging.Logger, max_retries: int = 4
+) -> bool:
     """
     Download a file with exponential backoff retry logic.
 
@@ -96,11 +98,11 @@ def download_file(url: str, output_path: Path, logger: logging.Logger, max_retri
             response.raise_for_status()
 
             # Get file size if available
-            total_size = int(response.headers.get('content-length', 0))
+            total_size = int(response.headers.get("content-length", 0))
 
             # Download with progress
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, 'wb') as f:
+            with open(output_path, "wb") as f:
                 downloaded = 0
                 chunk_size = 8192
                 for chunk in response.iter_content(chunk_size=chunk_size):
@@ -171,7 +173,7 @@ def filter_projects_csv(
     seen_records: Set = set()
 
     try:
-        with open(input_path, 'r', encoding='utf-8', errors='ignore') as infile:
+        with open(input_path, "r", encoding="utf-8", errors="ignore") as infile:
             reader = csv.DictReader(infile)
 
             # Validate columns exist
@@ -179,26 +181,34 @@ def filter_projects_csv(
                 logger.error("CSV file has no headers")
                 return stats
 
-            available_text_cols = [col for col in text_columns if col in reader.fieldnames]
+            available_text_cols = [
+                col for col in text_columns if col in reader.fieldnames
+            ]
             if not available_text_cols:
-                logger.warning(f"None of the specified text columns found. Available: {reader.fieldnames}")
+                logger.warning(
+                    f"None of the specified text columns found. Available: {reader.fieldnames}"
+                )
                 logger.info("Will search all text columns")
                 available_text_cols = list(reader.fieldnames)
             else:
                 logger.info(f"Found columns: {', '.join(available_text_cols)}")
 
             if project_id_column not in reader.fieldnames:
-                logger.error(f"Project ID column '{project_id_column}' not found in CSV")
+                logger.error(
+                    f"Project ID column '{project_id_column}' not found in CSV"
+                )
                 return stats
 
             # Write filtered output
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, 'w', newline='', encoding='utf-8') as outfile:
+            with open(output_path, "w", newline="", encoding="utf-8") as outfile:
                 # Add classification columns
                 output_fieldnames = list(reader.fieldnames) + [
-                    'EXPLICIT_BIOMARKER',
-                    'MATCHED_CORE_TERMS', 'MATCHED_EXPANDED_TERMS',
-                    'MATCHED_TERMS', 'PRIMARY_TERM',
+                    "EXPLICIT_BIOMARKER",
+                    "MATCHED_CORE_TERMS",
+                    "MATCHED_EXPANDED_TERMS",
+                    "MATCHED_TERMS",
+                    "PRIMARY_TERM",
                 ]
                 writer = csv.DictWriter(outfile, fieldnames=output_fieldnames)
                 writer.writeheader()
@@ -211,7 +221,9 @@ def filter_projects_csv(
                     for col in available_text_cols:
                         col_text = row.get(col, "")
                         if col_text:
-                            all_matched.extend(find_matching_terms(col_text, search_terms))
+                            all_matched.extend(
+                                find_matching_terms(col_text, search_terms)
+                            )
 
                     # Deduplicate matched terms while preserving order
                     seen_terms = set()
@@ -233,22 +245,26 @@ def filter_projects_csv(
                         # Separate core vs expanded-only matches
                         core_set = set(CORE_BIOMARKER_TERMS)
                         core_matched = [t for t in unique_matched if t in core_set]
-                        expanded_matched = [t for t in unique_matched if t not in core_set]
+                        expanded_matched = [
+                            t for t in unique_matched if t not in core_set
+                        ]
                         is_explicit = len(core_matched) > 0
 
                         # Add classification columns
-                        row['EXPLICIT_BIOMARKER'] = 'TRUE' if is_explicit else 'FALSE'
-                        row['MATCHED_CORE_TERMS'] = ';'.join(core_matched)
-                        row['MATCHED_EXPANDED_TERMS'] = ';'.join(expanded_matched)
-                        row['MATCHED_TERMS'] = ';'.join(unique_matched)
-                        row['PRIMARY_TERM'] = primary_term(unique_matched)
+                        row["EXPLICIT_BIOMARKER"] = "TRUE" if is_explicit else "FALSE"
+                        row["MATCHED_CORE_TERMS"] = ";".join(core_matched)
+                        row["MATCHED_EXPANDED_TERMS"] = ";".join(expanded_matched)
+                        row["MATCHED_TERMS"] = ";".join(unique_matched)
+                        row["PRIMARY_TERM"] = primary_term(unique_matched)
 
                         # Deduplicate by (APPLICATION_ID, FY) to preserve yearly funding records
                         project_id = row.get(project_id_column, "")
                         fiscal_year = row.get(fy_column, "")
 
                         # Create composite key to track unique project-year combinations
-                        unique_key = (project_id, fiscal_year) if fiscal_year else project_id
+                        unique_key = (
+                            (project_id, fiscal_year) if fiscal_year else project_id
+                        )
 
                         if project_id and unique_key not in seen_records:
                             seen_records.add(unique_key)
@@ -259,7 +275,9 @@ def filter_projects_csv(
 
                     # Progress reporting
                     if stats["total_rows"] % 10000 == 0:
-                        logger.info(f"Processed {stats['total_rows']:,} rows, found {stats['matched_rows']:,} matches...")
+                        logger.info(
+                            f"Processed {stats['total_rows']:,} rows, found {stats['matched_rows']:,} matches..."
+                        )
 
         logger.info("Filtering complete:")
         logger.info(f"  Total rows processed: {stats['total_rows']:,}")
@@ -302,7 +320,7 @@ def filter_abstracts_csv(
     # Load project IDs from filtered projects
     project_ids: Set[str] = set()
     try:
-        with open(projects_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(projects_path, "r", encoding="utf-8", errors="ignore") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 if "APPLICATION_ID" in row:
@@ -317,7 +335,7 @@ def filter_abstracts_csv(
     stats = {"total_rows": 0, "matched_rows": 0, "additional_matches": 0}
 
     try:
-        with open(abstracts_path, 'r', encoding='utf-8', errors='ignore') as infile:
+        with open(abstracts_path, "r", encoding="utf-8", errors="ignore") as infile:
             reader = csv.DictReader(infile)
 
             if reader.fieldnames is None:
@@ -325,7 +343,7 @@ def filter_abstracts_csv(
                 return stats
 
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, 'w', newline='', encoding='utf-8') as outfile:
+            with open(output_path, "w", newline="", encoding="utf-8") as outfile:
                 writer = csv.DictWriter(outfile, fieldnames=reader.fieldnames)
                 writer.writeheader()
 
@@ -353,7 +371,9 @@ def filter_abstracts_csv(
         logger.info("Abstract filtering complete:")
         logger.info(f"  Total abstracts: {stats['total_rows']:,}")
         logger.info(f"  Abstracts kept: {stats['matched_rows']:,}")
-        logger.info(f"  Additional matches from abstract text: {stats['additional_matches']:,}")
+        logger.info(
+            f"  Additional matches from abstract text: {stats['additional_matches']:,}"
+        )
 
     except FileNotFoundError:
         logger.error(f"Abstracts file not found: {abstracts_path}")
@@ -480,13 +500,15 @@ Examples:
 
     elif args.download_url:
         # Download from URL
-        filename = args.download_url.split('/')[-1]
+        filename = args.download_url.split("/")[-1]
         download_path = args.data_dir / filename
 
         if download_file(args.download_url, download_path, logger):
             # Handle ZIP files if needed
-            if download_path.suffix == '.zip':
-                logger.info("ZIP file support not yet implemented. Please extract manually.")
+            if download_path.suffix == ".zip":
+                logger.info(
+                    "ZIP file support not yet implemented. Please extract manually."
+                )
                 logger.info(f"Extract {download_path} and re-run with --input-csv")
                 sys.exit(1)
             input_csv_path = download_path
@@ -500,7 +522,9 @@ Examples:
         logger.warning("Year-based download is experimental.")
         logger.info("For accurate downloads, visit: https://reporter.nih.gov/exporter")
         logger.info(f"Download the Projects CSV for FY{args.year} manually")
-        logger.info(f"Then run: {sys.argv[0]} --input-csv <downloaded-file> --output {args.output}")
+        logger.info(
+            f"Then run: {sys.argv[0]} --input-csv <downloaded-file> --output {args.output}"
+        )
         sys.exit(1)
 
     # Select search terms
@@ -543,9 +567,13 @@ Examples:
                 )
 
         if stats["unique_projects"] > 0:
-            logger.info(f"✓ Success! Filtered {stats['unique_projects']:,} unique biomarker project-year records")
+            logger.info(
+                f"✓ Success! Filtered {stats['unique_projects']:,} unique biomarker project-year records"
+            )
         else:
-            logger.warning("No matching projects found. Check your search terms and input data.")
+            logger.warning(
+                "No matching projects found. Check your search terms and input data."
+            )
 
 
 if __name__ == "__main__":

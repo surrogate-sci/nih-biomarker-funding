@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -61,12 +62,12 @@ INSTITUTE_LABELS = {
 }
 
 # Colors for core vs expanded split
-CORE_COLOR = "#225588"       # dark blue — high confidence
-EXPANDED_COLOR = "#88CCEE"   # light cyan — broader matches
+CORE_COLOR = "#225588"  # dark blue — high confidence
+EXPANDED_COLOR = "#88CCEE"  # light cyan — broader matches
 
 # Colors for match source
-KEYWORD_COLOR = "#332288"    # indigo — keyword matched
-ABSTRACT_COLOR = "#DDCC77"   # sand — abstract-only
+KEYWORD_COLOR = "#332288"  # indigo — keyword matched
+ABSTRACT_COLOR = "#DDCC77"  # sand — abstract-only
 
 # Mechanism colors
 MECHANISM_COLORS = {
@@ -81,9 +82,7 @@ MECHANISM_COLORS = {
 
 sns.set_theme(style="whitegrid", font_scale=1.1)
 
-SOURCE_NOTE = (
-    "Source: NIH ExPORTER (FY2004\u20132024), expanded keyword set (36 terms) + abstract text search"
-)
+SOURCE_NOTE = "Source: NIH ExPORTER (FY2004\u20132024), expanded keyword set (36 terms) + abstract text search"
 DATA_CAVEAT = (
     "FY2005\u201306: sparse PROJECT_TERMS; FY2013, FY2018: anomalous keyword counts"
 )
@@ -98,7 +97,9 @@ def get_renderer(output_dir: Path):  # -> SeabornRenderer | DatawrapperRenderer
     token = os.environ.get("DATAWRAPPER_API_TOKEN")
     if token:
         return DatawrapperRenderer(output_dir, token)
-    print("  [charts] No DATAWRAPPER_API_TOKEN \u2014 using seaborn/matplotlib fallback")
+    print(
+        "  [charts] No DATAWRAPPER_API_TOKEN \u2014 using seaborn/matplotlib fallback"
+    )
     return SeabornRenderer(output_dir)
 
 
@@ -124,7 +125,10 @@ class SeabornRenderer:
             df["FY"],
             df["core_funding"],
             df["expanded_funding"],
-            labels=["Core terms (13 definite biomarker terms)", "Expanded terms only (broader matches)"],
+            labels=[
+                "Core terms (13 definite biomarker terms)",
+                "Expanded terms only (broader matches)",
+            ],
             colors=[CORE_COLOR, EXPANDED_COLOR],
             alpha=0.85,
         )
@@ -137,10 +141,23 @@ class SeabornRenderer:
             fontsize=14,
         )
         ax.legend(loc="upper left", fontsize=9)
-        ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
-                    fontsize=8, color="gray", fontstyle="italic")
-        ax.text(0.99, -0.08, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+        ax.annotate(
+            DATA_CAVEAT,
+            xy=(0.02, 0.02),
+            xycoords="axes fraction",
+            fontsize=8,
+            color="gray",
+            fontstyle="italic",
+        )
+        ax.text(
+            0.99,
+            -0.08,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
@@ -152,8 +169,13 @@ class SeabornRenderer:
         # Core bars
         ax.barh(y_pos, df["core_funding"], color=CORE_COLOR, label="Core terms")
         # Expanded bars stacked
-        ax.barh(y_pos, df["expanded_funding"], left=df["core_funding"],
-                color=EXPANDED_COLOR, label="Expanded only")
+        ax.barh(
+            y_pos,
+            df["expanded_funding"],
+            left=df["core_funding"],
+            color=EXPANDED_COLOR,
+            label="Expanded only",
+        )
 
         ax.set_yticks(list(y_pos))
         ax.set_yticklabels(df["label"])
@@ -161,19 +183,34 @@ class SeabornRenderer:
         ax.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax.set_xlabel("")
         ax.set_ylabel("")
-        ax.set_title("NIH Biomarker Funding by Institute\nCore terms vs. expanded matches", fontsize=14)
+        ax.set_title(
+            "NIH Biomarker Funding by Institute\nCore terms vs. expanded matches",
+            fontsize=14,
+        )
         ax.legend(loc="lower right", fontsize=9)
 
         total = df["total_funding"].sum()
         for i, row in enumerate(df.itertuples()):
             pct = 100 * row.total_funding / total
             core_pct = row.core_pct
-            ax.text(row.total_funding, i,
-                    f"  ${row.total_funding/1e9:.1f}B ({pct:.0f}%) \u2014 {core_pct:.0f}% core",
-                    va="center", fontsize=8, fontweight="bold")
+            ax.text(
+                row.total_funding,
+                i,
+                f"  ${row.total_funding / 1e9:.1f}B ({pct:.0f}%) \u2014 {core_pct:.0f}% core",
+                va="center",
+                fontsize=8,
+                fontweight="bold",
+            )
 
-        ax.text(0.99, -0.06, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+        ax.text(
+            0.99,
+            -0.06,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
@@ -183,8 +220,7 @@ class SeabornRenderer:
         colors = [INSTITUTE_COLORS.get(col, "#888888") for col in pivot.columns]
         pivot_b = pivot / 1e9
         pivot_b.plot.area(ax=ax, alpha=0.8, color=colors)
-        ax.yaxis.set_major_formatter(
-            mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("")
         ax.set_title(
@@ -193,18 +229,37 @@ class SeabornRenderer:
             fontsize=14,
         )
         ax.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
-        ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
-                    fontsize=8, color="gray", fontstyle="italic")
-        ax.text(0.99, -0.06, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+        ax.annotate(
+            DATA_CAVEAT,
+            xy=(0.02, 0.02),
+            xycoords="axes fraction",
+            fontsize=8,
+            color="gray",
+            fontstyle="italic",
+        )
+        ax.text(
+            0.99,
+            -0.06,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
     def explicit_adoption(self, df: pd.DataFrame, filename: str):
         """Line chart: % of matched grants using core biomarker terms per year."""
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(df["FY"], df["explicit_pct"], marker="o", linewidth=2.5,
-                color=CORE_COLOR, markersize=6)
+        ax.plot(
+            df["FY"],
+            df["explicit_pct"],
+            marker="o",
+            linewidth=2.5,
+            color=CORE_COLOR,
+            markersize=6,
+        )
         ax.fill_between(df["FY"], df["explicit_pct"], alpha=0.1, color=CORE_COLOR)
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("% of matched grants")
@@ -215,10 +270,23 @@ class SeabornRenderer:
         )
         ax.set_ylim(0, max(df["explicit_pct"]) * 1.15)
         ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0f}%"))
-        ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
-                    fontsize=8, color="gray", fontstyle="italic")
-        ax.text(0.99, -0.08, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+        ax.annotate(
+            DATA_CAVEAT,
+            xy=(0.02, 0.02),
+            xycoords="axes fraction",
+            fontsize=8,
+            color="gray",
+            fontstyle="italic",
+        )
+        ax.text(
+            0.99,
+            -0.08,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
@@ -242,23 +310,46 @@ class SeabornRenderer:
             fontsize=14,
         )
         ax.legend(loc="upper left", fontsize=9)
-        ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
-                    fontsize=8, color="gray", fontstyle="italic")
-        ax.text(0.99, -0.08, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+        ax.annotate(
+            DATA_CAVEAT,
+            xy=(0.02, 0.02),
+            xycoords="axes fraction",
+            fontsize=8,
+            color="gray",
+            fontstyle="italic",
+        )
+        ax.text(
+            0.99,
+            -0.08,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
-    def mechanism_breakdown(self, summary_df: pd.DataFrame, pivot: pd.DataFrame, filename: str):
+    def mechanism_breakdown(
+        self, summary_df: pd.DataFrame, pivot: pd.DataFrame, filename: str
+    ):
         """Bar chart: funding by grant mechanism, with core/expanded split."""
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7),
-                                        gridspec_kw={"width_ratios": [1, 1.5]})
+        fig, (ax1, ax2) = plt.subplots(
+            1, 2, figsize=(16, 7), gridspec_kw={"width_ratios": [1, 1.5]}
+        )
 
         # Left: bar chart of total by mechanism
         y_pos = range(len(summary_df))
-        ax1.barh(y_pos, summary_df["core_funding"], color=CORE_COLOR, label="Core terms")
-        ax1.barh(y_pos, summary_df["expanded_funding"], left=summary_df["core_funding"],
-                 color=EXPANDED_COLOR, label="Expanded only")
+        ax1.barh(
+            y_pos, summary_df["core_funding"], color=CORE_COLOR, label="Core terms"
+        )
+        ax1.barh(
+            y_pos,
+            summary_df["expanded_funding"],
+            left=summary_df["core_funding"],
+            color=EXPANDED_COLOR,
+            label="Expanded only",
+        )
         ax1.set_yticks(list(y_pos))
         ax1.set_yticklabels(summary_df["mechanism"])
         ax1.invert_yaxis()
@@ -269,8 +360,7 @@ class SeabornRenderer:
         # Right: stacked area over time
         colors = [MECHANISM_COLORS.get(col, "#888888") for col in pivot.columns]
         (pivot / 1e9).plot.area(ax=ax2, alpha=0.8, color=colors)
-        ax2.yaxis.set_major_formatter(
-            mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
+        ax2.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
         ax2.set_xlabel("Fiscal Year")
         ax2.set_title("By Mechanism Over Time", fontsize=12)
         ax2.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
@@ -298,17 +388,29 @@ class SeabornRenderer:
             fontsize=14,
         )
         for i, row in enumerate(df.itertuples()):
-            ax.text(row.total_funding, i,
-                    f"  ${row.total_funding/1e9:.1f}B ({row.grant_count:,} grants)",
-                    va="center", fontsize=8)
-        ax.text(0.99, -0.04, SOURCE_NOTE, transform=ax.transAxes,
-                fontsize=8, ha="right", color="gray")
+            ax.text(
+                row.total_funding,
+                i,
+                f"  ${row.total_funding / 1e9:.1f}B ({row.grant_count:,} grants)",
+                va="center",
+                fontsize=8,
+            )
+        ax.text(
+            0.99,
+            -0.04,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
+        )
         fig.tight_layout()
         return self._save(fig, filename)
 
-
     @staticmethod
-    def _top_terms_with_threshold(df: pd.DataFrame, notable_terms: dict = None) -> pd.DataFrame:
+    def _top_terms_with_threshold(
+        df: pd.DataFrame, notable_terms: dict = None
+    ) -> pd.DataFrame:
         """Return top terms + 'Other' row. Notable collapsed terms are named in the label.
 
         Args:
@@ -321,8 +423,10 @@ class SeabornRenderer:
         if total == 0:
             return df
         if notable_terms is None:
-            notable_terms = {"surrogate": "surrogate endpoints",
-                             "intermediate": "intermediate endpoints"}
+            notable_terms = {
+                "surrogate": "surrogate endpoints",
+                "intermediate": "intermediate endpoints",
+            }
 
         cumsum = df["total_funding"].cumsum()
         threshold = total * 0.95
@@ -345,15 +449,21 @@ class SeabornRenderer:
             else:
                 label = f"Other ({len(rest)} terms)"
 
-            other_row = pd.DataFrame([{
-                "PRIMARY_TERM": label,
-                "total_funding": rest["total_funding"].sum(),
-                "grant_count": rest["grant_count"].sum(),
-            }])
+            other_row = pd.DataFrame(
+                [
+                    {
+                        "PRIMARY_TERM": label,
+                        "total_funding": rest["total_funding"].sum(),
+                        "grant_count": rest["grant_count"].sum(),
+                    }
+                ]
+            )
             top = pd.concat([top, other_row], ignore_index=True)
         return top
 
-    def core_vs_expanded_terms(self, core_df: pd.DataFrame, expanded_df: pd.DataFrame, filename: str):
+    def core_vs_expanded_terms(
+        self, core_df: pd.DataFrame, expanded_df: pd.DataFrame, filename: str
+    ):
         """Two-panel: keyword breakdown for core grants (left) vs expanded-only (right)."""
         core_total = core_df["total_funding"].sum()
         exp_total = expanded_df["total_funding"].sum()
@@ -365,13 +475,16 @@ class SeabornRenderer:
         core_top = self._top_terms_with_threshold(core_df)
         exp_top = expanded_df.copy()  # Already 3 categories
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 9),
-                                        gridspec_kw={"width_ratios": [1, 1.3]})
+        fig, (ax1, ax2) = plt.subplots(
+            1, 2, figsize=(18, 9), gridspec_kw={"width_ratios": [1, 1.3]}
+        )
 
         # Left panel: core grants by core keyword
         y1 = range(len(core_top))
-        colors1 = [CORE_COLOR if "Other" not in str(t) else TOL_QUALITATIVE[9]
-                    for t in core_top["PRIMARY_TERM"]]
+        colors1 = [
+            CORE_COLOR if "Other" not in str(t) else TOL_QUALITATIVE[9]
+            for t in core_top["PRIMARY_TERM"]
+        ]
         ax1.barh(y1, core_top["total_funding"], color=colors1)
         ax1.set_yticks(list(y1))
         ax1.set_yticklabels(core_top["PRIMARY_TERM"], fontsize=9)
@@ -380,18 +493,25 @@ class SeabornRenderer:
         ax1.set_title(
             f"Grants matching core biomarker terms\n"
             f"{core_df['grant_count'].sum():,} grants totaling "
-            f"${core_total/1e9:.0f}B ({core_pct:.0f}% of all matched funding)",
-            fontsize=11, fontweight="bold",
+            f"${core_total / 1e9:.0f}B ({core_pct:.0f}% of all matched funding)",
+            fontsize=11,
+            fontweight="bold",
         )
         for i, row in enumerate(core_top.itertuples()):
-            ax1.text(row.total_funding, i,
-                     f"  ${row.total_funding/1e9:.1f}B ({int(row.grant_count):,})",
-                     va="center", fontsize=8)
+            ax1.text(
+                row.total_funding,
+                i,
+                f"  ${row.total_funding / 1e9:.1f}B ({int(row.grant_count):,})",
+                va="center",
+                fontsize=8,
+            )
 
         # Right panel: expanded-only grants
         y2 = range(len(exp_top))
-        colors2 = [EXPANDED_COLOR if "Other" not in str(t) else TOL_QUALITATIVE[9]
-                    for t in exp_top["PRIMARY_TERM"]]
+        colors2 = [
+            EXPANDED_COLOR if "Other" not in str(t) else TOL_QUALITATIVE[9]
+            for t in exp_top["PRIMARY_TERM"]
+        ]
         ax2.barh(y2, exp_top["total_funding"], color=colors2)
         ax2.set_yticks(list(y2))
         ax2.set_yticklabels(exp_top["PRIMARY_TERM"], fontsize=9)
@@ -400,22 +520,37 @@ class SeabornRenderer:
         ax2.set_title(
             f"Additional grants captured by expanded terms only\n"
             f"{expanded_df['grant_count'].sum():,} grants totaling "
-            f"${exp_total/1e9:.0f}B ({exp_pct:.0f}% of all matched funding)",
-            fontsize=11, fontweight="bold",
+            f"${exp_total / 1e9:.0f}B ({exp_pct:.0f}% of all matched funding)",
+            fontsize=11,
+            fontweight="bold",
         )
         for i, row in enumerate(exp_top.itertuples()):
-            ax2.text(row.total_funding, i,
-                     f"  ${row.total_funding/1e9:.1f}B ({int(row.grant_count):,})",
-                     va="center", fontsize=8)
+            ax2.text(
+                row.total_funding,
+                i,
+                f"  ${row.total_funding / 1e9:.1f}B ({int(row.grant_count):,})",
+                va="center",
+                fontsize=8,
+            )
 
-        fig.suptitle("What do core vs. expanded keywords capture?",
-                     fontsize=14, fontweight="bold", y=1.02)
-        fig.text(0.5, -0.01,
-                 "Each grant appears in exactly one panel. "
-                 "The left panel shows grants that matched any of the 13 core biomarker terms, "
-                 "with individual terms shown for those covering 95% of core grants. "
-                 "The right panel shows grants matched only by the 23 additional expanded terms.",
-                 ha="center", fontsize=8, color="gray", fontstyle="italic")
+        fig.suptitle(
+            "What do core vs. expanded keywords capture?",
+            fontsize=14,
+            fontweight="bold",
+            y=1.02,
+        )
+        fig.text(
+            0.5,
+            -0.01,
+            "Each grant appears in exactly one panel. "
+            "The left panel shows grants that matched any of the 13 core biomarker terms, "
+            "with individual terms shown for those covering 95% of core grants. "
+            "The right panel shows grants matched only by the 23 additional expanded terms.",
+            ha="center",
+            fontsize=8,
+            color="gray",
+            fontstyle="italic",
+        )
         fig.text(0.99, -0.04, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
         fig.tight_layout()
         return self._save(fig, filename)
@@ -429,6 +564,7 @@ class DatawrapperRenderer:
 
     def __init__(self, output_dir: Path, token: str):
         from datawrapper import Datawrapper
+
         self.dw = Datawrapper(access_token=token)
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -445,8 +581,14 @@ class DatawrapperRenderer:
                 return parts[-1]
         return None
 
-    def _upsert_chart(self, chart_type: str, title: str, data: pd.DataFrame,
-                      filename: str, metadata: Optional[dict] = None) -> str:
+    def _upsert_chart(
+        self,
+        chart_type: str,
+        title: str,
+        data: pd.DataFrame,
+        filename: str,
+        metadata: Optional[dict] = None,
+    ) -> str:
         """Create or update a Datawrapper chart. Reuses chart ID if .url exists."""
         chart_id = self._get_existing_chart_id(filename)
 
@@ -471,7 +613,7 @@ class DatawrapperRenderer:
                     "get-the-data": True,
                     "embed": True,
                 }
-            }
+            },
         }
         if metadata:
             for key in metadata:
@@ -499,11 +641,14 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-area",
             "NIH Biomarker-Related Spending (FY2004\u20132024)",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("Core terms = 13 definite biomarker terms; "
-                              "Expanded = 23 additional broader terms"),
+                    "intro": (
+                        "Core terms = 13 definite biomarker terms; "
+                        "Expanded = 23 additional broader terms"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -529,11 +674,14 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-bars-stacked",
             "NIH Biomarker Funding by Institute",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("Stacked: core biomarker terms vs. broader expanded matches. "
-                              "Core % varies widely across institutes."),
+                    "intro": (
+                        "Stacked: core biomarker terms vs. broader expanded matches. "
+                        "Core % varies widely across institutes."
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -555,11 +703,14 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-area",
             "Biomarker Funding by Institute Over Time",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("All matched grants (core + expanded + abstract). "
-                              "NCI leads throughout; NIA grew substantially after 2010."),
+                    "intro": (
+                        "All matched grants (core + expanded + abstract). "
+                        "NCI leads throughout; NIA grew substantially after 2010."
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -580,11 +731,14 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-lines",
             "Explicit Biomarker Term Adoption Over Time",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("% of matched grants using 13 core biomarker terms "
-                              "(biomarker, surrogate endpoint, companion diagnostic, etc.)"),
+                    "intro": (
+                        "% of matched grants using 13 core biomarker terms "
+                        "(biomarker, surrogate endpoint, companion diagnostic, etc.)"
+                    ),
                     "number-append": "%",
                     "number-format": "0,[.0]",
                 },
@@ -606,20 +760,25 @@ class DatawrapperRenderer:
 
     def match_source_breakdown(self, pivot: pd.DataFrame, filename: str):
         chart_df = (pivot / 1e9).round(2).reset_index()
-        chart_df = chart_df.rename(columns={
-            "FY": "Fiscal Year",
-            "keywords_only": "Keyword Matched ($B)",
-            "abstract_only": "Abstract Only ($B)",
-        })
+        chart_df = chart_df.rename(
+            columns={
+                "FY": "Fiscal Year",
+                "keywords_only": "Keyword Matched ($B)",
+                "abstract_only": "Abstract Only ($B)",
+            }
+        )
 
         return self._upsert_chart(
             "d3-area",
             "How Grants Are Discovered: Keyword vs. Abstract Search",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("Keyword = matched in PROJECT_TITLE or PROJECT_TERMS; "
-                              "Abstract = matched only in ABSTRACT_TEXT"),
+                    "intro": (
+                        "Keyword = matched in PROJECT_TITLE or PROJECT_TERMS; "
+                        "Abstract = matched only in ABSTRACT_TEXT"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -636,7 +795,9 @@ class DatawrapperRenderer:
             },
         )
 
-    def mechanism_breakdown(self, summary_df: pd.DataFrame, pivot: pd.DataFrame, filename: str):
+    def mechanism_breakdown(
+        self, summary_df: pd.DataFrame, pivot: pd.DataFrame, filename: str
+    ):
         chart_df = summary_df[["mechanism", "core_funding", "expanded_funding"]].copy()
         chart_df["core_funding"] = (chart_df["core_funding"] / 1e9).round(1)
         chart_df["expanded_funding"] = (chart_df["expanded_funding"] / 1e9).round(1)
@@ -645,11 +806,14 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-bars-stacked",
             "Biomarker Funding by Grant Mechanism",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("R = research grants (R01, R21, etc.); P = program/center grants; "
-                              "U = cooperative agreements"),
+                    "intro": (
+                        "R = research grants (R01, R21, etc.); P = program/center grants; "
+                        "U = cooperative agreements"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -672,11 +836,14 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-bars",
             "Funding by Primary Keyword Term",
-            chart_df, filename,
+            chart_df,
+            filename,
             metadata={
                 "describe": {
-                    "intro": ("Each grant assigned its most specific matching term "
-                              "via priority ordering (most specific wins)"),
+                    "intro": (
+                        "Each grant assigned its most specific matching term "
+                        "via priority ordering (most specific wins)"
+                    ),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -687,7 +854,9 @@ class DatawrapperRenderer:
             },
         )
 
-    def core_vs_expanded_terms(self, core_df: pd.DataFrame, expanded_df: pd.DataFrame, filename: str):
+    def core_vs_expanded_terms(
+        self, core_df: pd.DataFrame, expanded_df: pd.DataFrame, filename: str
+    ):
         """Two separate Datawrapper charts for core vs expanded terms."""
         # Core terms chart
         core_chart = core_df[["PRIMARY_TERM", "total_funding", "grant_count"]].copy()
@@ -697,10 +866,11 @@ class DatawrapperRenderer:
         self._upsert_chart(
             "d3-bars",
             "Core Biomarker Terms (13) \u2014 Definite Biomarker Research",
-            core_chart, "core_terms.png",
+            core_chart,
+            "core_terms.png",
             metadata={
                 "describe": {
-                    "intro": f"Total: ${core_df['total_funding'].sum()/1e9:.1f}B across {core_df['grant_count'].sum():,} grants",
+                    "intro": f"Total: ${core_df['total_funding'].sum() / 1e9:.1f}B across {core_df['grant_count'].sum():,} grants",
                     "number-prepend": "$",
                     "number-append": "B",
                 },
@@ -719,10 +889,11 @@ class DatawrapperRenderer:
         return self._upsert_chart(
             "d3-bars",
             "Expanded Terms (+23) \u2014 Additional Broader Matches",
-            exp_chart, "expanded_terms.png",
+            exp_chart,
+            "expanded_terms.png",
             metadata={
                 "describe": {
-                    "intro": f"Total: ${expanded_df['total_funding'].sum()/1e9:.1f}B across {expanded_df['grant_count'].sum():,} grants",
+                    "intro": f"Total: ${expanded_df['total_funding'].sum() / 1e9:.1f}B across {expanded_df['grant_count'].sum():,} grants",
                     "number-prepend": "$",
                     "number-append": "B",
                 },

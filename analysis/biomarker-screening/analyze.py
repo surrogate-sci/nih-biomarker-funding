@@ -13,6 +13,7 @@ Reads the unified NIH biomarker dataset and produces:
 Uses Datawrapper if DATAWRAPPER_API_TOKEN is set, else seaborn/matplotlib.
 Outputs: charts/ directory + funding_analysis.json
 """
+
 import json
 import sys
 from pathlib import Path
@@ -30,16 +31,25 @@ CHARTS_DIR = Path(__file__).parent / "charts"
 def spending_over_time(df: pd.DataFrame, renderer) -> dict:
     """Chart 1: Biomarker spending per fiscal year, split by core vs expanded."""
     # Total (all grants)
-    yearly = df.groupby("FY").agg(
-        total_funding=("TOTAL_COST", "sum"),
-        grant_count=("APPLICATION_ID", "count"),
-    ).reset_index()
+    yearly = (
+        df.groupby("FY")
+        .agg(
+            total_funding=("TOTAL_COST", "sum"),
+            grant_count=("APPLICATION_ID", "count"),
+        )
+        .reset_index()
+    )
 
     # Core-only (EXPLICIT_BIOMARKER=TRUE)
-    core = df[df["EXPLICIT_BIOMARKER"]].groupby("FY").agg(
-        core_funding=("TOTAL_COST", "sum"),
-        core_count=("APPLICATION_ID", "count"),
-    ).reset_index()
+    core = (
+        df[df["EXPLICIT_BIOMARKER"]]
+        .groupby("FY")
+        .agg(
+            core_funding=("TOTAL_COST", "sum"),
+            core_count=("APPLICATION_ID", "count"),
+        )
+        .reset_index()
+    )
 
     yearly = yearly.merge(core, on="FY", how="left").fillna(0)
     yearly["expanded_funding"] = yearly["total_funding"] - yearly["core_funding"]
@@ -109,8 +119,18 @@ def institute_allocation(df: pd.DataFrame, renderer, n: int = 10) -> dict:
 
     return {
         "institutes": ic[
-            ["ADMINISTERING_IC", "IC_NAME", "label", "total_funding", "grant_count",
-             "core_funding", "core_count", "expanded_funding", "expanded_count", "core_pct"]
+            [
+                "ADMINISTERING_IC",
+                "IC_NAME",
+                "label",
+                "total_funding",
+                "grant_count",
+                "core_funding",
+                "core_count",
+                "expanded_funding",
+                "expanded_count",
+                "core_pct",
+            ]
         ].to_dict(orient="records")
     }
 
@@ -125,8 +145,14 @@ def institute_over_time(df: pd.DataFrame, renderer, n_top: int = 8) -> dict:
     )
 
     name_map = {
-        "CA": "NCI", "AG": "NIA", "HL": "NHLBI", "AI": "NIAID",
-        "NS": "NINDS", "MH": "NIMH", "DK": "NIDDK", "LM": "NLM",
+        "CA": "NCI",
+        "AG": "NIA",
+        "HL": "NHLBI",
+        "AI": "NIAID",
+        "NS": "NINDS",
+        "MH": "NIMH",
+        "DK": "NIDDK",
+        "LM": "NLM",
     }
 
     df = df.copy()
@@ -134,15 +160,18 @@ def institute_over_time(df: pd.DataFrame, renderer, n_top: int = 8) -> dict:
         lambda x: name_map.get(x, x) if x in top_ics else "Other"
     )
 
-    yearly_ic = (
-        df.groupby(["FY", "ic_group"])["TOTAL_COST"]
-        .sum()
-        .reset_index()
+    yearly_ic = df.groupby(["FY", "ic_group"])["TOTAL_COST"].sum().reset_index()
+    pivot = yearly_ic.pivot(index="FY", columns="ic_group", values="TOTAL_COST").fillna(
+        0
     )
-    pivot = yearly_ic.pivot(index="FY", columns="ic_group", values="TOTAL_COST").fillna(0)
 
     # Order columns by total funding (largest first), but keep "Other" last
-    col_order = pivot.drop(columns=["Other"], errors="ignore").sum().sort_values(ascending=False).index.tolist()
+    col_order = (
+        pivot.drop(columns=["Other"], errors="ignore")
+        .sum()
+        .sort_values(ascending=False)
+        .index.tolist()
+    )
     if "Other" in pivot.columns:
         col_order.append("Other")
     pivot = pivot[col_order]
@@ -161,11 +190,17 @@ def explicit_adoption(df: pd.DataFrame, renderer) -> dict:
     Shows the trend in terminological specificity — what fraction of grants
     in the broad haystack actually use definite biomarker language.
     """
-    yearly = df.groupby("FY").agg(
-        total_count=("APPLICATION_ID", "count"),
-        explicit_count=("EXPLICIT_BIOMARKER", "sum"),
-    ).reset_index()
-    yearly["explicit_pct"] = (100 * yearly["explicit_count"] / yearly["total_count"]).round(1)
+    yearly = (
+        df.groupby("FY")
+        .agg(
+            total_count=("APPLICATION_ID", "count"),
+            explicit_count=("EXPLICIT_BIOMARKER", "sum"),
+        )
+        .reset_index()
+    )
+    yearly["explicit_pct"] = (
+        100 * yearly["explicit_count"] / yearly["total_count"]
+    ).round(1)
 
     renderer.explicit_adoption(yearly, "explicit_adoption.png")
 
@@ -183,13 +218,21 @@ def match_source_breakdown(df: pd.DataFrame, renderer) -> dict:
     Shows how much the abstract text search contributes — critical for
     understanding data quality in sparse years (FY2005-06, FY2013, FY2018).
     """
-    yearly = df.groupby(["FY", "MATCH_SOURCE"]).agg(
-        funding=("TOTAL_COST", "sum"),
-        count=("APPLICATION_ID", "count"),
-    ).reset_index()
+    yearly = (
+        df.groupby(["FY", "MATCH_SOURCE"])
+        .agg(
+            funding=("TOTAL_COST", "sum"),
+            count=("APPLICATION_ID", "count"),
+        )
+        .reset_index()
+    )
 
-    pivot_funding = yearly.pivot(index="FY", columns="MATCH_SOURCE", values="funding").fillna(0)
-    pivot_count = yearly.pivot(index="FY", columns="MATCH_SOURCE", values="count").fillna(0)
+    pivot_funding = yearly.pivot(
+        index="FY", columns="MATCH_SOURCE", values="funding"
+    ).fillna(0)
+    pivot_count = yearly.pivot(
+        index="FY", columns="MATCH_SOURCE", values="count"
+    ).fillna(0)
 
     # Ensure both columns exist
     for col in ["keywords_only", "abstract_only"]:
@@ -239,18 +282,23 @@ def mechanism_breakdown(df: pd.DataFrame, renderer) -> dict:
     mech["expanded_funding"] = mech["total_funding"] - mech["core_funding"]
 
     # Over time by mechanism
-    yearly_mech = (
-        df.groupby(["FY", "mechanism"])["TOTAL_COST"]
-        .sum()
-        .reset_index()
-    )
-    pivot = yearly_mech.pivot(index="FY", columns="mechanism", values="TOTAL_COST").fillna(0)
+    yearly_mech = df.groupby(["FY", "mechanism"])["TOTAL_COST"].sum().reset_index()
+    pivot = yearly_mech.pivot(
+        index="FY", columns="mechanism", values="TOTAL_COST"
+    ).fillna(0)
 
     renderer.mechanism_breakdown(mech, pivot, "mechanism_breakdown.png")
 
     return {
         "mechanisms": mech[
-            ["mechanism", "total_funding", "grant_count", "core_funding", "core_count", "expanded_funding"]
+            [
+                "mechanism",
+                "total_funding",
+                "grant_count",
+                "core_funding",
+                "core_count",
+                "expanded_funding",
+            ]
         ].to_dict(orient="records"),
         "over_time": {
             "years": pivot.index.tolist(),
@@ -302,6 +350,7 @@ def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
     No double counting: every grant appears in exactly one panel.
     """
     import sys
+
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
     from keyword_terms import CORE_BIOMARKER_TERMS, TERM_PRIORITY
 
@@ -329,7 +378,9 @@ def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
 
     core_df = (
         core_grants.groupby("CORE_PRIMARY")
-        .agg(total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count"))
+        .agg(
+            total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count")
+        )
         .reset_index()
         .rename(columns={"CORE_PRIMARY": "PRIMARY_TERM"})
         .sort_values("total_funding", ascending=False)
@@ -337,6 +388,7 @@ def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
 
     # For expanded-only grants: group into 3 categories
     expanded_grants = expanded_grants.copy()
+
     def expanded_category(term):
         if term == "clinical+omics":
             return "clinical+omics"
@@ -345,10 +397,14 @@ def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
         else:
             return "Other precision medicine terms"
 
-    expanded_grants["exp_category"] = expanded_grants["PRIMARY_TERM"].apply(expanded_category)
+    expanded_grants["exp_category"] = expanded_grants["PRIMARY_TERM"].apply(
+        expanded_category
+    )
     expanded_df = (
         expanded_grants.groupby("exp_category")
-        .agg(total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count"))
+        .agg(
+            total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count")
+        )
         .reset_index()
         .rename(columns={"exp_category": "PRIMARY_TERM"})
         .sort_values("total_funding", ascending=False)

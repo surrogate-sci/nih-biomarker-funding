@@ -112,7 +112,9 @@ def process_year_zip(
                     biomarker_counts.update(unique_terms)
 
                 # Check if this grant has current keywords
-                has_keywords = grant_has_current_keywords(project_terms_raw, project_title)
+                has_keywords = grant_has_current_keywords(
+                    project_terms_raw, project_title
+                )
 
                 if not has_keywords:
                     # Grant does NOT match any current keyword — these terms appear independently
@@ -245,7 +247,9 @@ def main():
             f"{bio_c.total():,} biomarker term occurrences"
         )
 
-    logger.info(f"\nTotal: {total_grants:,} grants processed, {total_empty:,} with empty PROJECT_TERMS")
+    logger.info(
+        f"\nTotal: {total_grants:,} grants processed, {total_empty:,} with empty PROJECT_TERMS"
+    )
     logger.info(f"Unique terms found: {len(total_all):,}")
 
     # Build results table
@@ -340,7 +344,9 @@ def main():
 
     # Also show high-enrichment terms WITH high co-occurrence (already captured but interesting)
     print("\n" + "=" * 100)
-    print("HIGH CO-OCCURRENCE TERMS (>0.8, enrichment > 2.0) — REDUNDANT, already captured")
+    print(
+        "HIGH CO-OCCURRENCE TERMS (>0.8, enrichment > 2.0) — REDUNDANT, already captured"
+    )
     print("=" * 100)
     print(
         f"{'term':<40} {'total':>8} {'biomarker':>10} {'independent':>12} "
