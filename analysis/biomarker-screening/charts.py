@@ -310,6 +310,50 @@ class SeabornRenderer:
         return self._save(fig, filename)
 
 
+    def core_vs_expanded_terms(self, core_df: pd.DataFrame, expanded_df: pd.DataFrame, filename: str):
+        """Two-panel: funding by core terms (left) and what expanded adds (right)."""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8),
+                                        gridspec_kw={"width_ratios": [1, 1.3]})
+
+        # Left panel: core terms
+        y1 = range(len(core_df))
+        ax1.barh(y1, core_df["total_funding"], color=CORE_COLOR)
+        ax1.set_yticks(list(y1))
+        ax1.set_yticklabels(core_df["PRIMARY_TERM"], fontsize=9)
+        ax1.invert_yaxis()
+        ax1.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
+        ax1.set_title("Core Terms (13)\nDefinite biomarker research", fontsize=12, fontweight="bold")
+        for i, row in enumerate(core_df.itertuples()):
+            ax1.text(row.total_funding, i,
+                     f"  ${row.total_funding/1e9:.1f}B ({row.grant_count:,})",
+                     va="center", fontsize=8)
+        core_total = core_df["total_funding"].sum()
+        ax1.text(0.5, -0.06, f"Total: ${core_total/1e9:.1f}B ({core_df['grant_count'].sum():,} grants)",
+                 transform=ax1.transAxes, ha="center", fontsize=10, fontweight="bold")
+
+        # Right panel: expanded-only terms
+        y2 = range(len(expanded_df))
+        ax2.barh(y2, expanded_df["total_funding"], color=EXPANDED_COLOR)
+        ax2.set_yticks(list(y2))
+        ax2.set_yticklabels(expanded_df["PRIMARY_TERM"], fontsize=9)
+        ax2.invert_yaxis()
+        ax2.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
+        ax2.set_title("Expanded Terms (+23)\nBroader matches, need LLM screening", fontsize=12, fontweight="bold")
+        for i, row in enumerate(expanded_df.itertuples()):
+            ax2.text(row.total_funding, i,
+                     f"  ${row.total_funding/1e9:.1f}B ({row.grant_count:,})",
+                     va="center", fontsize=8)
+        exp_total = expanded_df["total_funding"].sum()
+        ax2.text(0.5, -0.06, f"Total: ${exp_total/1e9:.1f}B ({expanded_df['grant_count'].sum():,} grants)",
+                 transform=ax2.transAxes, ha="center", fontsize=10, fontweight="bold")
+
+        fig.suptitle("What Do Core vs. Expanded Keywords Capture?",
+                     fontsize=14, fontweight="bold", y=1.02)
+        fig.text(0.99, -0.02, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
+        fig.tight_layout()
+        return self._save(fig, filename)
+
+
 class DatawrapperRenderer:
     """Primary renderer using Datawrapper API with colorblind-safe palette.
 
@@ -572,6 +616,52 @@ class DatawrapperRenderer:
                 },
                 "visualize": {
                     "sort-bars": "desc",
+                },
+            },
+        )
+
+    def core_vs_expanded_terms(self, core_df: pd.DataFrame, expanded_df: pd.DataFrame, filename: str):
+        """Two separate Datawrapper charts for core vs expanded terms."""
+        # Core terms chart
+        core_chart = core_df[["PRIMARY_TERM", "total_funding", "grant_count"]].copy()
+        core_chart["total_funding"] = (core_chart["total_funding"] / 1e9).round(2)
+        core_chart.columns = ["Term", "Funding ($B)", "Grant Count"]
+
+        self._upsert_chart(
+            "d3-bars",
+            "Core Biomarker Terms (13) \u2014 Definite Biomarker Research",
+            core_chart, "core_terms.png",
+            metadata={
+                "describe": {
+                    "intro": f"Total: ${core_df['total_funding'].sum()/1e9:.1f}B across {core_df['grant_count'].sum():,} grants",
+                    "number-prepend": "$",
+                    "number-append": "B",
+                },
+                "visualize": {
+                    "sort-bars": "desc",
+                    "custom-colors": {"Funding ($B)": CORE_COLOR},
+                },
+            },
+        )
+
+        # Expanded terms chart
+        exp_chart = expanded_df[["PRIMARY_TERM", "total_funding", "grant_count"]].copy()
+        exp_chart["total_funding"] = (exp_chart["total_funding"] / 1e9).round(2)
+        exp_chart.columns = ["Term", "Funding ($B)", "Grant Count"]
+
+        return self._upsert_chart(
+            "d3-bars",
+            "Expanded Terms (+23) \u2014 Broader Matches, Need LLM Screening",
+            exp_chart, "expanded_terms.png",
+            metadata={
+                "describe": {
+                    "intro": f"Total: ${expanded_df['total_funding'].sum()/1e9:.1f}B across {expanded_df['grant_count'].sum():,} grants",
+                    "number-prepend": "$",
+                    "number-append": "B",
+                },
+                "visualize": {
+                    "sort-bars": "desc",
+                    "custom-colors": {"Funding ($B)": EXPANDED_COLOR},
                 },
             },
         )

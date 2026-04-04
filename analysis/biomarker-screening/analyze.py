@@ -289,6 +289,52 @@ def keyword_funding(df: pd.DataFrame, renderer, n_top: int = 15) -> dict:
     }
 
 
+def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
+    """Chart 8: Two-panel — funding by top core terms, then what expanded adds.
+
+    Left panel: funding for each of the 13 core biomarker terms.
+    Right panel: funding for expanded-only terms (what the broader net catches).
+    """
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
+    from keyword_terms import CORE_BIOMARKER_TERMS
+
+    core_set = set(CORE_BIOMARKER_TERMS)
+    has_term = df[df["PRIMARY_TERM"].notna() & (df["PRIMARY_TERM"] != "")].copy()
+    has_term["term_tier"] = has_term["PRIMARY_TERM"].apply(
+        lambda t: "core" if t in core_set else "expanded"
+    )
+
+    # Core terms
+    core_df = (
+        has_term[has_term["term_tier"] == "core"]
+        .groupby("PRIMARY_TERM")
+        .agg(total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count"))
+        .reset_index()
+        .sort_values("total_funding", ascending=False)
+    )
+
+    # Expanded-only terms
+    expanded_df = (
+        has_term[has_term["term_tier"] == "expanded"]
+        .groupby("PRIMARY_TERM")
+        .agg(total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count"))
+        .reset_index()
+        .sort_values("total_funding", ascending=False)
+    )
+
+    renderer.core_vs_expanded_terms(core_df, expanded_df, "core_vs_expanded_terms.png")
+
+    return {
+        "core_terms": core_df.to_dict(orient="records"),
+        "expanded_terms": expanded_df.to_dict(orient="records"),
+        "core_total_funding": float(core_df["total_funding"].sum()),
+        "expanded_total_funding": float(expanded_df["total_funding"].sum()),
+        "core_total_grants": int(core_df["grant_count"].sum()),
+        "expanded_total_grants": int(expanded_df["grant_count"].sum()),
+    }
+
+
 def main():
     print("Loading dataset...")
     df = load_dataset()
@@ -325,6 +371,9 @@ def main():
 
     print("\n7. Funding by keyword term...")
     results["keyword_funding"] = keyword_funding(df, renderer)
+
+    print("\n8. Core vs expanded terms (two-panel)...")
+    results["core_vs_expanded_terms"] = core_vs_expanded_terms(df, renderer)
 
     # Summary stats
     explicit_df = df[df["EXPLICIT_BIOMARKER"]]
