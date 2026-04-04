@@ -506,31 +506,15 @@ def main():
 
     results = {}
 
-    print("1. Total biomarker spending over time (core vs expanded)...")
+    # Chart registry — only sanctioned analyses run here.
+    # See SUMMARY.md for the registry spec.
+    print("C1. Spending over time (core vs expanded)...")
     results["spending_over_time"] = spending_over_time(df, renderer)
 
-    print("\n2. Institute allocation (with core/expanded split)...")
+    print("\nC2. Institute allocation (with core/expanded split)...")
     results["institute_allocation"] = institute_allocation(df, renderer)
 
-    print("\n3. Institute funding over time...")
-    results["institute_over_time"] = institute_over_time(df, renderer)
-
-    print("\n4. Explicit biomarker adoption rate...")
-    results["explicit_adoption"] = explicit_adoption(df, renderer)
-
-    print("\n5. Match source breakdown (keyword vs abstract)...")
-    results["match_source_breakdown"] = match_source_breakdown(df, renderer)
-
-    print("\n6. Mechanism breakdown...")
-    results["mechanism_breakdown"] = mechanism_breakdown(df, renderer)
-
-    print("\n7. Funding by keyword term...")
-    results["keyword_funding"] = keyword_funding(df, renderer)
-
-    print("\n8. Core vs expanded terms (two-panel)...")
-    results["core_vs_expanded_terms"] = core_vs_expanded_terms(df, renderer)
-
-    print("\n9. Term × grant mechanism...")
+    print("\nC3. Term × grant mechanism...")
     results["term_by_mechanism"] = term_by_mechanism(df, renderer)
 
     # Summary stats
