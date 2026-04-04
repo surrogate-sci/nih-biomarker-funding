@@ -2,14 +2,14 @@
 Produce public-facing figures for surrogate-sci/biomarker-funding.
 
 Reads per-year spending data (hardcoded below from dataset v3.0), computes
-cumulative totals in nominal and CPI-adjusted dollars, then UPDATES existing
+annual and cumulative totals in 2024 dollars (BLS CPI-U), then UPDATES existing
 Datawrapper line charts and exports their PNGs to visualizations/.
 
 IMPORTANT: Always update existing chart IDs — never create new ones.
 
 Datawrapper chart IDs:
-  VydiG — cumulative nominal (pre-existing, canonical)
-  pzYSe — cumulative 2024-dollar adjusted
+  VydiG — annual spending, 2024-dollar adjusted
+  pzYSe — cumulative spending, 2024-dollar adjusted
 
 Dataset: nih_biomarker_unified_2004-2024.csv, v3.0 (generated 2026-04-03)
   Term definitions: scripts/keyword_terms.py (CORE_BIOMARKER_TERMS,
@@ -86,8 +86,8 @@ CPI_U = {
 CPI_BASE_YEAR = 2024
 
 # Datawrapper chart IDs — update these in place, never create new ones
-DW_CHART_NOMINAL = "VydiG"   # NIH Biomarker-Related Spending (pre-existing)
-DW_CHART_ADJ     = "pzYSe"   # CPI-adjusted (created 2026-04-02)
+DW_CHART_ANNUAL = "VydiG"   # Annual spending, 2024-dollar adjusted (pre-existing chart ID)
+DW_CHART_CUM    = "pzYSe"   # Cumulative spending, 2024-dollar adjusted
 
 DW_API = "https://api.datawrapper.de/v3"
 
@@ -120,12 +120,17 @@ def inflation_adjust(annual: list[float], years: list[int], base_year: int = CPI
     return [round(v * base_cpi / CPI_U[y], 2) for v, y in zip(annual, years)]
 
 
-def build_csv(years, col1_annual, col2_annual, col1_label, col2_label) -> str:
+def build_csv(years, col1_annual, col2_annual, col1_label, col2_label, *, as_cumulative: bool = True) -> str:
     # Quote years as strings to prevent Datawrapper from parsing them as dates
     # and inserting monthly sub-ticks on the x-axis.
     lines = [f"Fiscal Year,{col1_label},{col2_label}"]
-    c1_cum, c2_cum = cumulative(col1_annual), cumulative(col2_annual)
-    for y, c1, c2 in zip(years, c1_cum, c2_cum):
+    if as_cumulative:
+        c1_vals = cumulative(col1_annual)
+        c2_vals = cumulative(col2_annual)
+    else:
+        c1_vals = col1_annual
+        c2_vals = col2_annual
+    for y, c1, c2 in zip(years, c1_vals, c2_vals):
         lines.append(f'"{y}",{c1},{c2}')
     return "\n".join(lines)
 
@@ -187,18 +192,12 @@ def main():
     expand_adj = inflation_adjust(EXPANDED_ANNUAL_B, YEARS)
 
     DW_BYLINE = "Surrogate Science Project"
-    DW_SOURCE_NOMINAL = "NIH ExPORTER (FY2004\u20132024), keyword + abstract filtered"
-    DW_SOURCE_ADJ = "NIH ExPORTER (FY2004\u20132024), keyword + abstract filtered; BLS CPI-U"
-    DW_NOTES_NOMINAL = (
-        "FY2005\u201306 likely undercounted despite title, term, and abstract search"
+    DW_SOURCE = "NIH ExPORTER (FY2004\u20132024), keyword + abstract filtered; BLS CPI-U"
+    DW_NOTES = "FY2005\u201306 likely undercounted despite title, term, and abstract search"
+    DW_INTRO_ANNUAL = (
+        "Annual NIH biomarker-related spending, adjusted to 2024 dollars"
     )
-    DW_NOTES_ADJ = (
-        "FY2005\u201306 likely undercounted despite title, term, and abstract search"
-    )
-    DW_INTRO_NOMINAL = (
-        "Biomarker-related NIH funding grew nearly 8-fold over two decades"
-    )
-    DW_INTRO_ADJ = (
+    DW_INTRO_CUM = (
         "NIH has spent between $62B and $175B on biomarker-related research since 2004, "
         "depending on how broadly \u201cbiomarker\u201d is defined. "
         "Adjusted to 2024 dollars using BLS CPI-U annual averages."
@@ -221,42 +220,44 @@ def main():
     }
 
     if not args.export_only:
-        # --- Nominal chart ---
-        nom_csv = build_csv(
-            YEARS, CORE_ANNUAL_B, EXPANDED_ANNUAL_B,
-            "Core", "Expanded",
-        )
-        print(f"Uploading nominal data to {DW_CHART_NOMINAL}...")
-        dw_upload_data(DW_CHART_NOMINAL, nom_csv, token)
-        dw_patch_metadata(DW_CHART_NOMINAL, viz_patch, token)
-        dw_patch_metadata(DW_CHART_NOMINAL, {"metadata": {
-            "describe": {"intro": DW_INTRO_NOMINAL, "byline": DW_BYLINE, "source-name": DW_SOURCE_NOMINAL},
-            "annotate": {"notes": DW_NOTES_NOMINAL},
-        }}, token)
-        url_nom = dw_publish(DW_CHART_NOMINAL, token)
-        print(f"Published: {url_nom}")
-
-        # --- Inflation-adjusted chart ---
-        adj_csv = build_csv(
+        # --- Annual spending chart (VydiG), CPI-adjusted ---
+        annual_csv = build_csv(
             YEARS, core_adj, expand_adj,
             "Core", "Expanded",
+            as_cumulative=False,
         )
-        print(f"Uploading CPI-adjusted data to {DW_CHART_ADJ}...")
-        dw_upload_data(DW_CHART_ADJ, adj_csv, token)
-        dw_patch_metadata(DW_CHART_ADJ, viz_patch, token)
-        dw_patch_metadata(DW_CHART_ADJ, {"metadata": {
-            "describe": {"intro": DW_INTRO_ADJ, "byline": DW_BYLINE, "source-name": DW_SOURCE_ADJ},
-            "annotate": {"notes": DW_NOTES_ADJ},
+        print(f"Uploading annual CPI-adjusted data to {DW_CHART_ANNUAL}...")
+        dw_upload_data(DW_CHART_ANNUAL, annual_csv, token)
+        dw_patch_metadata(DW_CHART_ANNUAL, viz_patch, token)
+        dw_patch_metadata(DW_CHART_ANNUAL, {"metadata": {
+            "describe": {"intro": DW_INTRO_ANNUAL, "byline": DW_BYLINE, "source-name": DW_SOURCE},
+            "annotate": {"notes": DW_NOTES},
         }}, token)
-        url_adj = dw_publish(DW_CHART_ADJ, token)
-        print(f"Published: {url_adj}")
+        url_annual = dw_publish(DW_CHART_ANNUAL, token)
+        print(f"Published: {url_annual}")
+
+        # --- Cumulative spending chart (pzYSe), CPI-adjusted ---
+        cum_csv = build_csv(
+            YEARS, core_adj, expand_adj,
+            "Core", "Expanded",
+            as_cumulative=True,
+        )
+        print(f"Uploading cumulative CPI-adjusted data to {DW_CHART_CUM}...")
+        dw_upload_data(DW_CHART_CUM, cum_csv, token)
+        dw_patch_metadata(DW_CHART_CUM, viz_patch, token)
+        dw_patch_metadata(DW_CHART_CUM, {"metadata": {
+            "describe": {"intro": DW_INTRO_CUM, "byline": DW_BYLINE, "source-name": DW_SOURCE},
+            "annotate": {"notes": DW_NOTES},
+        }}, token)
+        url_cum = dw_publish(DW_CHART_CUM, token)
+        print(f"Published: {url_cum}")
 
     # --- Export PNGs ---
     print("Exporting PNGs...")
-    dw_export_png(DW_CHART_NOMINAL, token,
-                  out_dir / "cumulative_biomarker_funding_nominal.png",
+    dw_export_png(DW_CHART_ANNUAL, token,
+                  out_dir / "annual_biomarker_funding_2024dollars.png",
                   width=700)
-    dw_export_png(DW_CHART_ADJ,    token,
+    dw_export_png(DW_CHART_CUM, token,
                   out_dir / "cumulative_biomarker_funding_2024dollars.png",
                   width=700)
 

@@ -62,14 +62,14 @@ jobs:
           }
 
           push_png \
-            visualizations/cumulative_biomarker_funding_nominal.png \
-            data/fig-1/cumulative_biomarker_funding_nominal.png \
-            "ci: update nominal cumulative funding figure"
+            visualizations/annual_biomarker_funding_2024dollars.png \
+            data/fig-1/annual_biomarker_funding_2024dollars.png \
+            "ci: update annual (2024\$) funding figure"
 
           push_png \
             visualizations/cumulative_biomarker_funding_2024dollars.png \
             data/fig-1/cumulative_biomarker_funding_2024dollars.png \
-            "ci: update inflation-adjusted cumulative funding figure"
+            "ci: update cumulative (2024\$) funding figure"
 
           push_csv() {
             local src="$1"
