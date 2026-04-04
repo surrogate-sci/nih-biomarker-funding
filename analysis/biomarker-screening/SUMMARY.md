@@ -1,152 +1,149 @@
-# Biomarker Screening: Dataset Characterization
+# Biomarker Screening: What Does NIH Fund?
 
-## What This Is
+## The Question
 
-A keyword-filtered subset of all NIH-funded grants from FY2004–2024. This is a **screening
-step**, not a classification — it identifies grants that *mention* biomarker-related concepts
-in their title, project terms, or abstract, without judging how they use those concepts.
+Does NIH biomarker funding prioritize surrogacy and endpoint validation, or is
+most of it discovery work without a clear estimand? This analysis characterizes
+a keyword-filtered dataset of ~332K NIH grants (FY2004-2024, dataset v3.1) by
+grouping each grant's most specific keyword match into functional purpose
+categories.
 
-### Methodology
+## Key Finding
 
-**Core terms (13):** biomarker, clinical marker, surrogate endpoint, imaging marker,
-endophenotype, intermediate outcome, intermediate endpoint, digital endpoint,
-risk stratification, patient selection, companion diagnostic, predicting response,
-response to therapy
+**Surrogacy and endpoint validation is nearly absent from NIH biomarker funding.**
 
-**Expanded terms (+23):** digital biomarker, genetic marker, clinical+omics, clinical+imaging,
-diagnostic accuracy/sensitivity/specificity, clinical diagnostics, personalized diagnostics,
-clinical predictors, prognostic value, prognostic assays, clinically actionable,
-patient/disease stratification, disease heterogeneity, clinical subtypes,
-theranostics, precision oncology, predictive/genomic/proteomic signature, biosignature
+Of 332,324 biomarker-related grants totaling $168B over 20 years, only 2,062
+(0.6%) mention surrogate endpoints or intermediate outcomes. That is $1.3B —
+less than 1% of all biomarker funding.
 
-**Matching sources:**
-- **Keyword match**: PROJECT_TITLE and PROJECT_TERMS fields
-- **Abstract match**: ABSTRACT_TEXT (catches grants that mention biomarker concepts only in the abstract)
+The overwhelming majority falls into two buckets:
 
-**Facility screening:** Infrastructure sub-projects (Administrative Core, Shared Resource,
-etc.) are excluded by title pattern. Center grants themselves (P30, P50) are preserved.
+- **Broad biomarker-adjacent** (75%, $126B): Grants matching AND-condition terms
+  like "clinical+omics" or "clinical+imaging." These grants contain both words
+  somewhere in their title, keywords, or abstract, but don't use specific
+  biomarker terminology. They are the broadest, least specific matches.
 
-Grants matching core terms are flagged `EXPLICIT_BIOMARKER=TRUE`. All others matched via
-expanded terms or abstract text only. Matching is case-insensitive.
+- **Discovery & identification** (24%, $40B): Grants that explicitly mention
+  "biomarker," "genetic marker," "endophenotype," "clinical marker," or "imaging
+  marker." These name biomarker concepts but don't specify how the biomarker
+  relates to a clinical endpoint or decision.
 
-### Data Quality Caveats
+Clinical decision-making terms (companion diagnostic, risk stratification,
+patient selection, predicting response, response to therapy), diagnostics terms
+(diagnostic accuracy/sensitivity/specificity), and precision medicine terms
+(theranostics, precision oncology, disease stratification) — all defined in the
+keyword set — produced **zero matches** across 20 years of NIH ExPORTER data.
+These concepts either aren't used in NIH grant language or are expressed
+differently than our keyword set captures.
 
-- **FY2005**: PROJECT_TERMS field only 68% populated — undercounts expanded-term matches
-- **FY2006**: PROJECT_TERMS field completely empty — severe undercount
-- **FY2013, FY2018**: Anomalous keyword counts — partially compensated by abstract search
-- These years are annotated on all time-series charts
-
-## Key Numbers
+## The Dataset (v3.1)
 
 | Metric | Value |
 |--------|-------|
-| Total grants | 344,550 |
-| Total funding | $175.22B |
-| Explicit biomarker grants (core terms) | 127,394 (37.0%) |
-| Explicit biomarker funding | $61.84B (35.3%) |
-| Expanded-only grants | 217,156 (63.0%) |
-| Expanded-only funding | $113.38B (64.7%) |
-| Keyword-matched grants | 276,161 (80.2%) |
-| Abstract-only grants | 68,389 (19.8%) |
-| Year range | FY2004–2024 |
-| Core terms | 13 |
-| Expanded terms | 36 (includes all 13 core) |
+| Total grants | 332,324 |
+| Total funding | $168.1B |
+| Core biomarker term matches | 109,234 (33%) |
+| Core biomarker funding | $49.7B (30%) |
+| Year range | FY2004-2024 |
+| Keyword terms | 36 (13 core + 23 expanded) |
+| Terms with matches | 10 of 36 |
 
-## Findings
+**Matched terms (by grant count):**
 
-### 1. Biomarker Spending: Core vs. Expanded
+| Term | Grants | Category |
+|------|--------|----------|
+| clinical+omics | 137,406 | Broad adjacent |
+| clinical+imaging | 135,933 | Broad adjacent |
+| biomarker | 105,853 | Discovery |
+| genetic marker | 11,666 | Discovery |
+| endophenotype | 5,344 | Discovery |
+| clinical marker | 2,472 | Discovery |
+| imaging marker | 1,908 | Discovery |
+| surrogate endpoint | 1,485 | Surrogacy |
+| intermediate outcome | 577 | Surrogacy |
+| digital biomarker | 263 | Discovery |
+
+Note: A grant may match multiple terms; PRIMARY_TERM assigns the most specific
+one. 26 of 36 keyword terms produced zero matches in the ExPORTER data.
+
+### Data quality caveats
+
+FY2005: PROJECT_TERMS 68% populated. FY2006: PROJECT_TERMS empty. FY2013 and
+FY2018: anomalous keyword counts. These years are annotated on time-series charts.
+
+## Charts
+
+### 1. Biomarker Spending Over Time
 
 ![Spending over time](charts/spending_over_time.png)
 
-Total biomarker-related funding grew from $2.9B (FY2004) to $15.5B (FY2024). The stacked
-chart separates **core term matches** (definite biomarker work — $61.8B total) from
-**expanded-only matches** (broader keyword proximity — $113.4B total). Core term funding
-grew roughly proportionally, maintaining ~35% of the total throughout.
+Total biomarker-related funding grew from ~$3B (FY2004) to ~$14B (FY2024). Core
+term matches (definite biomarker work) account for roughly 30% throughout, with
+the remainder captured by broader expanded terms.
 
-### 2. Institute Allocation: Who Funds Biomarker Research?
+### 2. Institute Allocation
 
 ![Institute allocation](charts/institute_allocation.png)
 
-NCI leads with $38.8B across 84K grants — 22% of all biomarker-related funding. The
-stacked bars reveal that **core term concentration varies widely**: NCI is 42% core,
-while NLM is only 1% core (its grants mention biomarkers in expanded/abstract context).
-NICHD (35% core) and NIDDK (36% core) are near the dataset average.
+NCI leads with the largest share of biomarker-related funding. The core term
+concentration varies across institutes, reflecting different research cultures
+around biomarker language.
 
-### 3. Institute Funding Over Time
+### 3. Biomarker Purpose Distribution
 
-![Institute over time](charts/institute_over_time.png)
+![Purpose distribution](charts/purpose_distribution.png)
 
-NCI has led throughout, but NIA and NHLBI grew substantially after 2010, reflecting
-the expansion of biomarker concepts into aging (Alzheimer's fluid biomarkers) and
-cardiovascular research. NIAID surges are visible around pandemic years. This chart
-shows all matched grants (core + expanded + abstract).
+Each grant is assigned to one purpose category based on its most specific keyword
+match:
 
-### 4. Explicit Biomarker Term Adoption
+| Purpose | Grants | Funding | Share |
+|---------|--------|---------|-------|
+| Surrogacy & endpoint validation | 2,062 | $1.3B | 0.8% |
+| Discovery & identification | 87,498 | $40.4B | 24.1% |
+| Broad biomarker-adjacent | 242,764 | $126.3B | 75.2% |
 
-![Explicit adoption](charts/explicit_adoption.png)
+Three of the six defined purpose categories (clinical decision-making,
+diagnostics & prognostics, stratification & precision medicine) are empty —
+those keyword terms produced zero matches in ExPORTER data.
 
-The fraction of matched grants using core biomarker terms hovers around 35–40%, with
-dips at FY2005–06 (data quality) and FY2013 (sequester/data gap). This metric shows
-that the majority of grants in our broad haystack don't use explicit biomarker
-language — they mention biomarker-adjacent concepts captured by expanded terms.
+### 4. Purpose Over Time
 
-### 5. How Grants Are Discovered: Keyword vs. Abstract Search
+![Purpose over time](charts/purpose_over_time.png)
 
-![Match source](charts/match_source_breakdown.png)
+Discovery & identification funding grew substantially over two decades.
+Surrogacy & endpoint validation remains a barely visible sliver throughout,
+with no catch-up trend.
 
-About 20% of matched grants (68K, $34.8B) were only discoverable through abstract
-text search. This search method is critical for recovering grants from sparse years
-(FY2005–06) and for capturing grants that discuss biomarker concepts in their
-scientific narrative without using biomarker terms in title or project terms fields.
+### 5. Purpose by Grant Mechanism
 
-### 6. Funding by Grant Mechanism
+![Purpose by mechanism](charts/purpose_by_mechanism.png)
 
-![Mechanism breakdown](charts/mechanism_breakdown.png)
-
-Research grants (R01, R21, etc.) carry the majority of biomarker funding. Cooperative
-agreements (U) are the second-largest mechanism, reflecting multi-site biomarker
-validation studies. The mechanism breakdown shows core vs. expanded composition —
-research grants have a higher core term rate than program/center grants.
-
-### 7. Funding by Primary Keyword Term
-
-![Keyword funding](charts/keyword_funding.png)
-
-Each grant is assigned its most specific matching term via priority ordering (most
-specific wins). Among keyword-matched grants (276K of 344K), the AND-condition terms
-`clinical+omics` ($60B, 106K grants) and `clinical+imaging` ($37B, 80K grants) dominate
-because PROJECT_TERMS frequently contains both "clinical" and "omics" or "imaging"
-substrings. These are the broadest expanded terms.
-
-More targeted terms: `biomarker` ($13B, 33K grants), `genetic marker` ($5B, 10K),
-`risk stratification` ($3B, 5K), `endophenotype` ($2.5B, 5K).
-
-**Coverage:** All 344,550 grants have PRIMARY_TERM assigned — keyword-matched grants
-derive it from their matched terms during filtering, and abstract-only grants derive
-it from their MATCHED_TERMS column.
-
-### 8. Core vs. Expanded Terms: What Each Tier Captures
-
-![Core vs expanded](charts/core_vs_expanded_terms.png)
-
-Each grant appears in exactly one panel. The left panel shows grants that matched any of
-the 13 core biomarker terms, with individual terms shown for those covering 95% of core
-grants. "biomarker" dominates ($45B), followed by risk stratification, endophenotype, and
-response to therapy. Surrogate and intermediate endpoint language accounts for $1.4B across
-2,236 grants — visible in the "Other" bar.
-
-The right panel shows grants matched only by the 23 additional expanded terms, grouped into
-three categories: clinical+omics ($69B, 104K grants), clinical+imaging ($39B, 68K grants),
-and other precision medicine terms ($15B, 45K grants). These grants never matched any core
-term — they represent the broader penumbra of biomarker-adjacent research.
+The left panel shows absolute funding; the right panel shows mechanism share
+within each purpose. Research grants (R01, R21, etc.) are 51% of surrogacy
+funding, 50% of discovery, and 42% of broad adjacent. There is no concentrated
+mechanism for validation work — it is distributed the same way as everything
+else, just at a tiny scale.
 
 ## What This Cannot Tell Us
 
-This keyword screen captures grants that *mention* biomarkers, not grants that *study*
-biomarkers rigorously. It cannot distinguish:
+This analysis classifies grants by **keyword match**, not by what the grant
+actually proposes to do. A grant that matches "biomarker" might be doing rigorous
+surrogate validation; a grant matching "clinical+omics" might be pure discovery.
+Only LLM grading of abstracts (Phase 2) can make that distinction.
 
-- A grant developing a validated surrogate endpoint from one that mentions "biomarker" in passing
-- Causal/mechanistic biomarker work from correlational/discovery work
-- Grants with a clear estimand from those without
+The keyword analysis does establish:
 
-That's the job of the LLM grading pipeline (Phase 2).
+1. **The language of surrogacy is rare.** Across 332K grants, only 2,062 use
+   "surrogate endpoint" or "intermediate outcome" — the terms that explicitly
+   name the concept of validating a biomarker as a stand-in for a clinical
+   endpoint.
+
+2. **Most biomarker funding is terminologically vague.** 75% of grants match
+   only broad AND-condition terms (clinical+omics, clinical+imaging), meaning
+   they don't use specific biomarker language at all.
+
+3. **26 of 36 keyword terms match nothing.** Clinical decision-making terms,
+   diagnostics terms, and precision medicine terms are absent from NIH grant
+   language as captured by ExPORTER. This suggests either a vocabulary mismatch
+   between our keyword set and NIH grant conventions, or a genuine absence of
+   these concepts in funded research.

@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Biomarker Screening Analysis — descriptive statistics and charts.
+"""Biomarker Screening Analysis — dataset characterization for policy narrative.
 
-Reads the unified NIH biomarker dataset and produces:
+Produces 5 charts addressing the question: what kind of biomarker work does NIH
+fund, and is surrogacy/endpoint validation an afterthought?
+
+Charts:
 1. Total biomarker spending over time (core vs expanded stacked)
 2. Funding allocation by institute (top 10, with core/expanded split)
-3. Funding by institute over time (stacked area, top 8 + other)
-4. Explicit biomarker adoption rate over time (% grants using core terms)
-5. Match source breakdown over time (keyword vs abstract-only)
-6. Funding by grant mechanism (R, P, U, K, T, F, Other)
-7. Funding by primary keyword term (top 15)
+3. Biomarker purpose distribution — funding by functional category
+4. Biomarker purpose over time — trends by category (surrogacy flat?)
+5. Purpose × grant mechanism — where surrogacy validation (doesn't) happen
 
 Uses Datawrapper if DATAWRAPPER_API_TOKEN is set, else seaborn/matplotlib.
 Outputs: charts/ directory + funding_analysis.json
@@ -23,14 +24,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pandas as pd
 
 from charts import get_renderer
-from utils import DATA_QUALITY_YEARS, activity_category, load_dataset
+from utils import (
+    DATA_QUALITY_YEARS,
+    PURPOSE_ORDER,
+    TERM_PURPOSE,
+    activity_category,
+    load_dataset,
+)
 
 CHARTS_DIR = Path(__file__).parent / "charts"
 
 
+def _assign_purpose(df: pd.DataFrame) -> pd.DataFrame:
+    """Add PURPOSE column based on PRIMARY_TERM → TERM_PURPOSE mapping."""
+    df = df.copy()
+    df["PURPOSE"] = df["PRIMARY_TERM"].map(TERM_PURPOSE).fillna("Unclassified")
+    return df
+
+
 def spending_over_time(df: pd.DataFrame, renderer) -> dict:
     """Chart 1: Biomarker spending per fiscal year, split by core vs expanded."""
-    # Total (all grants)
     yearly = (
         df.groupby("FY")
         .agg(
@@ -40,7 +53,6 @@ def spending_over_time(df: pd.DataFrame, renderer) -> dict:
         .reset_index()
     )
 
-    # Core-only (EXPLICIT_BIOMARKER=TRUE)
     core = (
         df[df["EXPLICIT_BIOMARKER"]]
         .groupby("FY")
@@ -70,7 +82,6 @@ def spending_over_time(df: pd.DataFrame, renderer) -> dict:
 
 def institute_allocation(df: pd.DataFrame, renderer, n: int = 10) -> dict:
     """Chart 2: Top institutes by total biomarker funding, with core/expanded split."""
-    # Total per institute
     ic = (
         df.groupby(["ADMINISTERING_IC", "IC_NAME"])
         .agg(
@@ -82,7 +93,6 @@ def institute_allocation(df: pd.DataFrame, renderer, n: int = 10) -> dict:
         .head(n)
     )
 
-    # Core funding per institute
     core_ic = (
         df[df["EXPLICIT_BIOMARKER"]]
         .groupby("ADMINISTERING_IC")
@@ -94,7 +104,6 @@ def institute_allocation(df: pd.DataFrame, renderer, n: int = 10) -> dict:
     ic["expanded_count"] = ic["grant_count"] - ic["core_count"]
     ic["core_pct"] = (100 * ic["core_funding"] / ic["total_funding"]).round(1)
 
-    # Readable labels
     name_map = {
         "CA": "NCI (Cancer)",
         "AG": "NIA (Aging)",
@@ -135,290 +144,124 @@ def institute_allocation(df: pd.DataFrame, renderer, n: int = 10) -> dict:
     }
 
 
-def institute_over_time(df: pd.DataFrame, renderer, n_top: int = 8) -> dict:
-    """Chart 3: Stacked area of funding by institute over time."""
-    top_ics = (
-        df.groupby("ADMINISTERING_IC")["TOTAL_COST"]
-        .sum()
-        .nlargest(n_top)
-        .index.tolist()
+def purpose_distribution(df: pd.DataFrame, renderer) -> dict:
+    """Chart 3: Funding by biomarker purpose category.
+
+    Scoped to grants where PURPOSE is determinable from title keywords (grants
+    with a non-empty PRIMARY_TERM). The remaining grants matched via PROJECT_TERMS
+    or abstract text — their purpose requires LLM grading to determine.
+
+    This scoping IS the finding: most biomarker grants don't use specific enough
+    language in their title to classify, and among those that do, surrogacy/endpoint
+    validation is nearly absent.
+    """
+    classified = df[df["PURPOSE"] != "Unclassified"]
+    unclassified_n = (df["PURPOSE"] == "Unclassified").sum()
+    unclassified_funding = df.loc[df["PURPOSE"] == "Unclassified", "TOTAL_COST"].sum()
+
+    purpose = (
+        classified.groupby("PURPOSE")
+        .agg(
+            total_funding=("TOTAL_COST", "sum"),
+            grant_count=("APPLICATION_ID", "count"),
+        )
+        .reset_index()
     )
 
-    name_map = {
-        "CA": "NCI",
-        "AG": "NIA",
-        "HL": "NHLBI",
-        "AI": "NIAID",
-        "NS": "NINDS",
-        "MH": "NIMH",
-        "DK": "NIDDK",
-        "LM": "NLM",
+    # Order by PURPOSE_ORDER
+    purpose["sort_key"] = purpose["PURPOSE"].map(
+        {p: i for i, p in enumerate(PURPOSE_ORDER)}
+    )
+    purpose = purpose.sort_values("sort_key").drop(columns="sort_key")
+
+    classified_funding = classified["TOTAL_COST"].sum()
+    purpose["pct"] = (100 * purpose["total_funding"] / classified_funding).round(1)
+
+    renderer.purpose_distribution(purpose, "purpose_distribution.png")
+
+    return {
+        "categories": purpose.to_dict(orient="records"),
+        "classified_grants": len(classified),
+        "classified_funding": float(classified_funding),
+        "unclassified_grants": int(unclassified_n),
+        "unclassified_funding": float(unclassified_funding),
     }
 
-    df = df.copy()
-    df["ic_group"] = df["ADMINISTERING_IC"].apply(
-        lambda x: name_map.get(x, x) if x in top_ics else "Other"
-    )
 
-    yearly_ic = df.groupby(["FY", "ic_group"])["TOTAL_COST"].sum().reset_index()
-    pivot = yearly_ic.pivot(index="FY", columns="ic_group", values="TOTAL_COST").fillna(
-        0
-    )
+def purpose_over_time(df: pd.DataFrame, renderer) -> dict:
+    """Chart 4: Biomarker purpose trends over time.
 
-    # Order columns by total funding (largest first), but keep "Other" last
-    col_order = (
-        pivot.drop(columns=["Other"], errors="ignore")
-        .sum()
-        .sort_values(ascending=False)
-        .index.tolist()
-    )
-    if "Other" in pivot.columns:
-        col_order.append("Other")
-    pivot = pivot[col_order]
+    Scoped to classified grants only (title-matched). Shows how each purpose
+    category grew (or didn't). Surrogacy & endpoint validation should be flat/tiny.
+    """
+    classified = df[df["PURPOSE"] != "Unclassified"]
+    yearly = classified.groupby(["FY", "PURPOSE"])["TOTAL_COST"].sum().reset_index()
+    pivot = yearly.pivot(index="FY", columns="PURPOSE", values="TOTAL_COST").fillna(0)
 
-    renderer.institute_over_time(pivot, "institute_over_time.png")
+    # Reorder columns by PURPOSE_ORDER (no Unclassified)
+    cols = [c for c in PURPOSE_ORDER if c in pivot.columns]
+    pivot = pivot[cols]
+
+    renderer.purpose_over_time(pivot, "purpose_over_time.png")
 
     return {
         "years": pivot.index.tolist(),
-        "institutes": {col: pivot[col].tolist() for col in pivot.columns},
+        "categories": {col: pivot[col].tolist() for col in pivot.columns},
     }
 
 
-def explicit_adoption(df: pd.DataFrame, renderer) -> dict:
-    """Chart 4: % of matched grants using core biomarker terms, per fiscal year.
+def purpose_by_mechanism(df: pd.DataFrame, renderer) -> dict:
+    """Chart 5: Purpose × grant mechanism cross-tabulation.
 
-    Shows the trend in terminological specificity — what fraction of grants
-    in the broad haystack actually use definite biomarker language.
+    Scoped to classified grants. Shows how surrogacy validation distributes
+    across R01s, cooperative agreements, center grants, etc. — directly
+    addressing whether validation work happens in investigator-initiated research.
     """
-    yearly = (
-        df.groupby("FY")
-        .agg(
-            total_count=("APPLICATION_ID", "count"),
-            explicit_count=("EXPLICIT_BIOMARKER", "sum"),
-        )
-        .reset_index()
-    )
-    yearly["explicit_pct"] = (
-        100 * yearly["explicit_count"] / yearly["total_count"]
-    ).round(1)
-
-    renderer.explicit_adoption(yearly, "explicit_adoption.png")
-
-    return {
-        "years": yearly["FY"].tolist(),
-        "total_count": yearly["total_count"].tolist(),
-        "explicit_count": [int(x) for x in yearly["explicit_count"].tolist()],
-        "explicit_pct": yearly["explicit_pct"].tolist(),
-    }
-
-
-def match_source_breakdown(df: pd.DataFrame, renderer) -> dict:
-    """Chart 5: Keyword-matched vs abstract-only grants per fiscal year.
-
-    Shows how much the abstract text search contributes — critical for
-    understanding data quality in sparse years (FY2005-06, FY2013, FY2018).
-    """
-    yearly = (
-        df.groupby(["FY", "MATCH_SOURCE"])
-        .agg(
-            funding=("TOTAL_COST", "sum"),
-            count=("APPLICATION_ID", "count"),
-        )
-        .reset_index()
-    )
-
-    pivot_funding = yearly.pivot(
-        index="FY", columns="MATCH_SOURCE", values="funding"
-    ).fillna(0)
-    pivot_count = yearly.pivot(
-        index="FY", columns="MATCH_SOURCE", values="count"
-    ).fillna(0)
-
-    # Ensure both columns exist
-    for col in ["keywords_only", "abstract_only"]:
-        if col not in pivot_funding.columns:
-            pivot_funding[col] = 0.0
-            pivot_count[col] = 0
-
-    renderer.match_source_breakdown(pivot_funding, "match_source_breakdown.png")
-
-    return {
-        "years": pivot_funding.index.tolist(),
-        "keyword_funding": pivot_funding["keywords_only"].tolist(),
-        "abstract_funding": pivot_funding["abstract_only"].tolist(),
-        "keyword_count": [int(x) for x in pivot_count["keywords_only"].tolist()],
-        "abstract_count": [int(x) for x in pivot_count["abstract_only"].tolist()],
-    }
-
-
-def mechanism_breakdown(df: pd.DataFrame, renderer) -> dict:
-    """Chart 6: Funding by grant mechanism (R, P, U, K, T, F, Other).
-
-    Shows how biomarker research distributes across different NIH funding
-    mechanisms — R01s vs center grants vs cooperative agreements.
-    """
-    df = df.copy()
+    df = df[df["PURPOSE"] != "Unclassified"].copy()
     df["mechanism"] = df["ACTIVITY"].apply(activity_category)
 
-    # Overall breakdown
-    mech = (
-        df.groupby("mechanism")
+    cross = (
+        df.groupby(["PURPOSE", "mechanism"])
         .agg(
             total_funding=("TOTAL_COST", "sum"),
             grant_count=("APPLICATION_ID", "count"),
         )
         .reset_index()
-        .sort_values("total_funding", ascending=False)
     )
 
-    # Core vs expanded per mechanism
-    core_mech = (
-        df[df["EXPLICIT_BIOMARKER"]]
-        .groupby("mechanism")
-        .agg(core_funding=("TOTAL_COST", "sum"), core_count=("APPLICATION_ID", "count"))
-        .reset_index()
-    )
-    mech = mech.merge(core_mech, on="mechanism", how="left").fillna(0)
-    mech["expanded_funding"] = mech["total_funding"] - mech["core_funding"]
-
-    # Over time by mechanism
-    yearly_mech = df.groupby(["FY", "mechanism"])["TOTAL_COST"].sum().reset_index()
-    pivot = yearly_mech.pivot(
-        index="FY", columns="mechanism", values="TOTAL_COST"
+    # Pivot: rows = purpose, columns = mechanism
+    pivot_funding = cross.pivot(
+        index="PURPOSE", columns="mechanism", values="total_funding"
     ).fillna(0)
 
-    renderer.mechanism_breakdown(mech, pivot, "mechanism_breakdown.png")
+    pivot_count = cross.pivot(
+        index="PURPOSE", columns="mechanism", values="grant_count"
+    ).fillna(0)
+
+    # Order rows by PURPOSE_ORDER
+    row_order = [p for p in PURPOSE_ORDER if p in pivot_funding.index]
+    for p in pivot_funding.index:
+        if p not in row_order:
+            row_order.append(p)
+    pivot_funding = pivot_funding.loc[row_order]
+    pivot_count = pivot_count.loc[row_order]
+
+    # Column order: largest mechanism first
+    col_order = pivot_funding.sum().sort_values(ascending=False).index.tolist()
+    pivot_funding = pivot_funding[col_order]
+    pivot_count = pivot_count[col_order]
+
+    renderer.purpose_by_mechanism(pivot_funding, pivot_count, "purpose_by_mechanism.png")
 
     return {
-        "mechanisms": mech[
-            [
-                "mechanism",
-                "total_funding",
-                "grant_count",
-                "core_funding",
-                "core_count",
-                "expanded_funding",
-            ]
-        ].to_dict(orient="records"),
-        "over_time": {
-            "years": pivot.index.tolist(),
-            "mechanisms": {col: pivot[col].tolist() for col in pivot.columns},
+        "funding": {
+            p: {m: float(pivot_funding.loc[p, m]) for m in pivot_funding.columns}
+            for p in pivot_funding.index
         },
-    }
-
-
-def keyword_funding(df: pd.DataFrame, renderer, n_top: int = 15) -> dict:
-    """Chart 7: Funding by primary keyword term (top N).
-
-    Uses TERM_PRIORITY to assign each grant a single non-overlapping term,
-    then shows funding distribution across the most common terms.
-    """
-    # Filter to grants with a primary term
-    has_term = df[df["PRIMARY_TERM"].notna() & (df["PRIMARY_TERM"] != "")].copy()
-
-    term_funding = (
-        has_term.groupby("PRIMARY_TERM")
-        .agg(
-            total_funding=("TOTAL_COST", "sum"),
-            grant_count=("APPLICATION_ID", "count"),
-        )
-        .reset_index()
-        .sort_values("total_funding", ascending=False)
-    )
-
-    top_terms = term_funding.head(n_top)
-
-    renderer.keyword_funding(top_terms, "keyword_funding.png")
-
-    return {
-        "terms": top_terms.to_dict(orient="records"),
-        "total_with_term": len(has_term),
-        "total_without_term": len(df) - len(has_term),
-    }
-
-
-def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
-    """Chart 8: Two-panel — funding by keyword for core vs expanded-only grants.
-
-    Left panel: grants with EXPLICIT_BIOMARKER=TRUE ($62B). Shows the highest-priority
-    CORE term each grant matched (not the most-specific expanded term). This avoids
-    showing expanded terms like "digital biomarker" in the core panel.
-
-    Right panel: grants with EXPLICIT_BIOMARKER=FALSE ($113B). Shows PRIMARY_TERM
-    (most specific expanded term).
-
-    No double counting: every grant appears in exactly one panel.
-    """
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
-    from keyword_terms import CORE_BIOMARKER_TERMS, TERM_PRIORITY
-
-    core_set = set(CORE_BIOMARKER_TERMS)
-    # Core-only priority: just the core terms, in TERM_PRIORITY order
-    core_priority = [t for t in TERM_PRIORITY if t in core_set]
-
-    has_term = df[df["PRIMARY_TERM"].notna() & (df["PRIMARY_TERM"] != "")].copy()
-
-    # Split by EXPLICIT_BIOMARKER — matches $62B/$113B split used elsewhere
-    core_grants = has_term[has_term["EXPLICIT_BIOMARKER"]].copy()
-    expanded_grants = has_term[~has_term["EXPLICIT_BIOMARKER"]]
-
-    # For core grants: assign the highest-priority CORE term they matched
-    def best_core_term(matched_terms_str):
-        if pd.isna(matched_terms_str) or matched_terms_str == "":
-            return "biomarker"
-        terms = matched_terms_str.split(";")
-        for t in core_priority:
-            if t in terms:
-                return t
-        return "biomarker"
-
-    core_grants["CORE_PRIMARY"] = core_grants["MATCHED_TERMS"].apply(best_core_term)
-
-    core_df = (
-        core_grants.groupby("CORE_PRIMARY")
-        .agg(
-            total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count")
-        )
-        .reset_index()
-        .rename(columns={"CORE_PRIMARY": "PRIMARY_TERM"})
-        .sort_values("total_funding", ascending=False)
-    )
-
-    # For expanded-only grants: group into 3 categories
-    expanded_grants = expanded_grants.copy()
-
-    def expanded_category(term):
-        if term == "clinical+omics":
-            return "clinical+omics"
-        elif term == "clinical+imaging":
-            return "clinical+imaging"
-        else:
-            return "Other precision medicine terms"
-
-    expanded_grants["exp_category"] = expanded_grants["PRIMARY_TERM"].apply(
-        expanded_category
-    )
-    expanded_df = (
-        expanded_grants.groupby("exp_category")
-        .agg(
-            total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count")
-        )
-        .reset_index()
-        .rename(columns={"exp_category": "PRIMARY_TERM"})
-        .sort_values("total_funding", ascending=False)
-    )
-
-    renderer.core_vs_expanded_terms(core_df, expanded_df, "core_vs_expanded_terms.png")
-
-    return {
-        "core_terms": core_df.to_dict(orient="records"),
-        "expanded_terms": expanded_df.to_dict(orient="records"),
-        "core_total_funding": float(core_df["total_funding"].sum()),
-        "expanded_total_funding": float(expanded_df["total_funding"].sum()),
-        "core_total_grants": int(core_df["grant_count"].sum()),
-        "expanded_total_grants": int(expanded_df["grant_count"].sum()),
+        "counts": {
+            p: {m: int(pivot_count.loc[p, m]) for m in pivot_count.columns}
+            for p in pivot_count.index
+        },
     }
 
 
@@ -432,6 +275,12 @@ def main():
     print(f"  EXPLICIT_BIOMARKER=TRUE: {df['EXPLICIT_BIOMARKER'].sum():,}")
     print(f"  PRIMARY_TERM populated: {(df['PRIMARY_TERM'] != '').sum():,}")
 
+    # Assign purpose categories
+    df = _assign_purpose(df)
+    unclassified = (df["PURPOSE"] == "Unclassified").sum()
+    if unclassified:
+        print(f"  WARNING: {unclassified:,} grants have no PURPOSE (missing PRIMARY_TERM)")
+
     renderer = get_renderer(CHARTS_DIR)
     print(f"  Using {renderer.backend} renderer\n")
 
@@ -443,47 +292,43 @@ def main():
     print("\n2. Institute allocation (with core/expanded split)...")
     results["institute_allocation"] = institute_allocation(df, renderer)
 
-    print("\n3. Institute funding over time...")
-    results["institute_over_time"] = institute_over_time(df, renderer)
+    print("\n3. Biomarker purpose distribution...")
+    results["purpose_distribution"] = purpose_distribution(df, renderer)
 
-    print("\n4. Explicit biomarker adoption rate...")
-    results["explicit_adoption"] = explicit_adoption(df, renderer)
+    print("\n4. Biomarker purpose over time...")
+    results["purpose_over_time"] = purpose_over_time(df, renderer)
 
-    print("\n5. Match source breakdown (keyword vs abstract)...")
-    results["match_source_breakdown"] = match_source_breakdown(df, renderer)
-
-    print("\n6. Mechanism breakdown...")
-    results["mechanism_breakdown"] = mechanism_breakdown(df, renderer)
-
-    print("\n7. Funding by keyword term...")
-    results["keyword_funding"] = keyword_funding(df, renderer)
-
-    print("\n8. Core vs expanded terms (two-panel)...")
-    results["core_vs_expanded_terms"] = core_vs_expanded_terms(df, renderer)
+    print("\n5. Purpose × grant mechanism...")
+    results["purpose_by_mechanism"] = purpose_by_mechanism(df, renderer)
 
     # Summary stats
     explicit_df = df[df["EXPLICIT_BIOMARKER"]]
-    kw_df = df[df["MATCH_SOURCE"] == "keywords_only"]
-    abs_df = df[df["MATCH_SOURCE"] == "abstract_only"]
+    classified = df[df["PURPOSE"] != "Unclassified"]
+    unclassified = df[df["PURPOSE"] == "Unclassified"]
+
+    surrogacy = df[df["PURPOSE"] == "Surrogacy & endpoint validation"]
+    decision = df[df["PURPOSE"] == "Clinical decision-making"]
 
     results["summary"] = {
         "total_grants": len(df),
-        "explicit_grants": int(df["EXPLICIT_BIOMARKER"].sum()),
-        "expanded_only_grants": len(df) - int(df["EXPLICIT_BIOMARKER"].sum()),
-        "keyword_matched_grants": len(kw_df),
-        "abstract_only_grants": len(abs_df),
         "total_funding_billions": round(df["TOTAL_COST"].sum() / 1e9, 2),
+        "explicit_grants": int(df["EXPLICIT_BIOMARKER"].sum()),
         "explicit_funding_billions": round(explicit_df["TOTAL_COST"].sum() / 1e9, 2),
-        "expanded_only_funding_billions": round(
-            (df["TOTAL_COST"].sum() - explicit_df["TOTAL_COST"].sum()) / 1e9, 2
-        ),
-        "keyword_funding_billions": round(kw_df["TOTAL_COST"].sum() / 1e9, 2),
-        "abstract_funding_billions": round(abs_df["TOTAL_COST"].sum() / 1e9, 2),
-        "explicit_pct": round(100 * df["EXPLICIT_BIOMARKER"].mean(), 1),
+        "classified_grants": len(classified),
+        "classified_funding_billions": round(classified["TOTAL_COST"].sum() / 1e9, 2),
+        "unclassified_grants": len(unclassified),
+        "unclassified_funding_billions": round(unclassified["TOTAL_COST"].sum() / 1e9, 2),
+        "surrogacy_grants": len(surrogacy),
+        "surrogacy_funding_billions": round(surrogacy["TOTAL_COST"].sum() / 1e9, 2),
+        "surrogacy_pct_of_classified": round(
+            100 * surrogacy["TOTAL_COST"].sum() / classified["TOTAL_COST"].sum(), 2
+        )
+        if len(classified) > 0
+        else 0,
+        "decision_grants": len(decision),
+        "decision_funding_billions": round(decision["TOTAL_COST"].sum() / 1e9, 2),
         "year_range": [int(df["FY"].min()), int(df["FY"].max())],
         "data_quality_years": sorted(DATA_QUALITY_YEARS),
-        "core_terms": 13,
-        "expanded_terms": 36,
         "renderer": renderer.backend,
     }
 
@@ -491,6 +336,17 @@ def main():
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
     print(f"\nResults saved to {out_path}")
+
+    # Print headline finding
+    s = results["summary"]
+    print(f"\n{'='*60}")
+    print(f"HEADLINE: Of {s['classified_grants']:,} title-classifiable grants:")
+    print(f"  Surrogacy & endpoint validation = {s['surrogacy_grants']:,} grants")
+    print(f"    ${s['surrogacy_funding_billions']:.2f}B of ${s['classified_funding_billions']:.1f}B classified")
+    print(f"    ({s['surrogacy_pct_of_classified']:.1f}% of classified funding)")
+    print(f"  {s['unclassified_grants']:,} grants (${s['unclassified_funding_billions']:.1f}B)")
+    print(f"    matched via structured fields/abstract — purpose requires LLM grading")
+    print(f"{'='*60}")
 
 
 if __name__ == "__main__":
