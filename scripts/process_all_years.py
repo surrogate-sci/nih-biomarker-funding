@@ -124,7 +124,10 @@ def process_fiscal_year(
     zip_path = raw_dir / f"RePORTER_PRJ_C_FY{year}.zip"
     csv_filename = f"RePORTER_PRJ_C_FY{year}.csv"
     csv_path = raw_dir / csv_filename
-    filtered_path = filtered_dir / f"biomarker_FY{year}.csv"
+    # Output to keywords/ subdirectory so create_unified_dataset.py finds them
+    keywords_dir = filtered_dir / "keywords"
+    keywords_dir.mkdir(parents=True, exist_ok=True)
+    filtered_path = keywords_dir / f"biomarker_FY{year}.csv"
 
     # Download if needed
     if not skip_download or not csv_path.exists():
