@@ -46,15 +46,17 @@ def load_dataset(path: Path = DATASET_PATH) -> pd.DataFrame:
     df["TOTAL_COST"] = pd.to_numeric(df["TOTAL_COST"], errors="coerce")
     df["FY"] = df["FY"].astype(int)
 
-    # Compute PRIMARY_TERM for keyword-matched rows (not present in filtered CSVs)
-    if "PRIMARY_TERM" not in df.columns or df["PRIMARY_TERM"].isna().all():
+    # Ensure PRIMARY_TERM column exists
+    if "PRIMARY_TERM" not in df.columns:
         df["PRIMARY_TERM"] = ""
-    # Fill missing PRIMARY_TERM by matching against PROJECT_TITLE
+
+    # Fill missing PRIMARY_TERM from MATCHED_TERMS (abstract-only grants have
+    # MATCHED_TERMS but not PRIMARY_TERM from the filter script)
     mask = df["PRIMARY_TERM"].isna() | (df["PRIMARY_TERM"] == "")
-    if mask.any():
-        df.loc[mask, "PRIMARY_TERM"] = df.loc[mask, "PROJECT_TITLE"].apply(
-            lambda t: primary_term(find_matching_terms(str(t), EXPANDED_BIOMARKER_TERMS))
-            if pd.notna(t) else ""
+    has_matched = mask & df["MATCHED_TERMS"].notna() & (df["MATCHED_TERMS"] != "")
+    if has_matched.any():
+        df.loc[has_matched, "PRIMARY_TERM"] = df.loc[has_matched, "MATCHED_TERMS"].apply(
+            lambda mt: primary_term(mt.split(";"))
         )
 
     return df
