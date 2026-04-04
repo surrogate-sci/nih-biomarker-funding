@@ -70,3 +70,38 @@ jobs:
             visualizations/cumulative_biomarker_funding_2024dollars.png \
             data/fig-1/cumulative_biomarker_funding_2024dollars.png \
             "ci: update inflation-adjusted cumulative funding figure"
+
+          push_csv() {
+            local src="$1"
+            local dest="$2"
+            local msg="$3"
+
+            SHA=$(gh api repos/$REPO/contents/$dest --jq '.sha' 2>/dev/null || echo "")
+            B64=$(base64 -w 0 "$src")
+
+            if [ -n "$SHA" ]; then
+              gh api --method PUT repos/$REPO/contents/$dest \
+                --field message="$msg" \
+                --field content="$B64" \
+                --field sha="$SHA"
+            else
+              gh api --method PUT repos/$REPO/contents/$dest \
+                --field message="$msg" \
+                --field content="$B64"
+            fi
+          }
+
+          push_csv \
+            data/biomarker_cumulative_funding_by_year.csv \
+            data/fig-1/biomarker_cumulative_funding_by_year.csv \
+            "ci: update core term set CSV"
+
+          push_csv \
+            data/extended_biomarker_cumulative_funding_by_year.csv \
+            data/fig-1/extended_biomarker_cumulative_funding_by_year.csv \
+            "ci: update expanded term set CSV"
+
+          push_csv \
+            data/biomarker_funding_2004_2024_with_cpi_adjustment.csv \
+            data/fig-1/biomarker_funding_2004_2024_with_cpi_adjustment.csv \
+            "ci: update combined CPI-adjusted CSV"

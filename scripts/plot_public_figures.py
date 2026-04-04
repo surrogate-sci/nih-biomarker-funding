@@ -241,8 +241,25 @@ def main():
                   out_dir / "cumulative_biomarker_funding_2024dollars.png",
                   width=700)
 
-    # Also write the combined CSV for the public repo
-    csv_path = Path(__file__).resolve().parent.parent / "data" / "biomarker_funding_2004_2024_with_cpi_adjustment.csv"
+    # Write all CSVs for the public repo
+    data_dir = Path(__file__).resolve().parent.parent / "data"
+
+    # Core standalone CSV
+    core_lines = ["Fiscal Year,Annual Funding (Billions),Cumulative Funding (Billions)"]
+    for y, a, c in zip(YEARS, CORE_ANNUAL_B, cumulative(CORE_ANNUAL_B)):
+        core_lines.append(f"{y},{a},{c}")
+    (data_dir / "biomarker_cumulative_funding_by_year.csv").write_text("\n".join(core_lines) + "\n")
+    print(f"Saved: {data_dir / 'biomarker_cumulative_funding_by_year.csv'}")
+
+    # Expanded standalone CSV
+    exp_lines = ["Fiscal Year,Annual Funding (Billions),Cumulative Funding (Billions)"]
+    for y, a, c in zip(YEARS, EXPANDED_ANNUAL_B, cumulative(EXPANDED_ANNUAL_B)):
+        exp_lines.append(f"{y},{a},{c}")
+    (data_dir / "extended_biomarker_cumulative_funding_by_year.csv").write_text("\n".join(exp_lines) + "\n")
+    print(f"Saved: {data_dir / 'extended_biomarker_cumulative_funding_by_year.csv'}")
+
+    # Combined CSV with CPI adjustment
+    csv_path = data_dir / "biomarker_funding_2004_2024_with_cpi_adjustment.csv"
     rows = ["Fiscal Year,"
             "Core Annual Nominal ($B),Core Cumulative Nominal ($B),"
             "Core Annual 2024$ ($B),Core Cumulative 2024$ ($B),"
