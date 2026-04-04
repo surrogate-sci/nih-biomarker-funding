@@ -1,17 +1,21 @@
 """
 Produce public-facing figures for surrogate-sci/biomarker-funding.
 
-Reads per-year spending data from data/filtered/SUMMARY.md (hardcoded below
-from the FY2004-2024 run), computes cumulative totals in nominal and
-CPI-adjusted dollars, then UPDATES existing Datawrapper line charts and
-exports their PNGs to visualizations/.
+Reads per-year spending data (hardcoded below from dataset v3.0), computes
+cumulative totals in nominal and CPI-adjusted dollars, then UPDATES existing
+Datawrapper line charts and exports their PNGs to visualizations/.
 
 IMPORTANT: Always update existing chart IDs — never create new ones.
 
 Datawrapper chart IDs:
   VydiG — cumulative nominal (pre-existing, canonical)
-  pzYSe — cumulative 2024-dollar adjusted (created 2026-04-02, to be replaced
-           with pre-existing chart ID if one exists for inflation-adjusted)
+  pzYSe — cumulative 2024-dollar adjusted
+
+Dataset: nih_biomarker_unified_2004-2024.csv, v3.0 (generated 2026-04-03)
+  Term definitions: scripts/keyword_terms.py (CORE_BIOMARKER_TERMS,
+                    EXPANDED_BIOMARKER_TERMS) — do not edit terms here.
+  Core  = grants flagged EXPLICIT_BIOMARKER=TRUE  ($61.84B total, 127,394 grants)
+  Expanded = all grants in the unified dataset    ($175.22B total, 344,550 grants)
 
 Usage:
     python3 scripts/plot_public_figures.py [--export-only]
@@ -31,26 +35,37 @@ from pathlib import Path
 import requests
 
 # ---------------------------------------------------------------------------
-# Source data — from data/filtered/SUMMARY.md (FY2004-2024 ExPORTER pipeline)
+# Source data — from nih_biomarker_unified_2004-2024.csv, dataset v3.0
+# (goofy-kowalevski branch, generated 2026-04-03)
+#
+# Expanded = all grants in the unified dataset (all 10 biomarker terms)
+# Core     = grants flagged EXPLICIT_BIOMARKER=TRUE (4 core terms only)
+#
+# Note: v3 includes abstract-based matching, so FY2005/2006 are no longer
+# dramatically undercounted. BAD_YEARS retained for now — confirm with Manjari
+# whether 2005/2006 annotation still applies given v3 recovery.
 # ---------------------------------------------------------------------------
 YEARS = [
     2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
     2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
 ]
 
-# Annual spending in billions — "expanded" = all 10 biomarker terms matched
+# Annual spending in billions — "expanded" = all grants in the unified dataset
+# (see EXPANDED_BIOMARKER_TERMS in scripts/keyword_terms.py for full term list)
 EXPANDED_ANNUAL_B = [
-    1.71, 0.11, 0.09, 2.71, 2.79, 4.80, 5.02, 4.91, 6.51, 2.25,
-    5.79, 6.10, 7.40, 8.36, 3.87, 9.95, 11.36, 11.54, 12.53, 13.13, 13.55,
+    2.87, 1.98, 2.26, 4.19, 4.50, 6.62, 7.04, 6.34, 7.21, 5.33,
+    7.44, 7.83, 8.90, 10.01, 8.17, 11.87, 13.26, 13.69, 14.79, 15.42, 15.49,
 ]
 
-# Annual spending in billions — "core" = explicit biomarker terms only (4 terms)
+# Annual spending in billions — "core" = grants flagged EXPLICIT_BIOMARKER=TRUE
+# (see CORE_BIOMARKER_TERMS in scripts/keyword_terms.py for full term list)
 CORE_ANNUAL_B = [
-    0.49, 0.06, 0.07, 0.16, 0.18, 1.60, 1.83, 1.85, 2.51, 0.29,
-    0.32, 0.48, 1.72, 2.09, 1.09, 2.71, 3.11, 3.33, 3.60, 4.09, 4.19,
+    0.82, 0.66, 0.78, 0.91, 1.02, 2.34, 2.62, 2.46, 2.79, 1.96,
+    1.73, 1.89, 2.96, 3.50, 3.57, 4.39, 4.76, 5.19, 5.50, 6.04, 5.95,
 ]
 
 # Years with known PROJECT_TERMS metadata gaps in NIH ExPORTER source files
+# TODO: confirm whether 2005/2006 still apply after v3 abstract-based recovery
 BAD_YEARS = {2005, 2006, 2013, 2018}
 
 # ---------------------------------------------------------------------------
