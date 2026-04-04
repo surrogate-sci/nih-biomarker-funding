@@ -336,11 +336,22 @@ def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
         .sort_values("total_funding", ascending=False)
     )
 
-    # For expanded-only grants: use PRIMARY_TERM as-is
+    # For expanded-only grants: group into 3 categories
+    expanded_grants = expanded_grants.copy()
+    def expanded_category(term):
+        if term == "clinical+omics":
+            return "clinical+omics"
+        elif term == "clinical+imaging":
+            return "clinical+imaging"
+        else:
+            return "Other precision medicine terms"
+
+    expanded_grants["exp_category"] = expanded_grants["PRIMARY_TERM"].apply(expanded_category)
     expanded_df = (
-        expanded_grants.groupby("PRIMARY_TERM")
+        expanded_grants.groupby("exp_category")
         .agg(total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count"))
         .reset_index()
+        .rename(columns={"exp_category": "PRIMARY_TERM"})
         .sort_values("total_funding", ascending=False)
     )
 

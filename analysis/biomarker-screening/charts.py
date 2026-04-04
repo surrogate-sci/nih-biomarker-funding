@@ -317,7 +317,7 @@ class SeabornRenderer:
         if total == 0:
             return df
         cumsum = df["total_funding"].cumsum()
-        threshold = total * 0.90
+        threshold = total * 0.95
         # Include all terms up to and including the one that crosses 90%
         n_keep = (cumsum <= threshold).sum() + 1
         n_keep = min(n_keep, len(df))
@@ -393,7 +393,7 @@ class SeabornRenderer:
                  "No double counting: each grant appears in exactly one panel. "
                  "Left = matched any of 13 core biomarker terms. "
                  "Right = matched only by 23 additional expanded terms (not in left panel).\n"
-                 "Showing terms accounting for ~90% of each panel's funding.",
+                 "Showing terms accounting for ~95% of each panel's funding.",
                  ha="center", fontsize=8, color="gray", fontstyle="italic")
         fig.text(0.99, -0.04, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
         fig.tight_layout()
