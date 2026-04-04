@@ -311,21 +311,45 @@ class SeabornRenderer:
 
 
     @staticmethod
-    def _top_terms_90pct(df: pd.DataFrame) -> pd.DataFrame:
-        """Return terms accounting for ~90% of total funding, plus an 'Other' row."""
+    def _top_terms_with_threshold(df: pd.DataFrame, notable_terms: dict = None) -> pd.DataFrame:
+        """Return top terms + 'Other' row. Notable collapsed terms are named in the label.
+
+        Args:
+            df: DataFrame with PRIMARY_TERM, total_funding, grant_count (sorted desc).
+            notable_terms: Map of substring → display name for terms that should be
+                called out in the 'Other' label if they get collapsed.
+                e.g. {"surrogate": "surrogate endpoints"}
+        """
         total = df["total_funding"].sum()
         if total == 0:
             return df
+        if notable_terms is None:
+            notable_terms = {"surrogate": "surrogate endpoints",
+                             "intermediate": "intermediate endpoints"}
+
         cumsum = df["total_funding"].cumsum()
         threshold = total * 0.95
-        # Include all terms up to and including the one that crosses 90%
         n_keep = (cumsum <= threshold).sum() + 1
         n_keep = min(n_keep, len(df))
+
         top = df.head(n_keep).copy()
         rest = df.iloc[n_keep:]
+
         if len(rest) > 0:
+            # Check which notable terms ended up in "Other"
+            collapsed_terms = rest["PRIMARY_TERM"].tolist()
+            callouts = []
+            for substr, display in notable_terms.items():
+                if any(substr in t.lower() for t in collapsed_terms):
+                    callouts.append(display)
+
+            if callouts:
+                label = f"Other {len(rest)} terms, includes {', '.join(callouts)}"
+            else:
+                label = f"Other ({len(rest)} terms)"
+
             other_row = pd.DataFrame([{
-                "PRIMARY_TERM": f"Other ({len(rest)} terms)",
+                "PRIMARY_TERM": label,
                 "total_funding": rest["total_funding"].sum(),
                 "grant_count": rest["grant_count"].sum(),
             }])
@@ -340,9 +364,9 @@ class SeabornRenderer:
         core_pct = 100 * core_total / grand_total
         exp_pct = 100 * exp_total / grand_total
 
-        # Keep only terms accounting for ~90% of each panel
-        core_top = self._top_terms_90pct(core_df)
-        exp_top = self._top_terms_90pct(expanded_df)
+        # Show terms accounting for 95% of grants, collapse rest into Other
+        core_top = self._top_terms_with_threshold(core_df)
+        exp_top = expanded_df.copy()  # Already 3 categories
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 9),
                                         gridspec_kw={"width_ratios": [1, 1.3]})
@@ -357,9 +381,9 @@ class SeabornRenderer:
         ax1.invert_yaxis()
         ax1.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax1.set_title(
-            f"Grants matching core terms\n"
-            f"${core_total/1e9:.0f}B \u2014 {core_pct:.0f}% of total \u2014 "
-            f"{core_df['grant_count'].sum():,} grants",
+            f"Grants matching core biomarker terms\n"
+            f"{core_df['grant_count'].sum():,} grants totaling "
+            f"${core_total/1e9:.0f}B ({core_pct:.0f}% of all matched funding)",
             fontsize=11, fontweight="bold",
         )
         for i, row in enumerate(core_top.itertuples()):
@@ -377,9 +401,9 @@ class SeabornRenderer:
         ax2.invert_yaxis()
         ax2.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax2.set_title(
-            f"Additional grants from expanded terms only\n"
-            f"${exp_total/1e9:.0f}B \u2014 {exp_pct:.0f}% of total \u2014 "
-            f"{expanded_df['grant_count'].sum():,} additional grants",
+            f"Additional grants captured by expanded terms only\n"
+            f"{expanded_df['grant_count'].sum():,} grants totaling "
+            f"${exp_total/1e9:.0f}B ({exp_pct:.0f}% of all matched funding)",
             fontsize=11, fontweight="bold",
         )
         for i, row in enumerate(exp_top.itertuples()):
@@ -387,13 +411,13 @@ class SeabornRenderer:
                      f"  ${row.total_funding/1e9:.1f}B ({int(row.grant_count):,})",
                      va="center", fontsize=8)
 
-        fig.suptitle("What Do Core vs. Expanded Keywords Capture?",
+        fig.suptitle("What do core vs. expanded keywords capture?",
                      fontsize=14, fontweight="bold", y=1.02)
         fig.text(0.5, -0.01,
-                 "No double counting: each grant appears in exactly one panel. "
-                 "Left = matched any of 13 core biomarker terms. "
-                 "Right = matched only by 23 additional expanded terms (not in left panel).\n"
-                 "Showing terms accounting for ~95% of each panel's funding.",
+                 "Each grant appears in exactly one panel. "
+                 "The left panel shows grants that matched any of the 13 core biomarker terms, "
+                 "with individual terms shown for those covering 95% of core grants. "
+                 "The right panel shows grants matched only by the 23 additional expanded terms.",
                  ha="center", fontsize=8, color="gray", fontstyle="italic")
         fig.text(0.99, -0.04, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
         fig.tight_layout()

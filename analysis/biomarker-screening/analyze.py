@@ -316,15 +316,14 @@ def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
     expanded_grants = has_term[~has_term["EXPLICIT_BIOMARKER"]]
 
     # For core grants: assign the highest-priority CORE term they matched
-    # (not the most-specific expanded term from PRIMARY_TERM)
     def best_core_term(matched_terms_str):
         if pd.isna(matched_terms_str) or matched_terms_str == "":
-            return "biomarker"  # fallback — they matched a core term somehow
+            return "biomarker"
         terms = matched_terms_str.split(";")
         for t in core_priority:
             if t in terms:
                 return t
-        return "biomarker"  # fallback
+        return "biomarker"
 
     core_grants["CORE_PRIMARY"] = core_grants["MATCHED_TERMS"].apply(best_core_term)
 
