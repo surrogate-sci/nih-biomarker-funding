@@ -1,97 +1,175 @@
 {# Biomarker Screening SUMMARY.md template — rendered by render_summary.py #}
 {# Chart registry: only analyses listed here should be produced by analyze.py #}
-# Biomarker Screening: Preliminary Funding Distribution
+{#- Macros -#}
+{%- macro dollars(val) -%}
+{%- if val >= 10e9 -%}${{ "%.1f"|format(val / 1e9) }}B
+{%- elif val >= 1e9 -%}${{ "%.2f"|format(val / 1e9) }}B
+{%- else -%}${{ "%.2f"|format(val / 1e9) }}B
+{%- endif -%}
+{%- endmacro -%}
+
+# NIH Biomarker Funding: Preliminary Keyword Analysis
 
 ## Purpose
 
-A preliminary look at where and how NIH biomarker-related funding is distributed,
-based on keyword screening of ~{{ "{:,}".format(summary.total_grants) }} grants (FY{{ summary.year_range[0] }}–{{ summary.year_range[1] }}).
-This is Phase 1 of a two-phase pipeline. Phase 2 uses LLM grading to evaluate
-grants through a methodological lens about biomarker R&D with long-horizon decision
-making in mind (see `data/RUBRIC.md`), rather than relying on keywords.
+This document characterizes 20 years of NIH-funded research that mentions
+biomarker concepts, based on keyword screening of grant records from {{ summary.year_range[0] }} to
+{{ summary.year_range[1] }}. It is a preliminary descriptive analysis — Phase 1 of a two-phase
+pipeline. Phase 2 will use large language models to read each grant's abstract
+and classify what kind of biomarker work was actually proposed, using a
+structured rubric (`data/RUBRIC.md`) that evaluates intended biomarker use,
+research design, and evidence strength for biomarker validity.
+
+The keyword analysis here cannot tell us whether a grant that mentions
+"biomarker" is doing rigorous surrogate endpoint validation or just using the
+word in passing. That distinction is the purpose of Phase 2. What Phase 1 can
+do is establish the overall scale of NIH biomarker funding, identify which
+institutes and grant mechanisms are involved, and show how frequently specific
+biomarker concepts appear across the funding landscape.
 
 ## Dataset
 
+The dataset was constructed by searching all NIH grant records in the ExPORTER
+database (fiscal years {{ summary.year_range[0] }}–{{ summary.year_range[1] }}) for {{ summary.expanded_terms }} biomarker-related keyword terms. Grants
+were matched if any term appeared in the project title, structured keyword fields
+(PROJECT_TERMS), or abstract text. Infrastructure sub-projects (administrative
+cores, shared resources) were excluded by title pattern, but center grants
+themselves (P30, P50) were preserved.
+
 | Metric | Value |
 |--------|-------|
-| Dataset version | v3.1 (`dataset-release-v3.1`) |
+| Dataset version | v3.1 |
 | Total grants | {{ "{:,}".format(summary.total_grants) }} |
-| Total funding | ${{ summary.total_funding_billions }}B |
-| Core biomarker term matches | {{ "{:,}".format(summary.explicit_grants) }} ({{ summary.explicit_pct }}%) |
-| Core biomarker funding | ${{ summary.explicit_funding_billions }}B |
-| Keyword-matched grants | {{ "{:,}".format(summary.keyword_matched_grants) }} |
-| Abstract-only grants | {{ "{:,}".format(summary.abstract_only_grants) }} |
-| Unique terms matched | {{ summary.unique_terms_matched }} of 36 defined |
-| Year range | FY{{ summary.year_range[0] }}–{{ summary.year_range[1] }} |
+| Total funding | ${{ "%.1f"|format(summary.total_funding_billions) }} billion |
+| Year range | Fiscal years {{ summary.year_range[0] }}–{{ summary.year_range[1] }} |
+| Keyword terms searched | {{ summary.expanded_terms }} ({{ summary.core_terms }} core, {{ summary.expanded_terms - summary.core_terms }} expanded) |
+| Terms with at least one match | {{ summary.unique_terms_matched }} of {{ summary.expanded_terms }} |
+| Grants matched via title or keyword fields | {{ "{:,}".format(summary.keyword_matched_grants) }} ({{ "%.0f"|format(100 * summary.keyword_matched_grants / summary.total_grants) }}%) |
+| Grants matched via abstract text only | {{ "{:,}".format(summary.abstract_only_grants) }} ({{ "%.0f"|format(100 * summary.abstract_only_grants / summary.total_grants) }}%) |
 
-**Data quality caveats:** FY2005: PROJECT_TERMS 68% populated. FY2006: PROJECT_TERMS
-empty. FY2013, FY2018: anomalous keyword counts. These years are annotated on
-time-series charts.
+The {{ summary.core_terms }} **core terms** unambiguously indicate biomarker research: *biomarker*,
+*clinical marker*, *surrogate endpoint*, *imaging marker*, *endophenotype*,
+*intermediate outcome*, *intermediate endpoint*, *digital endpoint*,
+*risk stratification*, *patient selection*, *companion diagnostic*,
+*predicting response*, and *response to therapy*. The {{ summary.expanded_terms - summary.core_terms }} **expanded terms** cast
+a wider net, capturing grants that mention biomarker-adjacent concepts like
+*diagnostic accuracy*, *precision oncology*, *genomic signature*, or
+co-occurrence of "clinical" with "omics" or "imaging" terminology.
 
-**Note:** 26 of 36 keyword terms defined in `scripts/keyword_terms.py` produced zero
-matches in the v3.1 dataset because they were added to the code after the dataset was
-filtered. A dataset re-filter is needed to capture all 36 terms.
+Grants matching any core term are flagged as definite biomarker research
+({{ "%.0f"|format(summary.explicit_pct) }}% of grants, {{ dollars(summary.explicit_funding_billions * 1e9) }}). The remaining {{ "%.0f"|format(100 - summary.explicit_pct) }}% matched only on expanded terms
+or abstract text and may include false positives — grants that mention
+biomarker concepts without actually studying biomarkers.
 
 ## Chart Registry
 
-| ID | Title | What it shows | Filename |
-|----|-------|---------------|----------|
-| C1 | Spending over time | Core vs expanded term funding by fiscal year | `spending_over_time.png` |
-| C2 | Institute allocation | Top 10 institutes, core vs expanded split | `institute_allocation.png` |
-| C3 | Term × mechanism | Each keyword term's funding by grant mechanism | `term_by_mechanism.png` |
+| ID | Title | Description | File |
+|----|-------|-------------|------|
+| C1 | Biomarker funding over time | Funding per fiscal year, split by core vs. expanded term matches | `spending_over_time.png` |
+| C2 | Funding by NIH institute | Top 10 institutes by total biomarker funding, with core vs. expanded split | `institute_allocation.png` |
+| C3 | Keyword terms by grant mechanism | Each keyword term's funding broken down by grant type (investigator-initiated, cooperative, center, etc.) | `term_by_mechanism.png` |
 
 ## Results
 
-### C1: Spending Over Time
+### C1: Biomarker Funding Over Time
 
-![Spending over time](charts/spending_over_time.png)
+![Biomarker funding over time](charts/spending_over_time.png)
 
-Total biomarker-related funding: ${{ summary.total_funding_billions }}B over
-FY{{ summary.year_range[0] }}–{{ summary.year_range[1] }}.
-Core term matches: ${{ summary.explicit_funding_billions }}B ({{ summary.explicit_pct }}%).
+Total NIH biomarker-related funding grew from approximately $3 billion in
+FY{{ summary.year_range[0] }} to $15 billion in FY{{ summary.year_range[1] }}. Core term matches (definite biomarker
+research) consistently account for about one-third of the total, with the
+remainder captured by broader expanded terms and abstract-text matches. The
+growth is roughly proportional — core and expanded funding grew at similar
+rates, suggesting the expansion reflects a general increase in biomarker-related
+research rather than a shift toward or away from specific biomarker language.
 
-### C2: Institute Allocation
+### C2: Funding by NIH Institute
 
-![Institute allocation](charts/institute_allocation.png)
+![Funding by NIH institute](charts/institute_allocation.png)
 
+| Institute | Total funding | Grants | Core term rate |
+|-----------|--------------|--------|----------------|
 {% for inst in institute_allocation.institutes -%}
-- **{{ inst.label }}**: ${{ "%.1f"|format(inst.total_funding / 1e9) }}B ({{ "{:,}".format(inst.grant_count) }} grants, {{ inst.core_pct }}% core)
+| {{ inst.label }} | {{ dollars(inst.total_funding) }} | {{ "{:,}".format(inst.grant_count) }} | {{ "%.0f"|format(inst.core_pct) }}% |
 {% endfor %}
 
-### C3: Term × Mechanism
+### C3: Keyword Terms by Grant Mechanism
 
-![Term by mechanism](charts/term_by_mechanism.png)
+![Keyword terms by grant mechanism](charts/term_by_mechanism.png)
 
-Funding by keyword term and grant mechanism. Grants matching multiple terms
-appear in each term's row.
+This chart shows every keyword term's funding broken down by NIH grant
+mechanism. A single grant can match multiple terms (for example, a grant
+mentioning both "biomarker" and "surrogate endpoint" appears in both rows), so
+the rows are not mutually exclusive. The left panel shows absolute funding; the
+right panel shows the percentage breakdown by mechanism within each term.
 
-{% if term_by_mechanism.r_grant_pct -%}
-| Term | R-grant % | Total funding |
-|------|-----------|---------------|
-{% for term, pct in term_by_mechanism.r_grant_pct.items() -%}
-{%- set term_total = term_by_mechanism.funding[term].values() | sum -%}
-| {{ term }} | {{ pct }}% | ${{ "%.2f"|format(term_total / 1e9) }}B |
-{% endfor -%}
-{% endif %}
+Grant mechanisms are grouped into broad categories: Research grants (R01, R21,
+R03, etc.) are investigator-initiated basic and applied research. Cooperative
+agreements (U) are multi-site collaborative studies. Program and center grants
+(P) support institutional research infrastructure. Career development (K),
+training (T), and fellowship (F) awards support individual researchers.
 
-## What Keyword Screening Cannot Determine
+The two broadest keyword terms dominate: grants where "clinical" and "omics"
+co-occur and grants where "clinical" and "imaging" co-occur. These AND-condition
+terms cast the widest net and likely include many grants that are not primarily
+about biomarkers. The generic term "biomarker" is next.
 
-Keywords capture grants that *mention* biomarker concepts, not grants that *study*
-biomarkers rigorously. LLM grading (Phase 2) classifies each grant's abstract on
-three `RUBRIC.md` dimensions — intended biomarker use, research design, and evidence
-strength for biomarker validity — to evaluate whether funding reflects biomarker R&D
-with long-horizon decision making or operates without a clear estimand.
+More specific terms are far smaller:
+{% for group in term_groups %}
+**{{ group.name }}**{% if group.description %} — {{ group.description }}{% endif %}:
 
-## Methodology Notes
+| Term | Total funding | Grants | Research grant share |
+|------|--------------|--------|---------------------|
+{% for t in group.terms -%}
+| {{ t.display_name | capitalize }} | {{ t.funding_str }} | {{ "{:,}".format(t.grants) }} | {{ "%.0f"|format(t.r_pct) }}% |
+{% endfor %}
+{% endfor %}
 
-- **Term matching**: Case-insensitive substring matching against PROJECT_TITLE,
-  PROJECT_TERMS, and ABSTRACT_TEXT. AND-condition terms (e.g., `clinical+omics`)
-  require both words present.
-- **Priority ordering**: Each grant is assigned a PRIMARY_TERM via `TERM_PRIORITY`
-  in `scripts/keyword_terms.py` (most specific term wins). This prevents
-  double-counting in per-grant analyses. The term × mechanism chart (C3) uses
-  MATCHED_TERMS (all matches) instead, to show which mechanisms fund grants
-  mentioning each term.
-- **Facility screening**: Infrastructure sub-projects (Administrative Core, Shared
-  Resource, etc.) are excluded by title pattern. Center grants (P30, P50) are preserved.
+## Limitations
+
+### What keyword screening cannot determine
+
+This analysis identifies grants that *mention* biomarker concepts. It cannot
+distinguish a grant that rigorously validates a surrogate endpoint from one
+that uses the phrase "surrogate endpoint" once in a background paragraph.
+It cannot assess whether a grant has a clear estimand, whether its research
+design supports causal inference about biomarker validity, or whether its
+findings would inform clinical decision-making.
+
+These are the questions that Phase 2 addresses. The LLM grading pipeline reads
+each grant's abstract and classifies it on three dimensions defined in
+`data/RUBRIC.md`: intended biomarker use (17 categories from susceptibility/risk
+through surrogate endpoint), research design (observational vs. experimental,
+with subtypes), and evidence strength for biomarker validity (correlational
+through causal-clinical). This rubric extends the FDA-NIH BEST framework to
+capture the gradient of specificity in how researchers invoke biomarker concepts.
+
+### Data quality
+
+Four fiscal years have known data gaps in the PROJECT_TERMS structured keyword
+field: FY2005 (68% populated), FY2006 (completely empty), FY2013 and FY2018
+(anomalous keyword counts). Abstract text search partially compensates for
+missing structured keywords in these years. These years are annotated on
+time-series charts.
+
+### Term coverage
+
+{{ summary.expanded_terms - summary.unique_terms_matched }} of {{ summary.expanded_terms }} keyword terms produced zero matches across the
+entire dataset. These terms may not appear in NIH grant language, or they may be
+expressed using different phrasing.
+
+## Methodology
+
+- **Term matching**: Case-insensitive substring matching against project title,
+  structured keyword fields (PROJECT_TERMS), and abstract text. AND-condition
+  terms (e.g., requiring both "clinical" and "omics" to be present) require
+  both words to appear in the same text field.
+- **Term priority**: Each grant is assigned a single primary term for
+  non-overlapping counts, using a priority ordering where more specific terms
+  (e.g., "surrogate endpoint") take precedence over broader terms (e.g.,
+  "biomarker"). The term-by-mechanism chart (C3) uses all matched terms per
+  grant instead, so a grant matching multiple terms appears in each term's row.
+- **Facility screening**: Infrastructure sub-projects (administrative cores,
+  shared resources, data cores, tissue procurement) are excluded by title
+  pattern matching. Parent center grants (P30, P50) are preserved.
 - **Data quality years**: {{ summary.data_quality_years | join(', ') }}

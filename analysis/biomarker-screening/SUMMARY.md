@@ -1,5 +1,4 @@
 
-
 # NIH Biomarker Funding: Preliminary Keyword Analysis
 
 ## Purpose
@@ -46,7 +45,7 @@ The 13 **core terms** unambiguously indicate biomarker research: *biomarker*,
 *predicting response*, and *response to therapy*. The 23 **expanded terms** cast
 a wider net, capturing grants that mention biomarker-adjacent concepts like
 *diagnostic accuracy*, *precision oncology*, *genomic signature*, or
-co-occurrence of *clinical* with *omics* or *imaging* terminology.
+co-occurrence of "clinical" with "omics" or "imaging" terminology.
 
 Grants matching any core term are flagged as definite biomarker research
 (37% of grants, $61.8B). The remaining 63% matched only on expanded terms
@@ -79,19 +78,6 @@ research rather than a shift toward or away from specific biomarker language.
 
 ![Funding by NIH institute](charts/institute_allocation.png)
 
-The National Cancer Institute leads with $38.8 billion across 84,177 grants
-(42% matched core terms). The National Institute on Aging follows at $17.6
-billion with the highest core term rate (58%), reflecting the prominence of
-Alzheimer's biomarker research. The National Heart, Lung, and Blood Institute
-($17.9 billion, 35% core) and the National Institute of Allergy and Infectious
-Diseases ($15.7 billion, 30% core) round out the top four.
-
-Notable variation in core term concentration: NIA's 58% core rate indicates
-grants that explicitly name biomarker concepts, while the National Library of
-Medicine's 1% core rate reflects grants caught almost entirely by expanded
-terms (co-occurrence of clinical and omics/imaging terminology in informatics
-research).
-
 | Institute | Total funding | Grants | Core term rate |
 |-----------|--------------|--------|----------------|
 | NCI (Cancer) | $38.8B | 84,177 | 42% |
@@ -100,10 +86,11 @@ research).
 | NIAID (Allergy/Infectious) | $15.7B | 21,740 | 30% |
 | NINDS (Neurological) | $11.1B | 23,066 | 39% |
 | NIMH (Mental Health) | $10.4B | 21,558 | 34% |
-| NIDDK (Diabetes/Digestive) | $9.3B | 22,232 | 36% |
-| NICHD (Child Health) | $5.7B | 12,988 | 35% |
-| NLM (Library of Medicine) | $5.0B | 1,023 | 1% |
-| NIGMS (General Medical) | $5.0B | 12,989 | 25% |
+| NIDDK (Diabetes/Digestive) | $9.29B | 22,232 | 36% |
+| NICHD (Child Health) | $5.74B | 12,988 | 35% |
+| NLM (Library of Medicine) | $5.02B | 1,023 | 1% |
+| NIGMS (General Medical) | $4.96B | 12,989 | 25% |
+
 
 ### C3: Keyword Terms by Grant Mechanism
 
@@ -121,16 +108,14 @@ agreements (U) are multi-site collaborative studies. Program and center grants
 (P) support institutional research infrastructure. Career development (K),
 training (T), and fellowship (F) awards support individual researchers.
 
-The two broadest keyword terms dominate: grants where *clinical* and *omics*
-co-occur ($77.5B, 135,050 grants) and grants where *clinical* and *imaging*
-co-occur ($68.9B, 134,429 grants). These AND-condition terms cast the widest
-net and likely include many grants that are not primarily about biomarkers.
+The two broadest keyword terms dominate: grants where "clinical" and "omics"
+co-occur and grants where "clinical" and "imaging" co-occur. These AND-condition
+terms cast the widest net and likely include many grants that are not primarily
+about biomarkers. The generic term "biomarker" is next.
 
-The generic term *biomarker* accounts for $50.6B across 104,175 grants, with
-49% funded through research grants. More specific terms are far smaller:
+More specific terms are far smaller:
 
-**Endpoint and surrogacy terms** — grants that explicitly name the concept of
-validating a biomarker as a stand-in for a clinical endpoint:
+**Endpoint and surrogacy terms** — grants that explicitly name the concept of validating a biomarker as a stand-in for a clinical endpoint:
 
 | Term | Total funding | Grants | Research grant share |
 |------|--------------|--------|---------------------|
@@ -138,29 +123,34 @@ validating a biomarker as a stand-in for a clinical endpoint:
 | Intermediate outcome | $0.26B | 569 | 53% |
 | Intermediate endpoint | $0.12B | 197 | 34% |
 
-**Clinical decision-making terms** — grants mentioning specific uses of
-biomarkers in patient care decisions:
+
+**Clinical decision-making terms** — grants mentioning specific uses of biomarkers in patient care decisions:
 
 | Term | Total funding | Grants | Research grant share |
 |------|--------------|--------|---------------------|
 | Response to therapy | $3.10B | 5,743 | 42% |
-| Risk stratification | $3.10B | 6,457 | 61% |
+| Risk stratification | $3.10B | 6,457 | 60% |
 | Predicting response | $2.79B | 6,016 | 55% |
 | Patient selection | $2.05B | 4,526 | 52% |
 | Companion diagnostic | $0.32B | 671 | 65% |
 
-**Diagnostic and prognostic terms:**
+
+**Diagnostic and prognostic terms**:
 
 | Term | Total funding | Grants | Research grant share |
 |------|--------------|--------|---------------------|
+| Clinical diagnostics | $2.81B | 2,418 | 23% |
 | Diagnostic accuracy | $2.02B | 4,065 | 66% |
 | Clinical predictors | $1.90B | 4,099 | 63% |
 | Prognostic value | $1.05B | 2,672 | 76% |
+| Clinically actionable | $0.87B | 1,601 | 49% |
+| Personalized diagnostics | $0.46B | 754 | 50% |
 | Diagnostic sensitivity | $0.29B | 652 | 79% |
 | Diagnostic specificity | $0.27B | 634 | 69% |
 | Prognostic assays | $0.22B | 539 | 71% |
 
-**Stratification and precision medicine terms:**
+
+**Stratification and precision medicine terms**:
 
 | Term | Total funding | Grants | Research grant share |
 |------|--------------|--------|---------------------|
@@ -171,7 +161,8 @@ biomarkers in patient care decisions:
 | Clinical subtypes | $0.26B | 450 | 52% |
 | Disease stratification | $0.13B | 203 | 32% |
 
-**Signature and discovery terms:**
+
+**Discovery and identification terms**:
 
 | Term | Total funding | Grants | Research grant share |
 |------|--------------|--------|---------------------|
@@ -184,6 +175,8 @@ biomarkers in patient care decisions:
 | Biosignature | $0.45B | 779 | 45% |
 | Proteomic signature | $0.41B | 726 | 59% |
 | Digital biomarker | $0.25B | 261 | 42% |
+
+
 
 ## Limitations
 
@@ -214,8 +207,8 @@ time-series charts.
 
 ### Term coverage
 
-One of 36 keyword terms (*digital endpoint*) produced zero matches across the
-entire dataset. This term may not appear in NIH grant language, or it may be
+1 of 36 keyword terms produced zero matches across the
+entire dataset. These terms may not appear in NIH grant language, or they may be
 expressed using different phrasing.
 
 ## Methodology
@@ -232,3 +225,4 @@ expressed using different phrasing.
 - **Facility screening**: Infrastructure sub-projects (administrative cores,
   shared resources, data cores, tissue procurement) are excluded by title
   pattern matching. Parent center grants (P30, P50) are preserved.
+- **Data quality years**: 2005, 2006, 2013, 2018
