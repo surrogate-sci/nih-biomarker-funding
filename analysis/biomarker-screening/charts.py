@@ -8,6 +8,7 @@ Datawrapper charts are updated in place if chart IDs exist in .url files.
 import json
 import os
 from pathlib import Path
+from typing import Optional
 
 import matplotlib
 matplotlib.use("Agg")
@@ -60,12 +61,33 @@ INSTITUTE_LABELS = {
     "NIBIB (Biomedical Imaging)": INSTITUTE_COLORS["NIBIB"],
 }
 
+# Colors for core vs expanded split
+CORE_COLOR = "#225588"       # dark blue — high confidence
+EXPANDED_COLOR = "#88CCEE"   # light cyan — broader matches
+
+# Colors for match source
+KEYWORD_COLOR = "#332288"    # indigo — keyword matched
+ABSTRACT_COLOR = "#DDCC77"   # sand — abstract-only
+
+# Mechanism colors
+MECHANISM_COLORS = {
+    "Research (R)": TOL_QUALITATIVE[0],
+    "Program/Center (P)": TOL_QUALITATIVE[2],
+    "Cooperative (U)": TOL_QUALITATIVE[3],
+    "Career Dev (K)": TOL_QUALITATIVE[5],
+    "Training (T)": TOL_QUALITATIVE[6],
+    "Fellowship (F)": TOL_QUALITATIVE[4],
+    "Other": TOL_QUALITATIVE[9],
+}
+
 sns.set_theme(style="whitegrid", font_scale=1.1)
 
-SOURCE_NOTE = "Source: NIH ExPORTER (FY2004–2024), keyword + abstract filtered"
-DATA_CAVEAT = "FY2005–06 likely undercounted despite title, term, and abstract search"
-
-SPENDING_LINE_COLOR = "#225588"
+SOURCE_NOTE = (
+    "Source: NIH ExPORTER (FY2004\u20132024), expanded keyword set (36 terms) + abstract text search"
+)
+DATA_CAVEAT = (
+    "FY2005\u201306: sparse PROJECT_TERMS; FY2013, FY2018: anomalous keyword counts"
+)
 
 
 def _billions(x, _pos=None):
@@ -77,12 +99,12 @@ def get_renderer(output_dir: Path) -> "ChartRenderer":
     token = os.environ.get("DATAWRAPPER_API_TOKEN")
     if token:
         return DatawrapperRenderer(output_dir, token)
-    print("  [charts] No DATAWRAPPER_API_TOKEN — using seaborn/matplotlib fallback")
+    print("  [charts] No DATAWRAPPER_API_TOKEN \u2014 using seaborn/matplotlib fallback")
     return SeabornRenderer(output_dir)
 
 
 class SeabornRenderer:
-    """Fallback renderer using seaborn/matplotlib → PNG files."""
+    """Fallback renderer using seaborn/matplotlib \u2192 PNG files."""
 
     def __init__(self, output_dir: Path):
         self.output_dir = output_dir
@@ -97,15 +119,25 @@ class SeabornRenderer:
         return str(path)
 
     def spending_over_time(self, df: pd.DataFrame, filename: str):
+        """Stacked area: core biomarker funding vs expanded-only funding."""
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(df["FY"], df["total_funding"], marker="o", linewidth=2.5,
-                color=SPENDING_LINE_COLOR, markersize=6)
-        ax.fill_between(df["FY"], df["total_funding"], alpha=0.1,
-                        color=SPENDING_LINE_COLOR)
+        ax.stackplot(
+            df["FY"],
+            df["core_funding"],
+            df["expanded_funding"],
+            labels=["Core terms (13 definite biomarker terms)", "Expanded terms only (broader matches)"],
+            colors=[CORE_COLOR, EXPANDED_COLOR],
+            alpha=0.85,
+        )
         ax.yaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("")
-        ax.set_title("NIH Biomarker-Related Spending (FY2004–2024)", fontsize=14)
+        ax.set_title(
+            "NIH Biomarker-Related Spending (FY2004\u20132024)\n"
+            "Core terms vs. expanded keyword matches",
+            fontsize=14,
+        )
+        ax.legend(loc="upper left", fontsize=9)
         ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
                     fontsize=8, color="gray", fontstyle="italic")
         ax.text(0.99, -0.08, SOURCE_NOTE, transform=ax.transAxes,
@@ -114,28 +146,40 @@ class SeabornRenderer:
         return self._save(fig, filename)
 
     def institute_allocation(self, df: pd.DataFrame, filename: str):
+        """Stacked horizontal bars: core vs expanded funding per institute."""
         fig, ax = plt.subplots(figsize=(10, 7))
-        total = df["total_funding"].sum()
-        colors = [INSTITUTE_LABELS.get(label, "#888888") for label in df["label"]]
-        ax.barh(range(len(df)), df["total_funding"], color=colors)
-        ax.set_yticks(range(len(df)))
+        y_pos = range(len(df))
+
+        # Core bars
+        ax.barh(y_pos, df["core_funding"], color=CORE_COLOR, label="Core terms")
+        # Expanded bars stacked
+        ax.barh(y_pos, df["expanded_funding"], left=df["core_funding"],
+                color=EXPANDED_COLOR, label="Expanded only")
+
+        ax.set_yticks(list(y_pos))
         ax.set_yticklabels(df["label"])
         ax.invert_yaxis()
         ax.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
         ax.set_xlabel("")
         ax.set_ylabel("")
-        ax.set_title("Where Does NIH Biomarker Funding Go?", fontsize=14)
+        ax.set_title("NIH Biomarker Funding by Institute\nCore terms vs. expanded matches", fontsize=14)
+        ax.legend(loc="lower right", fontsize=9)
+
+        total = df["total_funding"].sum()
         for i, row in enumerate(df.itertuples()):
             pct = 100 * row.total_funding / total
+            core_pct = row.core_pct
             ax.text(row.total_funding, i,
-                    f"  ${row.total_funding/1e9:.1f}B ({pct:.0f}%)",
-                    va="center", fontsize=9, fontweight="bold")
+                    f"  ${row.total_funding/1e9:.1f}B ({pct:.0f}%) \u2014 {core_pct:.0f}% core",
+                    va="center", fontsize=8, fontweight="bold")
+
         ax.text(0.99, -0.06, SOURCE_NOTE, transform=ax.transAxes,
                 fontsize=8, ha="right", color="gray")
         fig.tight_layout()
         return self._save(fig, filename)
 
     def institute_over_time(self, pivot: pd.DataFrame, filename: str):
+        """Stacked area: funding by institute over time (all matched grants)."""
         fig, ax = plt.subplots(figsize=(12, 7))
         colors = [INSTITUTE_COLORS.get(col, "#888888") for col in pivot.columns]
         pivot_b = pivot / 1e9
@@ -144,9 +188,123 @@ class SeabornRenderer:
             mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("")
-        ax.set_title("Biomarker Funding by Institute Over Time", fontsize=14)
+        ax.set_title(
+            "Biomarker Funding by Institute Over Time\n"
+            "All matched grants (core + expanded + abstract)",
+            fontsize=14,
+        )
         ax.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
+        ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
+                    fontsize=8, color="gray", fontstyle="italic")
         ax.text(0.99, -0.06, SOURCE_NOTE, transform=ax.transAxes,
+                fontsize=8, ha="right", color="gray")
+        fig.tight_layout()
+        return self._save(fig, filename)
+
+    def explicit_adoption(self, df: pd.DataFrame, filename: str):
+        """Line chart: % of matched grants using core biomarker terms per year."""
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.plot(df["FY"], df["explicit_pct"], marker="o", linewidth=2.5,
+                color=CORE_COLOR, markersize=6)
+        ax.fill_between(df["FY"], df["explicit_pct"], alpha=0.1, color=CORE_COLOR)
+        ax.set_xlabel("Fiscal Year")
+        ax.set_ylabel("% of matched grants")
+        ax.set_title(
+            "Explicit Biomarker Term Adoption\n"
+            "% of matched grants using 13 core biomarker terms",
+            fontsize=14,
+        )
+        ax.set_ylim(0, max(df["explicit_pct"]) * 1.15)
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0f}%"))
+        ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
+                    fontsize=8, color="gray", fontstyle="italic")
+        ax.text(0.99, -0.08, SOURCE_NOTE, transform=ax.transAxes,
+                fontsize=8, ha="right", color="gray")
+        fig.tight_layout()
+        return self._save(fig, filename)
+
+    def match_source_breakdown(self, pivot: pd.DataFrame, filename: str):
+        """Stacked area: keyword-matched vs abstract-only funding per year."""
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.stackplot(
+            pivot.index,
+            pivot["keywords_only"],
+            pivot["abstract_only"],
+            labels=["Keyword matched (title + terms)", "Abstract-only"],
+            colors=[KEYWORD_COLOR, ABSTRACT_COLOR],
+            alpha=0.85,
+        )
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(_billions))
+        ax.set_xlabel("Fiscal Year")
+        ax.set_ylabel("")
+        ax.set_title(
+            "How Grants Are Discovered: Keyword vs. Abstract Search\n"
+            "Contribution of abstract text search to total matched grants",
+            fontsize=14,
+        )
+        ax.legend(loc="upper left", fontsize=9)
+        ax.annotate(DATA_CAVEAT, xy=(0.02, 0.02), xycoords="axes fraction",
+                    fontsize=8, color="gray", fontstyle="italic")
+        ax.text(0.99, -0.08, SOURCE_NOTE, transform=ax.transAxes,
+                fontsize=8, ha="right", color="gray")
+        fig.tight_layout()
+        return self._save(fig, filename)
+
+    def mechanism_breakdown(self, summary_df: pd.DataFrame, pivot: pd.DataFrame, filename: str):
+        """Bar chart: funding by grant mechanism, with core/expanded split."""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7),
+                                        gridspec_kw={"width_ratios": [1, 1.5]})
+
+        # Left: bar chart of total by mechanism
+        y_pos = range(len(summary_df))
+        ax1.barh(y_pos, summary_df["core_funding"], color=CORE_COLOR, label="Core terms")
+        ax1.barh(y_pos, summary_df["expanded_funding"], left=summary_df["core_funding"],
+                 color=EXPANDED_COLOR, label="Expanded only")
+        ax1.set_yticks(list(y_pos))
+        ax1.set_yticklabels(summary_df["mechanism"])
+        ax1.invert_yaxis()
+        ax1.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
+        ax1.set_title("By Mechanism (Total)", fontsize=12)
+        ax1.legend(loc="lower right", fontsize=8)
+
+        # Right: stacked area over time
+        colors = [MECHANISM_COLORS.get(col, "#888888") for col in pivot.columns]
+        (pivot / 1e9).plot.area(ax=ax2, alpha=0.8, color=colors)
+        ax2.yaxis.set_major_formatter(
+            mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
+        ax2.set_xlabel("Fiscal Year")
+        ax2.set_title("By Mechanism Over Time", fontsize=12)
+        ax2.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
+
+        fig.suptitle("Biomarker Funding by Grant Mechanism", fontsize=14, y=1.02)
+        fig.text(0.99, -0.02, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
+        fig.tight_layout()
+        return self._save(fig, filename)
+
+    def keyword_funding(self, df: pd.DataFrame, filename: str):
+        """Horizontal bar chart: funding by primary keyword term."""
+        fig, ax = plt.subplots(figsize=(10, 8))
+        y_pos = range(len(df))
+        colors = [CORE_COLOR if i < 5 else EXPANDED_COLOR for i in y_pos]
+        ax.barh(y_pos, df["total_funding"], color=colors)
+        ax.set_yticks(list(y_pos))
+        ax.set_yticklabels(df["PRIMARY_TERM"])
+        ax.invert_yaxis()
+        ax.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        ax.set_title(
+            "Funding by Primary Keyword Term\n"
+            "Each grant assigned its most specific matching term",
+            fontsize=14,
+        )
+        total = df["total_funding"].sum()
+        for i, row in enumerate(df.itertuples()):
+            pct = 100 * row.total_funding / total
+            ax.text(row.total_funding, i,
+                    f"  ${row.total_funding/1e9:.1f}B ({row.grant_count:,} grants)",
+                    va="center", fontsize=8)
+        ax.text(0.99, -0.04, SOURCE_NOTE, transform=ax.transAxes,
                 fontsize=8, ha="right", color="gray")
         fig.tight_layout()
         return self._save(fig, filename)
@@ -164,31 +322,28 @@ class DatawrapperRenderer:
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.backend = "datawrapper"
-        self.chart_urls: dict[str, str] = {}
+        self.chart_urls: dict = {}
 
-    def _get_existing_chart_id(self, filename: str) -> str | None:
+    def _get_existing_chart_id(self, filename: str) -> Optional[str]:
         """Check if a .url file exists with a previous chart ID."""
         url_file = self.output_dir / f"{filename}.url"
         if url_file.exists():
             url = url_file.read_text().strip()
-            # Extract chart ID from https://datawrapper.dwcdn.net/{id}/
             parts = url.rstrip("/").split("/")
             if len(parts) >= 4:
                 return parts[-1]
         return None
 
     def _upsert_chart(self, chart_type: str, title: str, data: pd.DataFrame,
-                      filename: str, metadata: dict | None = None) -> str:
+                      filename: str, metadata: Optional[dict] = None) -> str:
         """Create or update a Datawrapper chart. Reuses chart ID if .url exists."""
         chart_id = self._get_existing_chart_id(filename)
 
         if chart_id:
-            # Update existing chart
             self.dw.update_chart(chart_id, title=title)
             self.dw.add_data(chart_id, data)
             print(f"  Updating existing chart {chart_id}")
         else:
-            # Create new chart
             chart_info = self.dw.create_chart(title=title, chart_type=chart_type)
             chart_id = chart_info["id"]
             self.dw.add_data(chart_id, data)
@@ -196,7 +351,7 @@ class DatawrapperRenderer:
 
         base_meta = {
             "describe": {
-                "source-name": "NIH ExPORTER (FY2004–2024), keyword + abstract filtered",
+                "source-name": "NIH ExPORTER (FY2004\u20132024), expanded keyword set (36 terms) + abstract search",
                 "source-url": "https://reporter.nih.gov/",
                 "byline": "Surrogate Science Project",
             },
@@ -225,31 +380,27 @@ class DatawrapperRenderer:
         return url
 
     def spending_over_time(self, df: pd.DataFrame, filename: str):
-        chart_df = df[["FY", "total_funding"]].copy()
-        chart_df["total_funding"] = (chart_df["total_funding"] / 1e9).round(2)
-        chart_df.columns = ["Fiscal Year", "Biomarker Spending ($B)"]
+        chart_df = df[["FY", "core_funding", "expanded_funding"]].copy()
+        chart_df["core_funding"] = (chart_df["core_funding"] / 1e9).round(2)
+        chart_df["expanded_funding"] = (chart_df["expanded_funding"] / 1e9).round(2)
+        chart_df.columns = ["Fiscal Year", "Core Terms ($B)", "Expanded Only ($B)"]
 
         return self._upsert_chart(
-            "d3-lines",
-            "NIH Biomarker-Related Spending (FY2004–2024)",
+            "d3-area",
+            "NIH Biomarker-Related Spending (FY2004\u20132024)",
             chart_df, filename,
             metadata={
                 "describe": {
-                    "intro": ("Biomarker-related NIH funding grew nearly "
-                              "8-fold over two decades"),
+                    "intro": ("Core terms = 13 definite biomarker terms; "
+                              "Expanded = 23 additional terms needing LLM screening"),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
                 },
                 "visualize": {
-                    "y-grid": "on",
-                    "line-symbols": True,
-                    "fill-below": True,
                     "custom-colors": {
-                        "Biomarker Spending ($B)": SPENDING_LINE_COLOR,
-                    },
-                    "line-widths": {
-                        "Biomarker Spending ($B)": 3,
+                        "Core Terms ($B)": CORE_COLOR,
+                        "Expanded Only ($B)": EXPANDED_COLOR,
                     },
                 },
                 "annotate": {
@@ -259,25 +410,29 @@ class DatawrapperRenderer:
         )
 
     def institute_allocation(self, df: pd.DataFrame, filename: str):
-        chart_df = df[["label", "total_funding"]].copy()
-        chart_df["total_funding"] = (chart_df["total_funding"] / 1e9).round(1)
-        chart_df.columns = ["Institute", "Funding ($B)"]
+        chart_df = df[["label", "core_funding", "expanded_funding"]].copy()
+        chart_df["core_funding"] = (chart_df["core_funding"] / 1e9).round(1)
+        chart_df["expanded_funding"] = (chart_df["expanded_funding"] / 1e9).round(1)
+        chart_df.columns = ["Institute", "Core Terms ($B)", "Expanded Only ($B)"]
 
         return self._upsert_chart(
-            "d3-bars",
-            "Where Does NIH Biomarker Funding Go?",
+            "d3-bars-stacked",
+            "NIH Biomarker Funding by Institute",
             chart_df, filename,
             metadata={
                 "describe": {
-                    "intro": ("NCI leads — cancer research drove "
-                              "early biomarker adoption"),
+                    "intro": ("Stacked: core biomarker terms vs. broader expanded matches. "
+                              "Core % varies widely across institutes."),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
                 },
                 "visualize": {
                     "sort-bars": "desc",
-                    "custom-colors": INSTITUTE_LABELS,
+                    "custom-colors": {
+                        "Core Terms ($B)": CORE_COLOR,
+                        "Expanded Only ($B)": EXPANDED_COLOR,
+                    },
                 },
             },
         )
@@ -292,8 +447,8 @@ class DatawrapperRenderer:
             chart_df, filename,
             metadata={
                 "describe": {
-                    "intro": ("NCI has led throughout, but NIA and NHLBI grew "
-                              "substantially after 2010"),
+                    "intro": ("All matched grants (core + expanded + abstract). "
+                              "NCI leads throughout; NIA grew substantially after 2010."),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -303,6 +458,120 @@ class DatawrapperRenderer:
                 },
                 "annotate": {
                     "notes": DATA_CAVEAT,
+                },
+            },
+        )
+
+    def explicit_adoption(self, df: pd.DataFrame, filename: str):
+        chart_df = df[["FY", "explicit_pct"]].copy()
+        chart_df.columns = ["Fiscal Year", "Core Term Adoption (%)"]
+
+        return self._upsert_chart(
+            "d3-lines",
+            "Explicit Biomarker Term Adoption Over Time",
+            chart_df, filename,
+            metadata={
+                "describe": {
+                    "intro": ("% of matched grants using 13 core biomarker terms "
+                              "(biomarker, surrogate endpoint, companion diagnostic, etc.)"),
+                    "number-append": "%",
+                    "number-format": "0,[.0]",
+                },
+                "visualize": {
+                    "y-grid": "on",
+                    "line-symbols": True,
+                    "custom-colors": {
+                        "Core Term Adoption (%)": CORE_COLOR,
+                    },
+                    "line-widths": {
+                        "Core Term Adoption (%)": 3,
+                    },
+                },
+                "annotate": {
+                    "notes": DATA_CAVEAT,
+                },
+            },
+        )
+
+    def match_source_breakdown(self, pivot: pd.DataFrame, filename: str):
+        chart_df = (pivot / 1e9).round(2).reset_index()
+        chart_df = chart_df.rename(columns={
+            "FY": "Fiscal Year",
+            "keywords_only": "Keyword Matched ($B)",
+            "abstract_only": "Abstract Only ($B)",
+        })
+
+        return self._upsert_chart(
+            "d3-area",
+            "How Grants Are Discovered: Keyword vs. Abstract Search",
+            chart_df, filename,
+            metadata={
+                "describe": {
+                    "intro": ("Keyword = matched in PROJECT_TITLE or PROJECT_TERMS; "
+                              "Abstract = matched only in ABSTRACT_TEXT"),
+                    "number-prepend": "$",
+                    "number-append": "B",
+                    "number-format": "0,[.0]",
+                },
+                "visualize": {
+                    "custom-colors": {
+                        "Keyword Matched ($B)": KEYWORD_COLOR,
+                        "Abstract Only ($B)": ABSTRACT_COLOR,
+                    },
+                },
+                "annotate": {
+                    "notes": DATA_CAVEAT,
+                },
+            },
+        )
+
+    def mechanism_breakdown(self, summary_df: pd.DataFrame, pivot: pd.DataFrame, filename: str):
+        chart_df = summary_df[["mechanism", "core_funding", "expanded_funding"]].copy()
+        chart_df["core_funding"] = (chart_df["core_funding"] / 1e9).round(1)
+        chart_df["expanded_funding"] = (chart_df["expanded_funding"] / 1e9).round(1)
+        chart_df.columns = ["Mechanism", "Core Terms ($B)", "Expanded Only ($B)"]
+
+        return self._upsert_chart(
+            "d3-bars-stacked",
+            "Biomarker Funding by Grant Mechanism",
+            chart_df, filename,
+            metadata={
+                "describe": {
+                    "intro": ("R = research grants (R01, R21, etc.); P = program/center grants; "
+                              "U = cooperative agreements"),
+                    "number-prepend": "$",
+                    "number-append": "B",
+                    "number-format": "0,[.0]",
+                },
+                "visualize": {
+                    "sort-bars": "desc",
+                    "custom-colors": {
+                        "Core Terms ($B)": CORE_COLOR,
+                        "Expanded Only ($B)": EXPANDED_COLOR,
+                    },
+                },
+            },
+        )
+
+    def keyword_funding(self, df: pd.DataFrame, filename: str):
+        chart_df = df[["PRIMARY_TERM", "total_funding", "grant_count"]].copy()
+        chart_df["total_funding"] = (chart_df["total_funding"] / 1e9).round(2)
+        chart_df.columns = ["Keyword", "Funding ($B)", "Grant Count"]
+
+        return self._upsert_chart(
+            "d3-bars",
+            "Funding by Primary Keyword Term",
+            chart_df, filename,
+            metadata={
+                "describe": {
+                    "intro": ("Each grant assigned its most specific matching term "
+                              "via priority ordering (most specific wins)"),
+                    "number-prepend": "$",
+                    "number-append": "B",
+                    "number-format": "0,[.0]",
+                },
+                "visualize": {
+                    "sort-bars": "desc",
                 },
             },
         )
