@@ -121,10 +121,12 @@ def inflation_adjust(annual: list[float], years: list[int], base_year: int = CPI
 
 
 def build_csv(years, col1_annual, col2_annual, col1_label, col2_label) -> str:
+    # Quote years as strings to prevent Datawrapper from parsing them as dates
+    # and inserting monthly sub-ticks on the x-axis.
     lines = [f"Fiscal Year,{col1_label},{col2_label}"]
     c1_cum, c2_cum = cumulative(col1_annual), cumulative(col2_annual)
     for y, c1, c2 in zip(years, c1_cum, c2_cum):
-        lines.append(f"{y},{c1},{c2}")
+        lines.append(f'"{y}",{c1},{c2}')
     return "\n".join(lines)
 
 
@@ -205,13 +207,6 @@ def main():
     # Shared visualize patch: dots at every data point + full x/y grid
     viz_patch = {
         "metadata": {
-            "data": {
-                # Parse integer year column as annual dates; prevents monthly sub-ticks
-                # and enables line-symbols:"always" to render dots at every data point.
-                "column-format": {
-                    "Fiscal Year": {"type": "date", "dateFormat": "YYYY"},
-                },
-            },
             "visualize": {
                 "x-grid": "on",
                 "line-symbol-size": 4.5,
@@ -233,10 +228,11 @@ def main():
         )
         print(f"Uploading nominal data to {DW_CHART_NOMINAL}...")
         dw_upload_data(DW_CHART_NOMINAL, nom_csv, token)
-        nom_patch = {**viz_patch, "metadata": {**viz_patch["metadata"],
+        dw_patch_metadata(DW_CHART_NOMINAL, viz_patch, token)
+        dw_patch_metadata(DW_CHART_NOMINAL, {"metadata": {
             "describe": {"intro": DW_INTRO_NOMINAL, "byline": DW_BYLINE, "source-name": DW_SOURCE_NOMINAL},
-            "annotate": {"notes": DW_NOTES_NOMINAL}}}
-        dw_patch_metadata(DW_CHART_NOMINAL, nom_patch, token)
+            "annotate": {"notes": DW_NOTES_NOMINAL},
+        }}, token)
         url_nom = dw_publish(DW_CHART_NOMINAL, token)
         print(f"Published: {url_nom}")
 
@@ -247,10 +243,11 @@ def main():
         )
         print(f"Uploading CPI-adjusted data to {DW_CHART_ADJ}...")
         dw_upload_data(DW_CHART_ADJ, adj_csv, token)
-        adj_patch = {**viz_patch, "metadata": {**viz_patch["metadata"],
+        dw_patch_metadata(DW_CHART_ADJ, viz_patch, token)
+        dw_patch_metadata(DW_CHART_ADJ, {"metadata": {
             "describe": {"intro": DW_INTRO_ADJ, "byline": DW_BYLINE, "source-name": DW_SOURCE_ADJ},
-            "annotate": {"notes": DW_NOTES_ADJ}}}
-        dw_patch_metadata(DW_CHART_ADJ, adj_patch, token)
+            "annotate": {"notes": DW_NOTES_ADJ},
+        }}, token)
         url_adj = dw_publish(DW_CHART_ADJ, token)
         print(f"Published: {url_adj}")
 
