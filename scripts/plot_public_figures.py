@@ -193,8 +193,7 @@ def main():
     )
     DW_INTRO_ADJ = (
         "NIH has spent between $62B and $175B on biomarker-related research since 2004, "
-        "depending on how broadly \u201cbiomarker\u201d is defined. "
-        "The core term set is a conservative undercount; the expanded set is likely an overcount."
+        "depending on how broadly \u201cbiomarker\u201d is defined."
     )
 
     # Shared visualize patch: dots at every data point + full x/y grid
