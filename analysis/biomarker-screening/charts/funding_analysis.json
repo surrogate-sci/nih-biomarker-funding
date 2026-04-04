@@ -1312,7 +1312,7 @@
     ],
     "core_terms": 13,
     "expanded_terms": 36,
-    "renderer": "seaborn",
+    "renderer": "datawrapper",
     "unique_terms_matched": 10
   }
 }
