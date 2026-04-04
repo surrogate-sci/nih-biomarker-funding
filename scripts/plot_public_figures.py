@@ -194,6 +194,8 @@ def main():
     DW_BYLINE = "Surrogate Science Project"
     DW_SOURCE = "NIH ExPORTER (FY2004\u20132024), keyword + abstract filtered; BLS CPI-U"
     DW_NOTES = "FY2005\u201306 likely undercounted despite title, term, and abstract search"
+    DW_TITLE_ANNUAL = "Annual NIH Biomarker Research Spending, FY2004\u20132024 (2024 dollars)"
+    DW_TITLE_CUM    = "Cumulative NIH Biomarker Research Spending, FY2004\u20132024 (2024 dollars)"
     DW_INTRO_ANNUAL = (
         "Annual NIH biomarker-related spending, adjusted to 2024 dollars"
     )
@@ -229,10 +231,13 @@ def main():
         print(f"Uploading annual CPI-adjusted data to {DW_CHART_ANNUAL}...")
         dw_upload_data(DW_CHART_ANNUAL, annual_csv, token)
         dw_patch_metadata(DW_CHART_ANNUAL, viz_patch, token)
-        dw_patch_metadata(DW_CHART_ANNUAL, {"metadata": {
-            "describe": {"intro": DW_INTRO_ANNUAL, "byline": DW_BYLINE, "source-name": DW_SOURCE},
-            "annotate": {"notes": DW_NOTES},
-        }}, token)
+        dw_patch_metadata(DW_CHART_ANNUAL, {
+            "title": DW_TITLE_ANNUAL,
+            "metadata": {
+                "describe": {"intro": DW_INTRO_ANNUAL, "byline": DW_BYLINE, "source-name": DW_SOURCE},
+                "annotate": {"notes": DW_NOTES},
+            },
+        }, token)
         url_annual = dw_publish(DW_CHART_ANNUAL, token)
         print(f"Published: {url_annual}")
 
@@ -245,10 +250,13 @@ def main():
         print(f"Uploading cumulative CPI-adjusted data to {DW_CHART_CUM}...")
         dw_upload_data(DW_CHART_CUM, cum_csv, token)
         dw_patch_metadata(DW_CHART_CUM, viz_patch, token)
-        dw_patch_metadata(DW_CHART_CUM, {"metadata": {
-            "describe": {"intro": DW_INTRO_CUM, "byline": DW_BYLINE, "source-name": DW_SOURCE},
-            "annotate": {"notes": DW_NOTES},
-        }}, token)
+        dw_patch_metadata(DW_CHART_CUM, {
+            "title": DW_TITLE_CUM,
+            "metadata": {
+                "describe": {"intro": DW_INTRO_CUM, "byline": DW_BYLINE, "source-name": DW_SOURCE},
+                "annotate": {"notes": DW_NOTES},
+            },
+        }, token)
         url_cum = dw_publish(DW_CHART_CUM, token)
         print(f"Published: {url_cum}")
 
