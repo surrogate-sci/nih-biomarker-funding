@@ -184,16 +184,22 @@ def main():
     core_adj   = inflation_adjust(CORE_ANNUAL_B,     YEARS)
     expand_adj = inflation_adjust(EXPANDED_ANNUAL_B, YEARS)
 
+    DW_BYLINE = "Surrogate Science Project"
+    DW_SOURCE_NOMINAL = "NIH ExPORTER (FY2004\u20132024), keyword + abstract filtered"
+    DW_SOURCE_ADJ = "NIH ExPORTER (FY2004\u20132024), keyword + abstract filtered; BLS CPI-U"
     DW_NOTES_NOMINAL = (
         "FY2005\u201306 likely undercounted despite title, term, and abstract search"
     )
     DW_NOTES_ADJ = (
-        "FY2005\u201306 likely undercounted despite title, term, and abstract search. "
-        "Adjusted to 2024 dollars using BLS CPI-U annual averages."
+        "FY2005\u201306 likely undercounted despite title, term, and abstract search"
+    )
+    DW_INTRO_NOMINAL = (
+        "Biomarker-related NIH funding grew nearly 8-fold over two decades"
     )
     DW_INTRO_ADJ = (
         "NIH has spent between $62B and $175B on biomarker-related research since 2004, "
-        "depending on how broadly \u201cbiomarker\u201d is defined."
+        "depending on how broadly \u201cbiomarker\u201d is defined. "
+        "Adjusted to 2024 dollars using BLS CPI-U annual averages."
     )
 
     # Shared visualize patch: dots at every data point + full x/y grid
@@ -228,6 +234,7 @@ def main():
         print(f"Uploading nominal data to {DW_CHART_NOMINAL}...")
         dw_upload_data(DW_CHART_NOMINAL, nom_csv, token)
         nom_patch = {**viz_patch, "metadata": {**viz_patch["metadata"],
+            "describe": {"intro": DW_INTRO_NOMINAL, "byline": DW_BYLINE, "source-name": DW_SOURCE_NOMINAL},
             "annotate": {"notes": DW_NOTES_NOMINAL}}}
         dw_patch_metadata(DW_CHART_NOMINAL, nom_patch, token)
         url_nom = dw_publish(DW_CHART_NOMINAL, token)
@@ -241,7 +248,7 @@ def main():
         print(f"Uploading CPI-adjusted data to {DW_CHART_ADJ}...")
         dw_upload_data(DW_CHART_ADJ, adj_csv, token)
         adj_patch = {**viz_patch, "metadata": {**viz_patch["metadata"],
-            "describe": {**viz_patch["metadata"].get("describe", {}), "intro": DW_INTRO_ADJ},
+            "describe": {"intro": DW_INTRO_ADJ, "byline": DW_BYLINE, "source-name": DW_SOURCE_ADJ},
             "annotate": {"notes": DW_NOTES_ADJ}}}
         dw_patch_metadata(DW_CHART_ADJ, adj_patch, token)
         url_adj = dw_publish(DW_CHART_ADJ, token)
