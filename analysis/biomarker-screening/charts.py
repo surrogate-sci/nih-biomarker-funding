@@ -310,46 +310,92 @@ class SeabornRenderer:
         return self._save(fig, filename)
 
 
+    @staticmethod
+    def _top_terms_90pct(df: pd.DataFrame) -> pd.DataFrame:
+        """Return terms accounting for ~90% of total funding, plus an 'Other' row."""
+        total = df["total_funding"].sum()
+        if total == 0:
+            return df
+        cumsum = df["total_funding"].cumsum()
+        threshold = total * 0.90
+        # Include all terms up to and including the one that crosses 90%
+        n_keep = (cumsum <= threshold).sum() + 1
+        n_keep = min(n_keep, len(df))
+        top = df.head(n_keep).copy()
+        rest = df.iloc[n_keep:]
+        if len(rest) > 0:
+            other_row = pd.DataFrame([{
+                "PRIMARY_TERM": f"Other ({len(rest)} terms)",
+                "total_funding": rest["total_funding"].sum(),
+                "grant_count": rest["grant_count"].sum(),
+            }])
+            top = pd.concat([top, other_row], ignore_index=True)
+        return top
+
     def core_vs_expanded_terms(self, core_df: pd.DataFrame, expanded_df: pd.DataFrame, filename: str):
-        """Two-panel: funding by core terms (left) and what expanded adds (right)."""
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8),
+        """Two-panel: keyword breakdown for core grants (left) vs expanded-only (right)."""
+        core_total = core_df["total_funding"].sum()
+        exp_total = expanded_df["total_funding"].sum()
+        grand_total = core_total + exp_total
+        core_pct = 100 * core_total / grand_total
+        exp_pct = 100 * exp_total / grand_total
+
+        # Keep only terms accounting for ~90% of each panel
+        core_top = self._top_terms_90pct(core_df)
+        exp_top = self._top_terms_90pct(expanded_df)
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 9),
                                         gridspec_kw={"width_ratios": [1, 1.3]})
 
-        # Left panel: core terms
-        y1 = range(len(core_df))
-        ax1.barh(y1, core_df["total_funding"], color=CORE_COLOR)
+        # Left panel: core grants by core keyword
+        y1 = range(len(core_top))
+        colors1 = [CORE_COLOR if "Other" not in str(t) else TOL_QUALITATIVE[9]
+                    for t in core_top["PRIMARY_TERM"]]
+        ax1.barh(y1, core_top["total_funding"], color=colors1)
         ax1.set_yticks(list(y1))
-        ax1.set_yticklabels(core_df["PRIMARY_TERM"], fontsize=9)
+        ax1.set_yticklabels(core_top["PRIMARY_TERM"], fontsize=9)
         ax1.invert_yaxis()
         ax1.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
-        ax1.set_title("Core Terms (13)\nDefinite biomarker research", fontsize=12, fontweight="bold")
-        for i, row in enumerate(core_df.itertuples()):
+        ax1.set_title(
+            f"Grants matching core terms\n"
+            f"${core_total/1e9:.0f}B \u2014 {core_pct:.0f}% of total \u2014 "
+            f"{core_df['grant_count'].sum():,} grants",
+            fontsize=11, fontweight="bold",
+        )
+        for i, row in enumerate(core_top.itertuples()):
             ax1.text(row.total_funding, i,
-                     f"  ${row.total_funding/1e9:.1f}B ({row.grant_count:,})",
+                     f"  ${row.total_funding/1e9:.1f}B ({int(row.grant_count):,})",
                      va="center", fontsize=8)
-        core_total = core_df["total_funding"].sum()
-        ax1.text(0.5, -0.06, f"Total: ${core_total/1e9:.1f}B ({core_df['grant_count'].sum():,} grants)",
-                 transform=ax1.transAxes, ha="center", fontsize=10, fontweight="bold")
 
-        # Right panel: expanded-only terms
-        y2 = range(len(expanded_df))
-        ax2.barh(y2, expanded_df["total_funding"], color=EXPANDED_COLOR)
+        # Right panel: expanded-only grants
+        y2 = range(len(exp_top))
+        colors2 = [EXPANDED_COLOR if "Other" not in str(t) else TOL_QUALITATIVE[9]
+                    for t in exp_top["PRIMARY_TERM"]]
+        ax2.barh(y2, exp_top["total_funding"], color=colors2)
         ax2.set_yticks(list(y2))
-        ax2.set_yticklabels(expanded_df["PRIMARY_TERM"], fontsize=9)
+        ax2.set_yticklabels(exp_top["PRIMARY_TERM"], fontsize=9)
         ax2.invert_yaxis()
         ax2.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
-        ax2.set_title("Expanded Terms (+23)\nBroader matches, need LLM screening", fontsize=12, fontweight="bold")
-        for i, row in enumerate(expanded_df.itertuples()):
+        ax2.set_title(
+            f"Additional grants from expanded terms only\n"
+            f"${exp_total/1e9:.0f}B \u2014 {exp_pct:.0f}% of total \u2014 "
+            f"{expanded_df['grant_count'].sum():,} additional grants",
+            fontsize=11, fontweight="bold",
+        )
+        for i, row in enumerate(exp_top.itertuples()):
             ax2.text(row.total_funding, i,
-                     f"  ${row.total_funding/1e9:.1f}B ({row.grant_count:,})",
+                     f"  ${row.total_funding/1e9:.1f}B ({int(row.grant_count):,})",
                      va="center", fontsize=8)
-        exp_total = expanded_df["total_funding"].sum()
-        ax2.text(0.5, -0.06, f"Total: ${exp_total/1e9:.1f}B ({expanded_df['grant_count'].sum():,} grants)",
-                 transform=ax2.transAxes, ha="center", fontsize=10, fontweight="bold")
 
         fig.suptitle("What Do Core vs. Expanded Keywords Capture?",
                      fontsize=14, fontweight="bold", y=1.02)
-        fig.text(0.99, -0.02, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
+        fig.text(0.5, -0.01,
+                 "No double counting: each grant appears in exactly one panel. "
+                 "Left = matched any of 13 core biomarker terms. "
+                 "Right = matched only by 23 additional expanded terms (not in left panel).\n"
+                 "Showing terms accounting for ~90% of each panel's funding.",
+                 ha="center", fontsize=8, color="gray", fontstyle="italic")
+        fig.text(0.99, -0.04, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
         fig.tight_layout()
         return self._save(fig, filename)
 
@@ -436,7 +482,7 @@ class DatawrapperRenderer:
             metadata={
                 "describe": {
                     "intro": ("Core terms = 13 definite biomarker terms; "
-                              "Expanded = 23 additional terms needing LLM screening"),
+                              "Expanded = 23 additional broader terms"),
                     "number-prepend": "$",
                     "number-append": "B",
                     "number-format": "0,[.0]",
@@ -651,7 +697,7 @@ class DatawrapperRenderer:
 
         return self._upsert_chart(
             "d3-bars",
-            "Expanded Terms (+23) \u2014 Broader Matches, Need LLM Screening",
+            "Expanded Terms (+23) \u2014 Additional Broader Matches",
             exp_chart, "expanded_terms.png",
             metadata={
                 "describe": {

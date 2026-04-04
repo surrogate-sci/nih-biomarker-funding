@@ -290,34 +290,55 @@ def keyword_funding(df: pd.DataFrame, renderer, n_top: int = 15) -> dict:
 
 
 def core_vs_expanded_terms(df: pd.DataFrame, renderer) -> dict:
-    """Chart 8: Two-panel — funding by top core terms, then what expanded adds.
+    """Chart 8: Two-panel — funding by keyword for core vs expanded-only grants.
 
-    Left panel: funding for each of the 13 core biomarker terms.
-    Right panel: funding for expanded-only terms (what the broader net catches).
+    Left panel: grants with EXPLICIT_BIOMARKER=TRUE ($62B). Shows the highest-priority
+    CORE term each grant matched (not the most-specific expanded term). This avoids
+    showing expanded terms like "digital biomarker" in the core panel.
+
+    Right panel: grants with EXPLICIT_BIOMARKER=FALSE ($113B). Shows PRIMARY_TERM
+    (most specific expanded term).
+
+    No double counting: every grant appears in exactly one panel.
     """
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
-    from keyword_terms import CORE_BIOMARKER_TERMS
+    from keyword_terms import CORE_BIOMARKER_TERMS, TERM_PRIORITY
 
     core_set = set(CORE_BIOMARKER_TERMS)
-    has_term = df[df["PRIMARY_TERM"].notna() & (df["PRIMARY_TERM"] != "")].copy()
-    has_term["term_tier"] = has_term["PRIMARY_TERM"].apply(
-        lambda t: "core" if t in core_set else "expanded"
-    )
+    # Core-only priority: just the core terms, in TERM_PRIORITY order
+    core_priority = [t for t in TERM_PRIORITY if t in core_set]
 
-    # Core terms
+    has_term = df[df["PRIMARY_TERM"].notna() & (df["PRIMARY_TERM"] != "")].copy()
+
+    # Split by EXPLICIT_BIOMARKER — matches $62B/$113B split used elsewhere
+    core_grants = has_term[has_term["EXPLICIT_BIOMARKER"]].copy()
+    expanded_grants = has_term[~has_term["EXPLICIT_BIOMARKER"]]
+
+    # For core grants: assign the highest-priority CORE term they matched
+    # (not the most-specific expanded term from PRIMARY_TERM)
+    def best_core_term(matched_terms_str):
+        if pd.isna(matched_terms_str) or matched_terms_str == "":
+            return "biomarker"  # fallback — they matched a core term somehow
+        terms = matched_terms_str.split(";")
+        for t in core_priority:
+            if t in terms:
+                return t
+        return "biomarker"  # fallback
+
+    core_grants["CORE_PRIMARY"] = core_grants["MATCHED_TERMS"].apply(best_core_term)
+
     core_df = (
-        has_term[has_term["term_tier"] == "core"]
-        .groupby("PRIMARY_TERM")
+        core_grants.groupby("CORE_PRIMARY")
         .agg(total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count"))
         .reset_index()
+        .rename(columns={"CORE_PRIMARY": "PRIMARY_TERM"})
         .sort_values("total_funding", ascending=False)
     )
 
-    # Expanded-only terms
+    # For expanded-only grants: use PRIMARY_TERM as-is
     expanded_df = (
-        has_term[has_term["term_tier"] == "expanded"]
-        .groupby("PRIMARY_TERM")
+        expanded_grants.groupby("PRIMARY_TERM")
         .agg(total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count"))
         .reset_index()
         .sort_values("total_funding", ascending=False)
