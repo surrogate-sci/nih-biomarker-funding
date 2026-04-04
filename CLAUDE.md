@@ -43,11 +43,12 @@ process_all_years.py  →  filter_biomarker_projects.py  →  data/filtered/biom
                                                               ↓
                                                        create_unified_dataset.py
                                                               ↓
-                                                       nih_biomarker_unified_2004-2024.csv (269,630 grants)
+                                                       nih_biomarker_unified_2004-2024.csv (344,550 grants)
 ```
 
-- **Term sets**: core (4 terms: biomarker, clinical marker, surrogate endpoint, imaging marker) and expanded (10 terms, adds digital biomarker, endophenotype, genetic marker, etc.)
-- `EXPLICIT_BIOMARKER` column flags core-term matches (75,849 grants, $35.77B)
+- **Term sets**: core (13 terms) and expanded (36 terms). Core includes explicit biomarker/marker language plus definite biomarker concepts (endophenotype, intermediate outcome/endpoint, digital endpoint) and decision-making terms (risk stratification, patient selection, companion diagnostic, predicting response, response to therapy). Expanded adds diagnostics, stratification, precision medicine, and signature terms.
+- **Facility screening**: `is_facility_grant()` excludes infrastructure sub-projects (Administrative Core, Shared Resource, etc.) by title pattern. Center grants themselves are NOT excluded.
+- `EXPLICIT_BIOMARKER` column flags core-term matches
 - Data quality: FY2005 PROJECT_TERMS 68% populated; FY2006 PROJECT_TERMS empty
 - See `README.md` for full script docs and commands
 
@@ -115,11 +116,13 @@ gold-label calibration. See Issue #20 for full plan.
 | `scripts/analyze_agreement.py` | Inter-model agreement analysis. Will be partially replaced by Inspect scorer metrics. |
 | `scripts/extract_disagreements.py` | Extract disagreement patterns for rubric refinement |
 | `inspect_task.py` | Inspect AI task: Dataset loader, Solver, Scorer. Parses codes from RUBRIC.md, supports gold labels, CLI-controlled config. |
-| `scripts/filter_biomarker_projects.py` | Filters NIH ExPORTER CSVs by keyword term sets |
+| `scripts/filter_biomarker_projects.py` | Filters NIH ExPORTER CSVs by keyword term sets (core/expanded) with facility screening |
+| `scripts/keyword_terms.py` | Biomarker keyword term sets, matching logic, and facility screening (imported by filter and analysis scripts) |
+| `scripts/analyze_keyword_distribution.py` | PROJECT_TERMS distribution analysis for keyword coverage audit (issue #27) |
 | `scripts/process_all_years.py` | Batch download + filter FY2004-2024 |
 | `scripts/create_unified_dataset.py` | Merges filtered year CSVs into single dataset |
 | `data/grader_calibration_examples.csv` | 25 easy cases (explicit biomarker terms from 2012 & 2022) |
-| `data/nih_biomarker_unified_2004-2024.csv` | 269,630 grants, NO abstracts |
+| `data/nih_biomarker_unified_2004-2024.csv` | 344,550 grants (276K keyword + 68K abstract-only), 27 columns |
 
 ## Commands
 
@@ -156,6 +159,7 @@ python3 scripts/generate_review.py --examples data/grader_calibration_examples.c
 # Utilities
 ruff check . && ruff format .
 python3 -m unittest tests.test_generate_review -v
+python3 -m unittest tests.test_filter_biomarker_projects -v
 ```
 
 ## Session Workflow

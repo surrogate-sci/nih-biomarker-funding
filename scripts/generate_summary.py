@@ -113,9 +113,9 @@ def generate_summary_markdown(
                         (df["EXPLICIT_BIOMARKER"] == True)  # noqa: E712
                         | (df["EXPLICIT_BIOMARKER"] == "TRUE")
                     ).sum()
-                    year_explicit_funding = df[df["EXPLICIT_BIOMARKER"] == True][  # noqa: E712
-                        "TOTAL_COST_NUM"
-                    ].sum()
+                    year_explicit_funding = df[
+                        df["EXPLICIT_BIOMARKER"] == True  # noqa: E712
+                    ]["TOTAL_COST_NUM"].sum()
                 else:
                     explicit_count = 0
                     year_explicit_funding = 0

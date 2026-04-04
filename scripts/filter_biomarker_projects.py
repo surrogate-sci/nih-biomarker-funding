@@ -15,14 +15,47 @@ from pathlib import Path
 from typing import Set, Dict, List
 import requests
 
-from scripts.keyword_terms import (
-    CORE_BIOMARKER_TERMS,
-    EXPANDED_BIOMARKER_TERMS,
-    contains_biomarker_terms,
-)
+try:
+    from scripts.keyword_terms import (
+        CORE_BIOMARKER_TERMS,
+        EXPANDED_BIOMARKER_TERMS,
+        FACILITY_TITLE_PATTERNS,
+        contains_biomarker_terms,
+        find_matching_terms,
+        is_facility_grant,
+        primary_term,
+    )
+except ImportError:
+    from keyword_terms import (
+        CORE_BIOMARKER_TERMS,
+        EXPANDED_BIOMARKER_TERMS,
+        FACILITY_TITLE_PATTERNS,
+        contains_biomarker_terms,
+        find_matching_terms,
+        is_facility_grant,
+        primary_term,
+    )
 
 # Default term set
 BIOMARKER_TERMS = EXPANDED_BIOMARKER_TERMS
+
+
+# Facility grant screening - exclude infrastructure/admin sub-projects
+# These are center components (cores, shared resources) not independent research.
+# Note: center grants themselves (P30, P50) ARE often biomarker work.
+FACILITY_TITLE_PATTERNS = [
+    r"\bAdministrative Core\b",
+    r"\bBiostatistics Core\b",
+    r"\bBioinformatics Core\b",
+    r"\bData Core\b",
+    r"\bShared Resource\b",
+    r"\bShared Facility\b",
+    r"\bInformatics Core\b",
+    r"\bStatistics Core\b",
+    r"\bBiorepository Core\b",
+    r"\bTissue Procurement\b",
+    r"\bCore [A-Z]:",  # e.g., "Core C: Biostatistics and Bioinformatics Core"
+]
 
 
 # NIH ExPORTER CSV download base URL
@@ -131,6 +164,7 @@ def filter_projects_csv(
     stats = {
         "total_rows": 0,
         "matched_rows": 0,
+        "facility_excluded": 0,
         "unique_projects": 0,
         "duplicates_removed": 0,
     }
@@ -168,35 +202,60 @@ def filter_projects_csv(
             # Write filtered output
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, "w", newline="", encoding="utf-8") as outfile:
-                # Add EXPLICIT_BIOMARKER column to flag core term matches
-                output_fieldnames = list(reader.fieldnames) + ["EXPLICIT_BIOMARKER"]
+                # Add classification columns
+                output_fieldnames = list(reader.fieldnames) + [
+                    "EXPLICIT_BIOMARKER",
+                    "MATCHED_CORE_TERMS",
+                    "MATCHED_EXPANDED_TERMS",
+                    "MATCHED_TERMS",
+                    "PRIMARY_TERM",
+                ]
                 writer = csv.DictWriter(outfile, fieldnames=output_fieldnames)
                 writer.writeheader()
 
                 for row in reader:
                     stats["total_rows"] += 1
 
-                    # Check if any text column contains biomarker terms
-                    has_match = False
+                    # Collect all matching terms across text columns
+                    all_matched = []
                     for col in available_text_cols:
-                        if contains_biomarker_terms(row.get(col, ""), search_terms):
-                            has_match = True
-                            break
+                        col_text = row.get(col, "")
+                        if col_text:
+                            all_matched.extend(
+                                find_matching_terms(col_text, search_terms)
+                            )
 
-                    if has_match:
+                    # Deduplicate matched terms while preserving order
+                    seen_terms = set()
+                    unique_matched = []
+                    for t in all_matched:
+                        if t not in seen_terms:
+                            seen_terms.add(t)
+                            unique_matched.append(t)
+
+                    if unique_matched:
+                        # Screen out facility/infrastructure grants
+                        title = row.get("PROJECT_TITLE", "")
+                        if is_facility_grant(title):
+                            stats["facility_excluded"] += 1
+                            continue
+
                         stats["matched_rows"] += 1
 
-                        # Check if this also matches core/explicit biomarker terms
-                        is_explicit = False
-                        for col in available_text_cols:
-                            if contains_biomarker_terms(
-                                row.get(col, ""), CORE_BIOMARKER_TERMS
-                            ):
-                                is_explicit = True
-                                break
+                        # Separate core vs expanded-only matches
+                        core_set = set(CORE_BIOMARKER_TERMS)
+                        core_matched = [t for t in unique_matched if t in core_set]
+                        expanded_matched = [
+                            t for t in unique_matched if t not in core_set
+                        ]
+                        is_explicit = len(core_matched) > 0
 
-                        # Add explicit biomarker flag to row
+                        # Add classification columns
                         row["EXPLICIT_BIOMARKER"] = "TRUE" if is_explicit else "FALSE"
+                        row["MATCHED_CORE_TERMS"] = ";".join(core_matched)
+                        row["MATCHED_EXPANDED_TERMS"] = ";".join(expanded_matched)
+                        row["MATCHED_TERMS"] = ";".join(unique_matched)
+                        row["PRIMARY_TERM"] = primary_term(unique_matched)
 
                         # Deduplicate by (APPLICATION_ID, FY) to preserve yearly funding records
                         project_id = row.get(project_id_column, "")
@@ -223,6 +282,7 @@ def filter_projects_csv(
         logger.info("Filtering complete:")
         logger.info(f"  Total rows processed: {stats['total_rows']:,}")
         logger.info(f"  Rows matching terms: {stats['matched_rows']:,}")
+        logger.info(f"  Facility grants excluded: {stats['facility_excluded']:,}")
         logger.info(f"  Unique project-year records kept: {stats['unique_projects']:,}")
         logger.info(f"  Duplicates removed: {stats['duplicates_removed']:,}")
         logger.info(f"  Output saved to: {output_path}")
