@@ -1,11 +1,11 @@
-
-
+{# Biomarker Screening SUMMARY.md template — rendered by render_summary.py #}
+{# Chart registry: only analyses listed here should be produced by analyze.py #}
 # Biomarker Screening: Preliminary Funding Distribution
 
 ## Purpose
 
 A preliminary look at where and how NIH biomarker-related funding is distributed,
-based on keyword screening of ~332,324 grants (FY2004–2024).
+based on keyword screening of ~{{ "{:,}".format(summary.total_grants) }} grants (FY{{ summary.year_range[0] }}–{{ summary.year_range[1] }}).
 This is Phase 1 of a two-phase pipeline. Phase 2 uses LLM grading to evaluate
 grants through a methodological lens about biomarker R&D with long-horizon decision
 making in mind (see `data/RUBRIC.md`), rather than relying on keywords.
@@ -15,14 +15,14 @@ making in mind (see `data/RUBRIC.md`), rather than relying on keywords.
 | Metric | Value |
 |--------|-------|
 | Dataset version | v3.1 (`dataset-release-v3.1`) |
-| Total grants | 332,324 |
-| Total funding | $168.05B |
-| Core biomarker term matches | 109,234 (32.9%) |
-| Core biomarker funding | $52.87B |
-| Keyword-matched grants | 269,630 |
-| Abstract-only grants | 62,694 |
-| Unique terms matched | 10 of 36 defined |
-| Year range | FY2004–2024 |
+| Total grants | {{ "{:,}".format(summary.total_grants) }} |
+| Total funding | ${{ summary.total_funding_billions }}B |
+| Core biomarker term matches | {{ "{:,}".format(summary.explicit_grants) }} ({{ summary.explicit_pct }}%) |
+| Core biomarker funding | ${{ summary.explicit_funding_billions }}B |
+| Keyword-matched grants | {{ "{:,}".format(summary.keyword_matched_grants) }} |
+| Abstract-only grants | {{ "{:,}".format(summary.abstract_only_grants) }} |
+| Unique terms matched | {{ summary.unique_terms_matched }} of 36 defined |
+| Year range | FY{{ summary.year_range[0] }}–{{ summary.year_range[1] }} |
 
 **Data quality caveats:** FY2005: PROJECT_TERMS 68% populated. FY2006: PROJECT_TERMS
 empty. FY2013, FY2018: anomalous keyword counts. These years are annotated on
@@ -46,25 +46,17 @@ filtered. A dataset re-filter is needed to capture all 36 terms.
 
 ![Spending over time](charts/spending_over_time.png)
 
-Total biomarker-related funding: $168.05B over
-FY2004–2024.
-Core term matches: $52.87B (32.9%).
+Total biomarker-related funding: ${{ summary.total_funding_billions }}B over
+FY{{ summary.year_range[0] }}–{{ summary.year_range[1] }}.
+Core term matches: ${{ summary.explicit_funding_billions }}B ({{ summary.explicit_pct }}%).
 
 ### C2: Institute Allocation
 
 ![Institute allocation](charts/institute_allocation.png)
 
-- **NCI (Cancer)**: $36.8B (80,834 grants, 37.4% core)
-- **NIA (Aging)**: $17.2B (27,077 grants, 55.0% core)
-- **NHLBI (Heart/Lung/Blood)**: $16.9B (30,106 grants, 29.0% core)
-- **NIAID (Allergy/Infectious)**: $14.5B (20,577 grants, 27.0% core)
-- **NINDS (Neurological)**: $10.8B (22,462 grants, 36.2% core)
-- **NIMH (Mental Health)**: $10.0B (20,816 grants, 23.4% core)
-- **NIDDK (Diabetes/Digestive)**: $8.9B (21,332 grants, 32.9% core)
-- **NICHD (Child Health)**: $5.6B (12,661 grants, 31.0% core)
-- **NLM (Library of Medicine)**: $5.0B (963 grants, 0.9% core)
-- **NIGMS (General Medical)**: $4.8B (12,569 grants, 23.9% core)
-
+{% for inst in institute_allocation.institutes -%}
+- **{{ inst.label }}**: ${{ "%.1f"|format(inst.total_funding / 1e9) }}B ({{ "{:,}".format(inst.grant_count) }} grants, {{ inst.core_pct }}% core)
+{% endfor %}
 
 ### C3: Term × Mechanism
 
@@ -73,19 +65,14 @@ Core term matches: $52.87B (32.9%).
 Funding by keyword term and grant mechanism. Grants matching multiple terms
 appear in each term's row.
 
+{% if term_by_mechanism.r_grant_pct -%}
 | Term | R-grant % | Total funding |
 |------|-----------|---------------|
-| clinical+omics | 36.2% | $77.55B |
-| clinical+imaging | 46.6% | $69.04B |
-| biomarker | 49.4% | $51.40B |
-| genetic marker | 46.0% | $6.15B |
-| endophenotype | 50.7% | $3.09B |
-| surrogate endpoint | 49.7% | $1.05B |
-| imaging marker | 62.8% | $1.04B |
-| clinical marker | 56.4% | $0.99B |
-| intermediate outcome | 55.1% | $0.27B |
-| digital biomarker | 41.8% | $0.25B |
-
+{% for term, pct in term_by_mechanism.r_grant_pct.items() -%}
+{%- set term_total = term_by_mechanism.funding[term].values() | sum -%}
+| {{ term }} | {{ pct }}% | ${{ "%.2f"|format(term_total / 1e9) }}B |
+{% endfor -%}
+{% endif %}
 
 ## What Keyword Screening Cannot Determine
 
@@ -107,4 +94,4 @@ with long-horizon decision making or operates without a clear estimand.
   mentioning each term.
 - **Facility screening**: Infrastructure sub-projects (Administrative Core, Shared
   Resource, etc.) are excluded by title pattern. Center grants (P30, P50) are preserved.
-- **Data quality years**: 2005, 2006, 2013, 2018
+- **Data quality years**: {{ summary.data_quality_years | join(', ') }}
