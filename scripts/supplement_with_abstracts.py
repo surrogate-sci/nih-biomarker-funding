@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 """
 Supplement keyword-filtered grants with abstract-text matches.
 
