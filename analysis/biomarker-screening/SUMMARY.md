@@ -121,8 +121,24 @@ substrings. These are the broadest expanded terms.
 More targeted terms: `biomarker` ($13B, 33K grants), `genetic marker` ($5B, 10K),
 `risk stratification` ($3B, 5K), `endophenotype` ($2.5B, 5K).
 
-**Coverage:** 276K keyword-matched grants have PRIMARY_TERM (100%); 68K abstract-only
-grants do not (they were matched via abstract text, not title/terms fields).
+**Coverage:** All 344,550 grants have PRIMARY_TERM assigned — keyword-matched grants
+derive it from their matched terms during filtering, and abstract-only grants derive
+it from their MATCHED_TERMS column.
+
+### 8. Core vs. Expanded Terms: What Each Tier Captures
+
+![Core vs expanded](charts/core_vs_expanded_terms.png)
+
+Each grant appears in exactly one panel. The left panel shows grants that matched any of
+the 13 core biomarker terms, with individual terms shown for those covering 95% of core
+grants. "biomarker" dominates ($45B), followed by risk stratification, endophenotype, and
+response to therapy. Surrogate and intermediate endpoint language accounts for $1.4B across
+2,236 grants — visible in the "Other" bar.
+
+The right panel shows grants matched only by the 23 additional expanded terms, grouped into
+three categories: clinical+omics ($69B, 104K grants), clinical+imaging ($39B, 68K grants),
+and other precision medicine terms ($15B, 45K grants). These grants never matched any core
+term — they represent the broader penumbra of biomarker-adjacent research.
 
 ## What This Cannot Tell Us
 
