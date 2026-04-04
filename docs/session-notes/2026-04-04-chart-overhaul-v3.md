@@ -25,21 +25,19 @@ Expanded analysis from 3 to 8 charts, added enriched keyword columns to the keyw
 The keyword filter was updated with enriched columns. The abstract filter was not. Downstream consequences:
 
 - **68K abstract-only rows**: empty MATCHED_CORE_TERMS, MATCHED_EXPANDED_TERMS; PRIMARY_TERM patched at load time only
-- **v3.1 release**: published with incomplete data
-- **11 Datawrapper charts**: published with incomplete data
-- **PR #32**: claims 30 uniform columns but 20% of rows have empty keyword columns
-- **funding_analysis.json, SUMMARY.md**: per-keyword breakdowns suspect for abstract portion
-- **Main repo data/**: still has stale Mar 31 data (332K rows), worktree has incomplete Apr 4 data (344K rows)
-- **utils.py load_dataset()**: patches PRIMARY_TERM at load time — masks the source problem
+Actual scope is narrower than initially thought:
 
-Aggregate figures ($175B total, $62B core, $113B expanded) are probably correct since they use EXPLICIT_BIOMARKER and TOTAL_COST which are populated. Per-keyword breakdowns are affected.
+**Correct:** EXPLICIT_BIOMARKER and MATCHED_TERMS populated for all 344K grants. Abstract-only grants matched with all 36 terms (35 of 36 represented). The $62B/$113B split and charts 1–6 are accurate. No re-filtering needed.
+
+**Missing:** Three derivative columns (MATCHED_CORE_TERMS, MATCHED_EXPANDED_TERMS, PRIMARY_TERM) empty for 68K abstract-only rows. Purely computable from MATCHED_TERMS.
+
+**Affected:** Charts 7 + 8 only, v3.1 release, `utils.py` load-time patch masks the problem.
 
 ## Next steps
-- Fix `supplement_with_abstracts.py` to compute all enriched columns (issue #35)
-- Re-run abstract filter, regenerate unified dataset
-- Verify all 344K rows have uniform columns before releasing
-- Replace v3.1 release, republish Datawrapper charts
-- Sync main repo data/ with verified data
+- Implement fix plan (`docs/plans/2026-04-04-fix-derivative-columns.md`)
+- Compute derivatives in both `supplement_with_abstracts.py` (source) and `create_unified_dataset.py` (safety net)
+- Add integration tests for column uniformity (`test_pipeline_integrity.py`)
+- Regenerate charts 7 + 8 only, replace v3.1 release
 - PR #32 blocked until data is fixed
 
 ## Files changed this session
