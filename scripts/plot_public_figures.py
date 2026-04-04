@@ -167,11 +167,20 @@ def main():
     expand_adj = inflation_adjust(EXPANDED_ANNUAL_B, YEARS)
 
     # Shared visualize patch: dots at every data point + full x/y grid
+    # NOTE: title and describe.intro are managed directly in the Datawrapper UI —
+    # do NOT include them here to avoid overwriting the user's edits.
     viz_patch = {
         "metadata": {
+            "data": {
+                # Parse integer year column as annual dates; prevents monthly sub-ticks
+                # and enables line-symbols:"always" to render dots at every data point.
+                "column-format": {
+                    "Fiscal Year": {"type": "date", "dateFormat": "YYYY"},
+                },
+            },
             "visualize": {
                 "x-grid": "on",
-                "line-symbols": True,
+                "line-symbols": "always",
                 "line-symbol-size": 4.5,
                 "lines": {
                     "Core":     {"symbols": {"enabled": True, "size": 4.5}},
@@ -179,8 +188,8 @@ def main():
                 },
                 "line-widths": {"Core": 2.5, "Expanded": 2.5},
                 "custom-colors": {"Core": "#1a6b9c", "Expanded": "#e8a85f"},
-            }
-        }
+            },
+        },
     }
 
     if not args.export_only:
@@ -210,10 +219,10 @@ def main():
     print("Exporting PNGs...")
     dw_export_png(DW_CHART_NOMINAL, token,
                   out_dir / "cumulative_biomarker_funding_nominal.png",
-                  width=1000)
+                  width=700)
     dw_export_png(DW_CHART_ADJ,    token,
                   out_dir / "cumulative_biomarker_funding_2024dollars.png",
-                  width=1000)
+                  width=700)
 
     # Also write the combined CSV for the public repo
     csv_path = Path(__file__).resolve().parent.parent / "data" / "biomarker_funding_2004_2024_with_cpi_adjustment.csv"
