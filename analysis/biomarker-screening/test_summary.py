@@ -71,9 +71,9 @@ def test_funding_total_matches_json(summary_text, results):
     expected = results["summary"]["total_funding_billions"]
     # Match "$175.2B" or "$175.2 billion" or "$175.22B" patterns
     amounts = re.findall(r"\$(\d+\.?\d*)\s*(?:B|billion)", summary_text)
-    assert any(
-        abs(float(a) - expected) <= 0.5 for a in amounts
-    ), f"Expected ~${expected}B in SUMMARY.md, found amounts: {amounts}"
+    assert any(abs(float(a) - expected) <= 0.5 for a in amounts), (
+        f"Expected ~${expected}B in SUMMARY.md, found amounts: {amounts}"
+    )
 
 
 def test_term_table_present(summary_text, results):
@@ -89,9 +89,9 @@ def test_term_table_present(summary_text, results):
         if "+" in term:
             # AND-condition term: check that both parts appear near each other
             parts = term.split("+")
-            assert all(
-                p in summary_text.lower() for p in parts
-            ), f"AND-condition term '{term}' parts not found in SUMMARY.md"
+            assert all(p in summary_text.lower() for p in parts), (
+                f"AND-condition term '{term}' parts not found in SUMMARY.md"
+            )
         else:
             # Check case-insensitive (template may capitalize)
             assert term.lower() in summary_text.lower(), (
@@ -125,9 +125,7 @@ def test_chart_registry_has_entries(summary_text):
 def test_registry_matches_chart_refs(summary_text):
     """Every chart filename in the registry must be referenced as an image."""
     # Extract filenames from registry table
-    registry_files = re.findall(
-        r"\| C\d+ \|.*?\| `(.+?)` \|", summary_text
-    )
+    registry_files = re.findall(r"\| C\d+ \|.*?\| `(.+?)` \|", summary_text)
     # Extract filenames from image references
     image_refs = re.findall(r"!\[.*?\]\(charts/(.+?)\)", summary_text)
 

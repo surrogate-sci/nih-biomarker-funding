@@ -202,8 +202,12 @@ def main():
 
     OUTPUT_PATH.write_text(rendered)
     s = data["summary"]
-    print(f"SUMMARY.md written ({len(rendered):,} chars, {rendered.count(chr(10)):,} lines)")
-    print(f"  {s['total_grants']:,} grants, ${s['total_funding_billions']}B, {s['unique_terms_matched']} terms")
+    print(
+        f"SUMMARY.md written ({len(rendered):,} chars, {rendered.count(chr(10)):,} lines)"
+    )
+    print(
+        f"  {s['total_grants']:,} grants, ${s['total_funding_billions']}B, {s['unique_terms_matched']} terms"
+    )
 
 
 if __name__ == "__main__":

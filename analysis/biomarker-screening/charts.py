@@ -589,9 +589,12 @@ class SeabornRenderer:
         for i, (term, total) in enumerate(row_totals.items()):
             count = int(pivot_count.loc[term].sum())
             ax1.text(
-                total, i,
+                total,
+                i,
                 f"  ${total / 1e9:.1f}B ({count:,})",
-                va="center", fontsize=9, fontweight="bold",
+                va="center",
+                fontsize=9,
+                fontweight="bold",
             )
 
         # Right: mechanism % within each term
@@ -613,14 +616,21 @@ class SeabornRenderer:
             for i, term in enumerate(pivot_pct.index):
                 r_pct = pivot_pct.loc[term, r_col]
                 ax2.text(
-                    r_pct / 2, i, f"R: {r_pct:.0f}%",
-                    va="center", ha="center", fontsize=8,
-                    color="white", fontweight="bold",
+                    r_pct / 2,
+                    i,
+                    f"R: {r_pct:.0f}%",
+                    va="center",
+                    ha="center",
+                    fontsize=8,
+                    color="white",
+                    fontweight="bold",
                 )
 
         fig.suptitle(
             "Which Grant Mechanisms Fund Which Biomarker Keywords?",
-            fontsize=14, fontweight="bold", y=1.02,
+            fontsize=14,
+            fontweight="bold",
+            y=1.02,
         )
         fig.text(0.99, -0.02, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
         fig.tight_layout()

@@ -474,9 +474,11 @@ def term_by_mechanism(df: pd.DataFrame, renderer) -> dict:
     if r_col:
         for term in pivot_funding.index:
             total = pivot_funding.loc[term].sum()
-            r_pct[term] = round(
-                100 * pivot_funding.loc[term, r_col] / total, 1
-            ) if total > 0 else 0
+            r_pct[term] = (
+                round(100 * pivot_funding.loc[term, r_col] / total, 1)
+                if total > 0
+                else 0
+            )
 
     return {
         "funding": {
