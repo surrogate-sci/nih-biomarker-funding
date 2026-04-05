@@ -1,6 +1,23 @@
 {# Biomarker Screening SUMMARY.md template — rendered by render_summary.py #}
 {# Chart registry: only analyses listed here should be produced by analyze.py #}
-{#- Macros -#}
+{#- Color palette (enforced in charts.py):
+    COOL tones — core vs expanded distinction:
+      Core terms:     #0072B2 (strong blue)
+      Expanded terms: #56B4E9 (sky blue)
+    WARM tones — grant mechanism categories:
+      Research (R):       #D55E00 (vermillion)
+      Cooperative (U):    #E69F00 (amber)
+      Program/Center (P): #CC79A7 (mauve)
+      Career Dev (K):     #DDAA33 (gold)
+      Training (T):       #BC6C25 (sienna)
+      Fellowship (F):     #9B2226 (dark red)
+      Other:              #BBBBBB (grey)
+    CATEGORICAL — 12 pilot institutes (Okabe-Ito + extended):
+      NCI:   #0072B2    NHLBI: #D55E00    NIA:  #009E73
+      NIAID: #E69F00    NINDS: #CC79A7    NIMH: #56B4E9
+      NIDDK: #F0E442    NICHD: #882255    NIGMS:#332288
+      NIDA:  #AA4499    NIBIB: #44AA99    NIAMS:#999933
+-#}
 {%- macro dollars(val) -%}
 {%- if val >= 10e9 -%}${{ "%.1f"|format(val / 1e9) }}B
 {%- elif val >= 1e9 -%}${{ "%.2f"|format(val / 1e9) }}B
@@ -65,9 +82,12 @@ biomarker concepts without actually studying biomarkers.
 
 | ID | Title | Description | File |
 |----|-------|-------------|------|
-| C1 | Biomarker funding over time | Funding per fiscal year, split by core vs. expanded term matches | `spending_over_time.png` |
-| C2 | Funding by NIH institute | Top 10 institutes by total biomarker funding, with core vs. expanded split | `institute_allocation.png` |
-| C3 | Keyword terms by grant mechanism | Each keyword term's funding broken down by grant type (investigator-initiated, cooperative, center, etc.) | `term_by_mechanism.png` |
+| C1 | Biomarker funding over time | Total funding per fiscal year, core vs. expanded term matches | `spending_over_time.png` |
+| C2 | Funding by NIH institute | Top 12 pilot institutes, core vs. expanded split | `institute_allocation.png` |
+| C3 | Institute funding over time | How the top 12 institutes' biomarker funding changed year by year | `institute_over_time.png` |
+| C4 | Grant mechanisms over time | How funding across grant types (R01, cooperative, center, etc.) changed over time | `mechanism_over_time.png` |
+| C5 | Core keyword terms by grant mechanism | Each of the 13 core biomarker terms broken down by grant type | `core_terms_by_mechanism.png` |
+| C6 | Expanded keyword terms by grant mechanism | Expanded terms broken down by grant type, dominated by broad co-occurrence terms | `expanded_terms_by_mechanism.png` |
 
 ## Results
 
@@ -77,11 +97,10 @@ biomarker concepts without actually studying biomarkers.
 
 Total NIH biomarker-related funding grew from approximately $3 billion in
 FY{{ summary.year_range[0] }} to $15 billion in FY{{ summary.year_range[1] }}. Core term matches (definite biomarker
-research) consistently account for about one-third of the total, with the
-remainder captured by broader expanded terms and abstract-text matches. The
-growth is roughly proportional — core and expanded funding grew at similar
-rates, suggesting the expansion reflects a general increase in biomarker-related
-research rather than a shift toward or away from specific biomarker language.
+research, shown in blue) consistently account for about one-third of the total,
+with the remainder (sky blue) captured by broader expanded terms and abstract-text
+matches. The growth is roughly proportional — core and expanded funding grew at
+similar rates over the two decades.
 
 ### C2: Funding by NIH Institute
 
@@ -93,37 +112,48 @@ research rather than a shift toward or away from specific biomarker language.
 | {{ inst.label }} | {{ dollars(inst.total_funding) }} | {{ "{:,}".format(inst.grant_count) }} | {{ "%.0f"|format(inst.core_pct) }}% |
 {% endfor %}
 
-### C3: Keyword Terms by Grant Mechanism
+### C3: Institute Funding Over Time
 
-![Keyword terms by grant mechanism](charts/term_by_mechanism.png)
+![Institute funding over time](charts/institute_over_time.png)
 
-This chart shows every keyword term's funding broken down by NIH grant
-mechanism. A single grant can match multiple terms (for example, a grant
-mentioning both "biomarker" and "surrogate endpoint" appears in both rows), so
-the rows are not mutually exclusive. The left panel shows absolute funding; the
-right panel shows the percentage breakdown by mechanism within each term.
+This chart tracks how each of the 12 pilot institutes' biomarker funding evolved
+from {{ summary.year_range[0] }} to {{ summary.year_range[1] }}. Each institute uses a consistent color across all
+charts in this document.
 
-Grant mechanisms are grouped into broad categories: Research grants (R01, R21,
-R03, etc.) are investigator-initiated basic and applied research. Cooperative
-agreements (U) are multi-site collaborative studies. Program and center grants
-(P) support institutional research infrastructure. Career development (K),
-training (T), and fellowship (F) awards support individual researchers.
+### C4: Grant Mechanisms Over Time
 
-The two broadest keyword terms dominate: grants where "clinical" and "omics"
-co-occur and grants where "clinical" and "imaging" co-occur. These AND-condition
-terms cast the widest net and likely include many grants that are not primarily
-about biomarkers. The generic term "biomarker" is next.
+![Grant mechanisms over time](charts/mechanism_over_time.png)
 
-More specific terms are far smaller:
-{% for group in term_groups %}
-**{{ group.name }}**{% if group.description %} — {{ group.description }}{% endif %}:
+This chart shows how biomarker funding distributes across grant types over time.
+Grant mechanisms are shown in warm tones throughout this document: vermillion
+for investigator-initiated research grants (R01, R21, etc.), amber for
+cooperative agreements (U), mauve for program and center grants (P), and
+smaller categories in gold, sienna, and dark red.
 
-| Term | Total funding | Grants | Research grant share |
-|------|--------------|--------|---------------------|
-{% for t in group.terms -%}
-| {{ t.display_name | capitalize }} | {{ t.funding_str }} | {{ "{:,}".format(t.grants) }} | {{ "%.0f"|format(t.r_pct) }}% |
-{% endfor %}
-{% endfor %}
+### C5: Core Biomarker Terms by Grant Mechanism
+
+![Core terms by grant mechanism](charts/core_terms_by_mechanism.png)
+
+This chart shows each of the {{ summary.core_terms }} core biomarker terms broken down by grant
+mechanism. These are the terms that unambiguously indicate biomarker research.
+A single grant can match multiple terms, so the rows are not mutually exclusive.
+
+The left panel shows absolute funding and the right panel shows the percentage
+of each term's funding that comes from each grant type. Warm tones indicate
+mechanism types (the same colors as chart C4).
+
+### C6: Expanded Terms by Grant Mechanism
+
+![Expanded terms by grant mechanism](charts/expanded_terms_by_mechanism.png)
+
+The expanded keyword set adds {{ summary.expanded_terms - summary.core_terms }} broader terms beyond the 13 core terms. Two
+AND-condition terms dominate this set: grants where "clinical" and "omics"
+co-occur, and grants where "clinical" and "imaging" co-occur. Together these
+account for the vast majority of expanded-term funding. These broad matches
+likely include many grants that are not primarily about biomarkers — they
+reflect the co-occurrence of common words in clinical research rather than
+specific biomarker intent. The remaining expanded terms are more targeted but
+individually much smaller.
 
 ## Limitations
 
@@ -167,7 +197,7 @@ expressed using different phrasing.
 - **Term priority**: Each grant is assigned a single primary term for
   non-overlapping counts, using a priority ordering where more specific terms
   (e.g., "surrogate endpoint") take precedence over broader terms (e.g.,
-  "biomarker"). The term-by-mechanism chart (C3) uses all matched terms per
+  "biomarker"). The term-by-mechanism charts (C5, C6) use all matched terms per
   grant instead, so a grant matching multiple terms appears in each term's row.
 - **Facility screening**: Infrastructure sub-projects (administrative cores,
   shared resources, data cores, tissue procurement) are excluded by title

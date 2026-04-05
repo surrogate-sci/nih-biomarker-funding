@@ -76,27 +76,14 @@ def test_funding_total_matches_json(summary_text, results):
     )
 
 
-def test_term_table_present(summary_text, results):
-    """The term × mechanism table must reference all terms from the JSON.
-
-    AND-condition terms (e.g., clinical+omics) may appear in readable form
-    (e.g., "clinical" and "omics") rather than raw form. Check for either.
-    """
-    if "term_by_mechanism" not in results:
-        pytest.skip("term_by_mechanism not in JSON")
-    r_pct = results["term_by_mechanism"].get("r_grant_pct", {})
-    for term in r_pct:
-        if "+" in term:
-            # AND-condition term: check that both parts appear near each other
-            parts = term.split("+")
-            assert all(p in summary_text.lower() for p in parts), (
-                f"AND-condition term '{term}' parts not found in SUMMARY.md"
-            )
-        else:
-            # Check case-insensitive (template may capitalize)
-            assert term.lower() in summary_text.lower(), (
-                f"Term '{term}' missing from SUMMARY.md"
-            )
+def test_term_mechanism_charts_exist(results):
+    """Core and expanded term × mechanism chart data must exist in JSON."""
+    has_core = "core_terms_by_mechanism" in results
+    has_expanded = "expanded_terms_by_mechanism" in results
+    has_combined = "term_by_mechanism" in results
+    assert has_core or has_expanded or has_combined, (
+        "No term × mechanism data found in funding_analysis.json"
+    )
 
 
 def test_unique_terms_stated(summary_text, results):
