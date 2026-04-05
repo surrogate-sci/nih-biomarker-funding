@@ -28,15 +28,22 @@ import seaborn as sns
 CORE_COLOR = "#0072B2"  # strong blue — definite biomarker terms
 EXPANDED_COLOR = "#56B4E9"  # sky blue — broader matches
 
-# WARM tones: grant mechanism categories (C4, C5, C6)
+# WARM/COOL split: Clinical vs Research grant categories (C4, C5, C6)
+# Based on NIH_SPENDING_CATS tags. Edit CLINICAL_TAGS in utils.py to change.
+GRANT_CATEGORY_COLORS = {
+    "Clinical": "#D55E00",  # vermillion (warm)
+    "Research": "#0072B2",  # blue (cool)
+}
+
+# Legacy mechanism colors (kept for backward compat, not used in current charts)
 MECHANISM_COLORS = {
-    "Research (R)": "#D55E00",  # vermillion
-    "Cooperative (U)": "#E69F00",  # amber
-    "Program/Center (P)": "#CC79A7",  # mauve
-    "Career Dev (K)": "#DDAA33",  # gold
-    "Training (T)": "#BC6C25",  # sienna
-    "Fellowship (F)": "#9B2226",  # dark red
-    "Other": "#BBBBBB",  # grey
+    "Research (R)": "#D55E00",
+    "Cooperative (U)": "#E69F00",
+    "Program/Center (P)": "#CC79A7",
+    "Career Dev (K)": "#DDAA33",
+    "Training (T)": "#BC6C25",
+    "Fellowship (F)": "#9B2226",
+    "Other": "#BBBBBB",
 }
 
 # CATEGORICAL: 12 pilot institutes (C2, C3)
@@ -221,102 +228,91 @@ class SeabornRenderer:
         fig.tight_layout()
         return self._save(fig, filename)
 
-    def term_by_mechanism(
+    def term_by_category(
         self,
-        pivot_funding: pd.DataFrame,
-        pivot_count: pd.DataFrame,
+        df: pd.DataFrame,
         filename: str,
-        title: str = "Which Grant Mechanisms Fund Which Biomarker Keywords?",
+        title: str = "Keyword Terms by Grant Category",
     ):
-        """Stacked horizontal bars: keyword term × grant mechanism funding."""
-        row_totals = pivot_funding.sum(axis=1)
-        pivot_pct = pivot_funding.div(row_totals, axis=0) * 100
+        """Grouped (dodged) horizontal bars: Clinical vs Research per keyword term.
 
-        fig, (ax1, ax2) = plt.subplots(
-            1, 2, figsize=(18, 9), gridspec_kw={"width_ratios": [1.2, 1]}
+        df must have columns: term, category, total_funding, grant_count
+        """
+        categories = sorted(df["category"].unique())
+        terms = (
+            df.groupby("term")["total_funding"]
+            .sum()
+            .sort_values(ascending=True)
+            .index.tolist()
         )
 
-        mechanisms = pivot_funding.columns.tolist()
-        y_pos = range(len(pivot_funding))
+        fig, ax = plt.subplots(figsize=(12, max(6, len(terms) * 0.6)))
+        bar_height = 0.35
+        y_base = range(len(terms))
 
-        # Left: absolute funding stacked bars
-        left = pd.Series(0.0, index=pivot_funding.index)
-        for mech in mechanisms:
-            color = MECHANISM_COLORS.get(mech, "#888888")
-            ax1.barh(y_pos, pivot_funding[mech], left=left, color=color, label=mech)
-            left = left + pivot_funding[mech]
+        for i, cat in enumerate(categories):
+            cat_data = df[df["category"] == cat].set_index("term")
+            vals = [
+                cat_data.loc[t, "total_funding"] if t in cat_data.index else 0
+                for t in terms
+            ]
+            y_offset = [y + i * bar_height for y in y_base]
+            color = GRANT_CATEGORY_COLORS.get(cat, "#888888")
+            ax.barh(y_offset, vals, height=bar_height, label=cat, color=color)
 
-        ax1.set_yticks(list(y_pos))
-        ax1.set_yticklabels(pivot_funding.index, fontsize=10)
-        ax1.invert_yaxis()
-        ax1.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
-        ax1.set_title("Funding by keyword term and grant mechanism", fontsize=12)
-        ax1.legend(loc="lower right", fontsize=8)
-
-        for i, (term, total) in enumerate(row_totals.items()):
-            count = int(pivot_count.loc[term].sum())
-            ax1.text(
-                total,
-                i,
-                f"  ${total / 1e9:.1f}B ({count:,})",
-                va="center",
-                fontsize=9,
-                fontweight="bold",
-            )
-
-        # Right: mechanism % within each term
-        left_pct = pd.Series(0.0, index=pivot_pct.index)
-        for mech in mechanisms:
-            color = MECHANISM_COLORS.get(mech, "#888888")
-            ax2.barh(y_pos, pivot_pct[mech], left=left_pct, color=color)
-            left_pct = left_pct + pivot_pct[mech]
-
-        ax2.set_yticks(list(y_pos))
-        ax2.set_yticklabels([""] * len(y_pos))
-        ax2.invert_yaxis()
-        ax2.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0f}%"))
-        ax2.set_xlim(0, 100)
-        ax2.set_title("Mechanism share within each term (%)", fontsize=12)
-
-        r_col = "Research (R)" if "Research (R)" in pivot_pct.columns else None
-        if r_col:
-            for i, term in enumerate(pivot_pct.index):
-                r_pct = pivot_pct.loc[term, r_col]
-                ax2.text(
-                    r_pct / 2,
-                    i,
-                    f"R: {r_pct:.0f}%",
-                    va="center",
-                    ha="center",
-                    fontsize=8,
-                    color="white",
-                    fontweight="bold",
-                )
-
-        fig.suptitle(
-            title,
-            fontsize=14,
-            fontweight="bold",
-            y=1.02,
+        ax.set_yticks([y + bar_height * (len(categories) - 1) / 2 for y in y_base])
+        ax.set_yticklabels(terms, fontsize=10)
+        ax.xaxis.set_major_formatter(mticker.FuncFormatter(_billions))
+        ax.set_xlabel("")
+        ax.set_title(title, fontsize=14)
+        ax.legend(loc="lower right", fontsize=10)
+        ax.text(
+            0.99,
+            -0.06,
+            SOURCE_NOTE,
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color="gray",
         )
-        fig.text(0.99, -0.02, SOURCE_NOTE, ha="right", fontsize=8, color="gray")
         fig.tight_layout()
         return self._save(fig, filename)
 
-    def institute_over_time(self, pivot: pd.DataFrame, filename: str):
-        """Stacked area: funding by institute over time."""
+    def institute_over_time(
+        self, top_lines: pd.DataFrame, other_band: pd.Series, filename: str
+    ):
+        """Line chart: top 5 institutes as lines, rest as shaded Other band."""
         fig, ax = plt.subplots(figsize=(14, 7))
-        colors = [INSTITUTE_COLORS.get(col, "#888888") for col in pivot.columns]
-        pivot_b = pivot / 1e9
-        pivot_b.plot.area(ax=ax, alpha=0.8, color=colors)
+
+        # Shaded Other band
+        other_b = other_band / 1e9
+        ax.fill_between(
+            other_b.index,
+            0,
+            other_b,
+            alpha=0.2,
+            color="#BBBBBB",
+            label="Other institutes",
+        )
+
+        # Lines for top institutes
+        for col in top_lines.columns:
+            color = INSTITUTE_COLORS.get(col, "#888888")
+            ax.plot(
+                top_lines.index,
+                top_lines[col] / 1e9,
+                linewidth=2.5,
+                color=color,
+                label=col,
+                marker="o",
+                markersize=3,
+            )
+
         ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("")
-        ax.set_title(
-            "Biomarker Funding by Institute Over Time (12 pilot institutes)",
-            fontsize=14,
-        )
-        ax.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
+        ax.set_title("Biomarker Funding by Institute Over Time", fontsize=14)
+        ax.legend(loc="upper left", fontsize=9, ncol=2)
         ax.annotate(
             DATA_CAVEAT,
             xy=(0.02, 0.02),
@@ -337,20 +333,17 @@ class SeabornRenderer:
         fig.tight_layout()
         return self._save(fig, filename)
 
-    def mechanism_over_time(self, pivot: pd.DataFrame, filename: str):
-        """Stacked area: funding by grant mechanism over time."""
+    def category_over_time(self, pivot: pd.DataFrame, filename: str):
+        """Stacked area: Clinical vs Research funding over time."""
         fig, ax = plt.subplots(figsize=(14, 7))
-        colors = [MECHANISM_COLORS.get(col, "#888888") for col in pivot.columns]
+        colors = [GRANT_CATEGORY_COLORS.get(col, "#888888") for col in pivot.columns]
         pivot_b = pivot / 1e9
         pivot_b.plot.area(ax=ax, alpha=0.8, color=colors)
         ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:.0f}B"))
         ax.set_xlabel("Fiscal Year")
         ax.set_ylabel("")
-        ax.set_title(
-            "Biomarker Funding by Grant Mechanism Over Time",
-            fontsize=14,
-        )
-        ax.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
+        ax.set_title("Biomarker Funding: Clinical vs Research Over Time", fontsize=14)
+        ax.legend(title="", loc="upper left", fontsize=10)
         ax.annotate(
             DATA_CAVEAT,
             xy=(0.02, 0.02),
@@ -512,43 +505,29 @@ class DatawrapperRenderer:
             },
         )
 
-    def term_by_mechanism(
-        self,
-        pivot_funding: pd.DataFrame,
-        pivot_count: pd.DataFrame,
-        filename: str,
-        title: str = "Which Grant Mechanisms Fund Which Biomarker Keywords?",
-    ):
-        chart_df = (pivot_funding / 1e9).round(2).reset_index()
+    def term_by_category(self, df, filename, title="Keyword Terms by Grant Category"):
+        """Datawrapper grouped bars for term × category."""
+        pivot = df.pivot(
+            index="term", columns="category", values="total_funding"
+        ).fillna(0)
+        chart_df = (pivot / 1e9).round(2).reset_index()
         chart_df = chart_df.rename(columns={"term": "Keyword Term"})
-
         return self._upsert_chart(
             "d3-bars-stacked",
             title,
             chart_df,
             filename,
             metadata={
-                "describe": {
-                    "intro": (
-                        "Funding by grant mechanism for each keyword term. "
-                        "Grants matching multiple terms appear in each term's row."
-                    ),
-                    "number-prepend": "$",
-                    "number-append": "B",
-                    "number-format": "0,[.0]",
-                },
-                "visualize": {
-                    "sort-bars": False,
-                    "custom-colors": MECHANISM_COLORS,
-                },
+                "visualize": {"custom-colors": GRANT_CATEGORY_COLORS},
             },
         )
 
-    def institute_over_time(self, pivot: pd.DataFrame, filename: str):
-        chart_df = (pivot / 1e9).round(2).reset_index()
+    def institute_over_time(self, top_lines, other_band, filename):
+        """Datawrapper line chart for institute over time."""
+        chart_df = (top_lines / 1e9).round(2).reset_index()
         chart_df = chart_df.rename(columns={"FY": "Fiscal Year"})
         return self._upsert_chart(
-            "d3-area",
+            "d3-lines",
             "Biomarker Funding by Institute Over Time",
             chart_df,
             filename,
@@ -558,16 +537,17 @@ class DatawrapperRenderer:
             },
         )
 
-    def mechanism_over_time(self, pivot: pd.DataFrame, filename: str):
+    def category_over_time(self, pivot, filename):
+        """Datawrapper stacked area for Clinical vs Research over time."""
         chart_df = (pivot / 1e9).round(2).reset_index()
         chart_df = chart_df.rename(columns={"FY": "Fiscal Year"})
         return self._upsert_chart(
             "d3-area",
-            "Biomarker Funding by Grant Mechanism Over Time",
+            "Biomarker Funding: Clinical vs Research Over Time",
             chart_df,
             filename,
             metadata={
-                "visualize": {"custom-colors": MECHANISM_COLORS},
+                "visualize": {"custom-colors": GRANT_CATEGORY_COLORS},
                 "annotate": {"notes": DATA_CAVEAT},
             },
         )

@@ -76,14 +76,17 @@ def test_funding_total_matches_json(summary_text, results):
     )
 
 
-def test_term_mechanism_charts_exist(results):
-    """Core and expanded term × mechanism chart data must exist in JSON."""
-    has_core = "core_terms_by_mechanism" in results
-    has_expanded = "expanded_terms_by_mechanism" in results
-    has_combined = "term_by_mechanism" in results
-    assert has_core or has_expanded or has_combined, (
-        "No term × mechanism data found in funding_analysis.json"
-    )
+def test_term_category_charts_exist(results):
+    """Core and expanded term × category chart data must exist in JSON."""
+    keys = set(results.keys())
+    term_keys = keys & {
+        "core_terms_by_category",
+        "expanded_terms_by_category",
+        "core_terms_by_mechanism",
+        "expanded_terms_by_mechanism",
+        "term_by_mechanism",
+    }
+    assert term_keys, f"No term chart data in JSON. Keys: {sorted(keys)}"
 
 
 def test_unique_terms_stated(summary_text, results):

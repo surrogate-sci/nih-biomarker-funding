@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pandas as pd
 
 from charts import IC_CODE_TO_NAME, IC_LABELS, PILOT_ICS, get_renderer
-from utils import DATA_QUALITY_YEARS, activity_category, load_dataset
+from utils import DATA_QUALITY_YEARS, grant_category, load_dataset
 
 CHARTS_DIR = Path(__file__).parent / "charts"
 
@@ -116,8 +116,8 @@ def institute_allocation(df: pd.DataFrame, renderer, n: int = 10) -> dict:
     }
 
 
-def institute_over_time(df: pd.DataFrame, renderer) -> dict:
-    """C3: Stacked area of funding by institute over time (12 pilot ICs)."""
+def institute_over_time(df: pd.DataFrame, renderer, n_top: int = 5) -> dict:
+    """C3: Line chart — top N institutes as lines, rest as shaded Other band."""
     df = df.copy()
     df["ic_short"] = df["ADMINISTERING_IC"].map(IC_CODE_TO_NAME)
     df.loc[~df["ADMINISTERING_IC"].isin(PILOT_ICS), "ic_short"] = "Other"
@@ -127,50 +127,59 @@ def institute_over_time(df: pd.DataFrame, renderer) -> dict:
         0
     )
 
-    # Order columns by total funding (largest first), Other last
-    col_order = (
+    # Top N by total funding
+    totals = (
         pivot.drop(columns=["Other"], errors="ignore")
         .sum()
         .sort_values(ascending=False)
-        .index.tolist()
     )
-    if "Other" in pivot.columns:
-        col_order.append("Other")
-    pivot = pivot[col_order]
+    top_names = totals.head(n_top).index.tolist()
 
-    renderer.institute_over_time(pivot, "institute_over_time.png")
+    top_lines = pivot[top_names]
+    other_cols = [c for c in pivot.columns if c not in top_names]
+    other_band = pivot[other_cols].sum(axis=1)
+
+    renderer.institute_over_time(top_lines, other_band, "institute_over_time.png")
 
     return {
         "years": pivot.index.tolist(),
-        "institutes": {col: pivot[col].tolist() for col in pivot.columns},
+        "top_institutes": {col: top_lines[col].tolist() for col in top_lines.columns},
+        "other": other_band.tolist(),
     }
 
 
-def mechanism_over_time(df: pd.DataFrame, renderer) -> dict:
-    """C4: Stacked area of funding by grant mechanism over time."""
+def category_over_time(df: pd.DataFrame, renderer) -> dict:
+    """C4: Stacked area — Clinical vs Research funding over time."""
     df = df.copy()
-    df["mechanism"] = df["ACTIVITY"].apply(activity_category)
+    df["category"] = df["NIH_SPENDING_CATS"].apply(grant_category)
 
-    yearly = df.groupby(["FY", "mechanism"])["TOTAL_COST"].sum().reset_index()
-    pivot = yearly.pivot(index="FY", columns="mechanism", values="TOTAL_COST").fillna(0)
+    yearly = df.groupby(["FY", "category"])["TOTAL_COST"].sum().reset_index()
+    pivot = yearly.pivot(index="FY", columns="category", values="TOTAL_COST").fillna(0)
 
-    # Order columns by total funding
-    col_order = pivot.sum().sort_values(ascending=False).index.tolist()
-    pivot = pivot[col_order]
+    # Ensure consistent column order
+    for col in ["Research", "Clinical"]:
+        if col not in pivot.columns:
+            pivot[col] = 0.0
+    pivot = pivot[["Research", "Clinical"]]
 
-    renderer.mechanism_over_time(pivot, "mechanism_over_time.png")
+    renderer.category_over_time(pivot, "category_over_time.png")
 
     return {
         "years": pivot.index.tolist(),
-        "mechanisms": {col: pivot[col].tolist() for col in pivot.columns},
+        "categories": {col: pivot[col].tolist() for col in pivot.columns},
     }
 
 
-def _term_by_mechanism_filtered(df, renderer, term_filter, filename, title):
-    """Shared logic for core/expanded term × mechanism charts."""
-    work = df[["APPLICATION_ID", "TOTAL_COST", "MATCHED_TERMS", "ACTIVITY"]].copy()
+FUNDING_THRESHOLD = 1e9  # $1B — terms below this are collapsed into "Other"
+
+
+def _term_by_category(df, term_filter, filename, title, renderer):
+    """Shared logic for core/expanded term × Clinical/Research charts."""
+    work = df[
+        ["APPLICATION_ID", "TOTAL_COST", "MATCHED_TERMS", "NIH_SPENDING_CATS"]
+    ].copy()
     work = work[work["MATCHED_TERMS"].notna() & (work["MATCHED_TERMS"] != "")]
-    work["mechanism"] = work["ACTIVITY"].apply(activity_category)
+    work["category"] = work["NIH_SPENDING_CATS"].apply(grant_category)
     work["term"] = work["MATCHED_TERMS"].str.split(";")
     work = work.explode("term")
     work["term"] = work["term"].str.strip()
@@ -178,83 +187,67 @@ def _term_by_mechanism_filtered(df, renderer, term_filter, filename, title):
     work = work[work["term"].isin(term_filter)]
 
     if work.empty:
-        return {"funding": {}, "counts": {}, "r_grant_pct": {}}
+        return {"terms": []}
 
     cross = (
-        work.groupby(["term", "mechanism"])
+        work.groupby(["term", "category"])
         .agg(
             total_funding=("TOTAL_COST", "sum"), grant_count=("APPLICATION_ID", "count")
         )
         .reset_index()
     )
 
-    pivot_funding = cross.pivot(
-        index="term", columns="mechanism", values="total_funding"
-    ).fillna(0)
-    pivot_count = cross.pivot(
-        index="term", columns="mechanism", values="grant_count"
-    ).fillna(0)
+    # Consolidate terms below threshold into "Other"
+    term_totals = cross.groupby("term")["total_funding"].sum()
+    big_terms = term_totals[term_totals >= FUNDING_THRESHOLD].index.tolist()
+    small_terms = term_totals[term_totals < FUNDING_THRESHOLD].index.tolist()
 
-    row_totals = pivot_funding.sum(axis=1).sort_values(ascending=False)
-    pivot_funding = pivot_funding.loc[row_totals.index]
-    pivot_count = pivot_count.loc[row_totals.index]
-
-    col_order = pivot_funding.sum().sort_values(ascending=False).index.tolist()
-    pivot_funding = pivot_funding[col_order]
-    pivot_count = pivot_count[col_order]
-
-    renderer.term_by_mechanism(pivot_funding, pivot_count, filename, title=title)
-
-    r_col = "Research (R)" if "Research (R)" in pivot_funding.columns else None
-    r_pct = {}
-    if r_col:
-        for term in pivot_funding.index:
-            total = pivot_funding.loc[term].sum()
-            r_pct[term] = (
-                round(100 * pivot_funding.loc[term, r_col] / total, 1)
-                if total > 0
-                else 0
+    if small_terms:
+        other_rows = cross[cross["term"].isin(small_terms)].copy()
+        other_rows["term"] = f"Other ({len(small_terms)} terms)"
+        other_agg = (
+            other_rows.groupby(["term", "category"])
+            .agg(
+                total_funding=("total_funding", "sum"),
+                grant_count=("grant_count", "sum"),
             )
+            .reset_index()
+        )
+        cross = pd.concat(
+            [cross[cross["term"].isin(big_terms)], other_agg], ignore_index=True
+        )
 
-    return {
-        "funding": {
-            t: {m: float(pivot_funding.loc[t, m]) for m in pivot_funding.columns}
-            for t in pivot_funding.index
-        },
-        "counts": {
-            t: {m: int(pivot_count.loc[t, m]) for m in pivot_count.columns}
-            for t in pivot_count.index
-        },
-        "r_grant_pct": r_pct,
-    }
+    renderer.term_by_category(cross, filename, title=title)
+
+    return {"terms": cross.to_dict(orient="records")}
 
 
-def core_terms_by_mechanism(df: pd.DataFrame, renderer) -> dict:
-    """C5: Core biomarker terms × grant mechanism."""
+def core_terms_by_category(df: pd.DataFrame, renderer) -> dict:
+    """C5: Core biomarker terms — Clinical vs Research."""
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
     from keyword_terms import CORE_BIOMARKER_TERMS
 
-    return _term_by_mechanism_filtered(
+    return _term_by_category(
         df,
+        set(CORE_BIOMARKER_TERMS),
+        "core_terms_by_mechanism.png",
+        "Core Biomarker Terms: Clinical vs Research Funding",
         renderer,
-        term_filter=set(CORE_BIOMARKER_TERMS),
-        filename="core_terms_by_mechanism.png",
-        title="Core Biomarker Terms by Grant Mechanism",
     )
 
 
-def expanded_terms_by_mechanism(df: pd.DataFrame, renderer) -> dict:
-    """C6: Expanded-only terms × grant mechanism."""
+def expanded_terms_by_category(df: pd.DataFrame, renderer) -> dict:
+    """C6: Expanded-only terms — Clinical vs Research."""
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
     from keyword_terms import CORE_BIOMARKER_TERMS, EXPANDED_BIOMARKER_TERMS
 
     expanded_only = set(EXPANDED_BIOMARKER_TERMS) - set(CORE_BIOMARKER_TERMS)
-    return _term_by_mechanism_filtered(
+    return _term_by_category(
         df,
+        expanded_only,
+        "expanded_terms_by_mechanism.png",
+        "Expanded Keyword Terms: Clinical vs Research Funding",
         renderer,
-        term_filter=expanded_only,
-        filename="expanded_terms_by_mechanism.png",
-        title="Expanded Keyword Terms by Grant Mechanism",
     )
 
 
@@ -281,17 +274,17 @@ def main():
     print("\nC2. Institute allocation (12 pilot ICs)...")
     results["institute_allocation"] = institute_allocation(df, renderer, n=12)
 
-    print("\nC3. Institute funding over time...")
+    print("\nC3. Institute funding over time (top 5 lines)...")
     results["institute_over_time"] = institute_over_time(df, renderer)
 
-    print("\nC4. Grant mechanisms over time...")
-    results["mechanism_over_time"] = mechanism_over_time(df, renderer)
+    print("\nC4. Clinical vs Research over time...")
+    results["category_over_time"] = category_over_time(df, renderer)
 
-    print("\nC5. Core terms × grant mechanism...")
-    results["core_terms_by_mechanism"] = core_terms_by_mechanism(df, renderer)
+    print("\nC5. Core terms: Clinical vs Research...")
+    results["core_terms_by_category"] = core_terms_by_category(df, renderer)
 
-    print("\nC6. Expanded terms × grant mechanism...")
-    results["expanded_terms_by_mechanism"] = expanded_terms_by_mechanism(df, renderer)
+    print("\nC6. Expanded terms: Clinical vs Research...")
+    results["expanded_terms_by_category"] = expanded_terms_by_category(df, renderer)
 
     # Summary stats
     explicit_df = df[df["EXPLICIT_BIOMARKER"]]

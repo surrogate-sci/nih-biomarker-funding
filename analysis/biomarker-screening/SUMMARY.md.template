@@ -84,10 +84,10 @@ biomarker concepts without actually studying biomarkers.
 |----|-------|-------------|------|
 | C1 | Biomarker funding over time | Total funding per fiscal year, core vs. expanded term matches | `spending_over_time.png` |
 | C2 | Funding by NIH institute | Top 12 pilot institutes, core vs. expanded split | `institute_allocation.png` |
-| C3 | Institute funding over time | How the top 12 institutes' biomarker funding changed year by year | `institute_over_time.png` |
-| C4 | Grant mechanisms over time | How funding across grant types (R01, cooperative, center, etc.) changed over time | `mechanism_over_time.png` |
-| C5 | Core keyword terms by grant mechanism | Each of the 13 core biomarker terms broken down by grant type | `core_terms_by_mechanism.png` |
-| C6 | Expanded keyword terms by grant mechanism | Expanded terms broken down by grant type, dominated by broad co-occurrence terms | `expanded_terms_by_mechanism.png` |
+| C3 | Institute funding over time | Top 5 institutes as trend lines, remaining as shaded band | `institute_over_time.png` |
+| C4 | Clinical vs research over time | How clinical and research biomarker funding changed year by year | `category_over_time.png` |
+| C5 | Core terms: clinical vs research | Each core biomarker term's funding split by clinical vs research | `core_terms_by_mechanism.png` |
+| C6 | Expanded terms: clinical vs research | Expanded terms split by clinical vs research | `expanded_terms_by_mechanism.png` |
 
 ## Results
 
@@ -116,44 +116,38 @@ similar rates over the two decades.
 
 ![Institute funding over time](charts/institute_over_time.png)
 
-This chart tracks how each of the 12 pilot institutes' biomarker funding evolved
-from {{ summary.year_range[0] }} to {{ summary.year_range[1] }}. Each institute uses a consistent color across all
-charts in this document.
+The top 5 institutes by total biomarker funding are shown as trend lines, with
+the remaining institutes collapsed into a shaded band. Each institute uses a
+consistent color across all charts in this document.
 
-### C4: Grant Mechanisms Over Time
+### C4: Clinical vs Research Over Time
 
-![Grant mechanisms over time](charts/mechanism_over_time.png)
+![Clinical vs research over time](charts/category_over_time.png)
 
-This chart shows how biomarker funding distributes across grant types over time.
-Grant mechanisms are shown in warm tones throughout this document: vermillion
-for investigator-initiated research grants (R01, R21, etc.), amber for
-cooperative agreements (U), mauve for program and center grants (P), and
-smaller categories in gold, sienna, and dark red.
+Grants are classified as "Clinical" if NIH tagged them with Clinical Research,
+Clinical Trials, or Clinical Trials and Supportive Activities in their spending
+categories. All other grants are classified as "Research." The vermillion
+(Clinical) and blue (Research) colors are used consistently in charts C4, C5,
+and C6.
 
-### C5: Core Biomarker Terms by Grant Mechanism
+### C5: Core Biomarker Terms — Clinical vs Research
 
-![Core terms by grant mechanism](charts/core_terms_by_mechanism.png)
+![Core terms: clinical vs research](charts/core_terms_by_mechanism.png)
 
-This chart shows each of the {{ summary.core_terms }} core biomarker terms broken down by grant
-mechanism. These are the terms that unambiguously indicate biomarker research.
-A single grant can match multiple terms, so the rows are not mutually exclusive.
+Each of the {{ summary.core_terms }} core biomarker terms is shown with two bars: blue for
+research funding and vermillion for clinical funding. Terms below $1 billion
+total are collapsed into an "Other" bucket. A single grant can match multiple
+terms, so the rows are not mutually exclusive.
 
-The left panel shows absolute funding and the right panel shows the percentage
-of each term's funding that comes from each grant type. Warm tones indicate
-mechanism types (the same colors as chart C4).
+### C6: Expanded Terms — Clinical vs Research
 
-### C6: Expanded Terms by Grant Mechanism
+![Expanded terms: clinical vs research](charts/expanded_terms_by_mechanism.png)
 
-![Expanded terms by grant mechanism](charts/expanded_terms_by_mechanism.png)
-
-The expanded keyword set adds {{ summary.expanded_terms - summary.core_terms }} broader terms beyond the 13 core terms. Two
-AND-condition terms dominate this set: grants where "clinical" and "omics"
-co-occur, and grants where "clinical" and "imaging" co-occur. Together these
-account for the vast majority of expanded-term funding. These broad matches
-likely include many grants that are not primarily about biomarkers — they
-reflect the co-occurrence of common words in clinical research rather than
-specific biomarker intent. The remaining expanded terms are more targeted but
-individually much smaller.
+The expanded keyword set adds {{ summary.expanded_terms - summary.core_terms }} broader terms beyond the 13 core terms.
+Terms below $1 billion total are collapsed into an "Other" bucket. The two
+largest expanded terms capture grants where "clinical" co-occurs with "omics"
+or "imaging" in the grant record — these co-occurrence terms identify grants
+at the intersection of clinical work and molecular or imaging methodologies.
 
 ## Limitations
 

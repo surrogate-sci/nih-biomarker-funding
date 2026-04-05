@@ -61,6 +61,30 @@ def load_dataset(path: Path = DATASET_PATH) -> pd.DataFrame:
     return df
 
 
+# =============================================================================
+# Grant categories — Clinical vs Research
+# Uses NIH_SPENDING_CATS tags. Edit CLINICAL_TAGS to change the split.
+# =============================================================================
+
+CLINICAL_TAGS = [
+    "Clinical Research",
+    "Clinical Trials",
+    "Clinical Trials and Supportive Activities",
+]
+
+
+def is_clinical(spending_cats) -> bool:
+    """True if any clinical tag appears in the grant's NIH_SPENDING_CATS."""
+    if pd.isna(spending_cats):
+        return False
+    return any(tag in str(spending_cats) for tag in CLINICAL_TAGS)
+
+
+def grant_category(spending_cats) -> str:
+    """Classify a grant as Clinical or Research based on NIH_SPENDING_CATS."""
+    return "Clinical" if is_clinical(spending_cats) else "Research"
+
+
 def activity_category(activity: str) -> str:
     """Map NIH activity codes to broad categories."""
     if not isinstance(activity, str) or len(activity) < 1:

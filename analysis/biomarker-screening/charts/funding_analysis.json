@@ -334,7 +334,7 @@
       2023,
       2024
     ],
-    "institutes": {
+    "top_institutes": {
       "NCI": [
         722843226.0,
         637952409.0,
@@ -449,194 +449,33 @@
         1012254442.0,
         1146948618.0,
         1103766445.0
-      ],
-      "NIMH": [
-        207932684.0,
-        103820996.0,
-        122071916.0,
-        304268518.0,
-        345622144.0,
-        445536893.0,
-        462366300.0,
-        420632330.0,
-        453537313.0,
-        331998815.0,
-        465831098.0,
-        486113892.0,
-        533584208.0,
-        578981442.0,
-        475250297.0,
-        657498113.0,
-        726697792.0,
-        731304259.0,
-        826836419.0,
-        834207179.0,
-        883063101.0
-      ],
-      "NIDDK": [
-        168709759.0,
-        90348499.0,
-        102010167.0,
-        185724505.0,
-        217304571.0,
-        334572193.0,
-        389206875.0,
-        392943815.0,
-        410965704.0,
-        298174619.0,
-        445295779.0,
-        531824553.0,
-        546168071.0,
-        555663799.0,
-        409520431.0,
-        625459192.0,
-        672194148.0,
-        665446807.0,
-        720397144.0,
-        745842382.0,
-        786781974.0
-      ],
-      "NICHD": [
-        137194269.0,
-        64269153.0,
-        62986424.0,
-        140915368.0,
-        153859131.0,
-        218144161.0,
-        235716121.0,
-        224120904.0,
-        232088286.0,
-        176989563.0,
-        252406834.0,
-        306220317.0,
-        301604849.0,
-        327145366.0,
-        263277727.0,
-        428278413.0,
-        433062814.0,
-        456365370.0,
-        481047759.0,
-        541314198.0,
-        509192011.0
-      ],
-      "NIGMS": [
-        48859232.0,
-        37888807.0,
-        50028260.0,
-        94656692.0,
-        94857898.0,
-        136971464.0,
-        149215689.0,
-        121459043.0,
-        264767893.0,
-        166168411.0,
-        261300376.0,
-        267046610.0,
-        314169956.0,
-        339678830.0,
-        224094759.0,
-        361821216.0,
-        367654430.0,
-        397723981.0,
-        412692211.0,
-        430533684.0,
-        415037929.0
-      ],
-      "NIDA": [
-        77452244.0,
-        32268828.0,
-        32958900.0,
-        113296161.0,
-        124184689.0,
-        183777764.0,
-        210884447.0,
-        169962565.0,
-        168886233.0,
-        137196293.0,
-        198016841.0,
-        205785969.0,
-        238980290.0,
-        281637931.0,
-        200442891.0,
-        348354305.0,
-        336829496.0,
-        370411757.0,
-        384832380.0,
-        413358681.0,
-        417299362.0
-      ],
-      "NIBIB": [
-        103481200.0,
-        72769325.0,
-        70056763.0,
-        109872652.0,
-        120337304.0,
-        168726302.0,
-        170190451.0,
-        149140672.0,
-        167262982.0,
-        126860765.0,
-        170301832.0,
-        167383785.0,
-        186006763.0,
-        207088642.0,
-        192527292.0,
-        235606085.0,
-        263319370.0,
-        258016163.0,
-        245336021.0,
-        249292975.0,
-        240623739.0
-      ],
-      "NIAMS": [
-        61746204.0,
-        34684030.0,
-        37436532.0,
-        73461710.0,
-        84132494.0,
-        141314402.0,
-        132538968.0,
-        112782865.0,
-        131382536.0,
-        90783357.0,
-        140449347.0,
-        145128437.0,
-        154970291.0,
-        163817932.0,
-        123870417.0,
-        291369879.0,
-        219946625.0,
-        254586859.0,
-        301020822.0,
-        323493370.0,
-        300373531.0
-      ],
-      "Other": [
-        452349392.0,
-        289325922.0,
-        412567882.0,
-        768403346.0,
-        823513367.0,
-        1384929909.0,
-        1374765058.0,
-        1284023769.0,
-        1495027782.0,
-        1086528630.0,
-        1453604912.0,
-        1580365126.0,
-        1729035648.0,
-        1834914639.0,
-        1662011354.0,
-        2120104305.0,
-        2374544731.0,
-        2294453218.0,
-        2426661526.0,
-        2564142898.0,
-        2578715258.0
       ]
-    }
+    },
+    "other": [
+      1257724984.0,
+      725375560.0,
+      890116844.0,
+      1790598952.0,
+      1963811598.0,
+      3013973088.0,
+      3124883909.0,
+      2875065963.0,
+      3323918729.0,
+      2414700453.0,
+      3387207019.0,
+      3689868689.0,
+      4004520076.0,
+      4288928581.0,
+      3550995168.0,
+      5068491508.0,
+      5394249406.0,
+      5428308414.0,
+      5798824282.0,
+      6102185367.0,
+      6131086905.0
+    ]
   },
-  "mechanism_over_time": {
+  "category_over_time": {
     "years": [
       2004,
       2005,
@@ -660,850 +499,302 @@
       2023,
       2024
     ],
-    "mechanisms": {
-      "Research (R)": [
-        1539850850.0,
-        723086625.0,
-        802362584.0,
-        1645403668.0,
-        1868600423.0,
-        2994428978.0,
-        3253414920.0,
-        2637984811.0,
-        2893749604.0,
-        1768012942.0,
-        2803165519.0,
-        3043779062.0,
-        3708491951.0,
-        4316042258.0,
-        3394492232.0,
-        5452708441.0,
-        6064713902.0,
-        6549630571.0,
-        7149021025.0,
-        7644235152.0,
-        7768630238.0
+    "categories": {
+      "Research": [
+        2870759421.0,
+        1976414510.0,
+        2258067397.0,
+        4193043725.0,
+        2458660734.0,
+        3317335276.0,
+        3690063462.0,
+        3283454496.0,
+        3733209293.0,
+        2752367912.0,
+        3679685955.0,
+        3882536244.0,
+        4494451215.0,
+        5228382859.0,
+        4173680301.0,
+        6015764155.0,
+        6470953780.0,
+        6979568962.0,
+        7771736137.0,
+        7972118214.0,
+        7967684102.0
       ],
-      "Cooperative (U)": [
-        504089497.0,
-        448859333.0,
-        528067497.0,
-        885544029.0,
-        896949774.0,
-        1103201310.0,
-        1198072341.0,
-        1147000504.0,
-        1470134207.0,
-        1146797035.0,
-        1851187806.0,
-        1986939328.0,
-        2096074596.0,
-        2403485789.0,
-        1905374145.0,
-        2878914159.0,
-        3347999918.0,
-        3002931723.0,
-        3396907708.0,
-        3315853955.0,
-        3360435468.0
-      ],
-      "Other": [
-        28286306.0,
-        23551450.0,
-        67870852.0,
-        602999671.0,
-        641018841.0,
-        1246032972.0,
-        1315244077.0,
-        1298734459.0,
-        1428961286.0,
-        1306417902.0,
-        1425080022.0,
-        1432919657.0,
-        1614171029.0,
-        1741663350.0,
-        1633533023.0,
-        1849473756.0,
-        2041470819.0,
-        2311464101.0,
-        2334241933.0,
-        2510671053.0,
-        2449492313.0
-      ],
-      "Program/Center (P)": [
-        641987014.0,
-        645938199.0,
-        708475179.0,
-        811580152.0,
-        822793807.0,
-        996125973.0,
-        994047197.0,
-        961916625.0,
-        1114809740.0,
-        854662415.0,
-        1050193327.0,
-        1041934422.0,
-        1112752298.0,
-        1150320948.0,
-        883519965.0,
-        1228322772.0,
-        1315324427.0,
-        1320612634.0,
-        1377607825.0,
-        1391293797.0,
-        1345023013.0
-      ],
-      "Career Dev (K)": [
-        100746630.0,
-        69248680.0,
-        75940694.0,
-        138256660.0,
-        156894500.0,
-        169317061.0,
-        173898648.0,
-        176982757.0,
-        189120219.0,
-        142329165.0,
-        196984475.0,
-        202562741.0,
-        230500514.0,
-        251881799.0,
-        204994502.0,
-        296246083.0,
-        317859776.0,
-        334200803.0,
-        358084836.0,
-        377385070.0,
-        382888647.0
-      ],
-      "Training (T)": [
-        48905202.0,
-        64114053.0,
-        73303464.0,
-        102873455.0,
-        101843261.0,
-        106073279.0,
-        98480903.0,
-        102645849.0,
-        96823848.0,
-        97838289.0,
-        94921778.0,
-        102438354.0,
-        112327388.0,
-        115254406.0,
-        127705214.0,
-        130745241.0,
-        129528884.0,
-        123932692.0,
-        129390516.0,
-        134346003.0,
-        130333797.0
-      ],
-      "Fellowship (F)": [
-        6893922.0,
-        1616170.0,
-        2047127.0,
-        6386090.0,
-        7416699.0,
-        9376395.0,
-        10348603.0,
-        13036423.0,
-        14060569.0,
-        9814147.0,
-        16085418.0,
-        19163826.0,
-        25449693.0,
-        29844319.0,
-        22352329.0,
-        36675489.0,
-        42012878.0,
-        48493028.0,
-        49278972.0,
-        50729086.0,
-        55491365.0
+      "Clinical": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2036856571.0,
+        3307220692.0,
+        3353443227.0,
+        3054846932.0,
+        3474450180.0,
+        2573503983.0,
+        3757932390.0,
+        3947201146.0,
+        4405316254.0,
+        4780110010.0,
+        3998291109.0,
+        5857321786.0,
+        6787956824.0,
+        6711696590.0,
+        7022796678.0,
+        7452395902.0,
+        7524610739.0
       ]
     }
   },
-  "core_terms_by_mechanism": {
-    "funding": {
-      "biomarker": {
-        "Research (R)": 24983889105.0,
-        "Cooperative (U)": 12662486626.0,
-        "Program/Center (P)": 5514341852.0,
-        "Other": 5884963967.0,
-        "Career Dev (K)": 1208542359.0,
-        "Training (T)": 274803776.0,
-        "Fellowship (F)": 110791943.0
+  "core_terms_by_category": {
+    "terms": [
+      {
+        "term": "biomarker",
+        "category": "Clinical",
+        "total_funding": 26797416112.0,
+        "grant_count": 50853
       },
-      "response to therapy": {
-        "Research (R)": 1306329285.0,
-        "Cooperative (U)": 1102825069.0,
-        "Program/Center (P)": 442256851.0,
-        "Other": 159151266.0,
-        "Career Dev (K)": 76658409.0,
-        "Training (T)": 4448347.0,
-        "Fellowship (F)": 7555675.0
+      {
+        "term": "biomarker",
+        "category": "Research",
+        "total_funding": 23842403516.0,
+        "grant_count": 53322
       },
-      "risk stratification": {
-        "Research (R)": 1874927577.0,
-        "Cooperative (U)": 679433381.0,
-        "Program/Center (P)": 193483723.0,
-        "Other": 163810011.0,
-        "Career Dev (K)": 174073187.0,
-        "Training (T)": 4005510.0,
-        "Fellowship (F)": 6849712.0
+      {
+        "term": "endophenotype",
+        "category": "Clinical",
+        "total_funding": 1635347011.0,
+        "grant_count": 2852
       },
-      "endophenotype": {
-        "Research (R)": 1566693261.0,
-        "Cooperative (U)": 920680471.0,
-        "Program/Center (P)": 293899035.0,
-        "Other": 232867881.0,
-        "Career Dev (K)": 66728823.0,
-        "Training (T)": 5084842.0,
-        "Fellowship (F)": 6451965.0
+      {
+        "term": "endophenotype",
+        "category": "Research",
+        "total_funding": 1457059267.0,
+        "grant_count": 2459
       },
-      "predicting response": {
-        "Research (R)": 1533096431.0,
-        "Cooperative (U)": 565878395.0,
-        "Program/Center (P)": 301212840.0,
-        "Other": 289514546.0,
-        "Career Dev (K)": 93604923.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 8253443.0
+      {
+        "term": "imaging marker",
+        "category": "Clinical",
+        "total_funding": 716737746.0,
+        "grant_count": 1335
       },
-      "patient selection": {
-        "Research (R)": 1070787280.0,
-        "Cooperative (U)": 491455089.0,
-        "Program/Center (P)": 228480363.0,
-        "Other": 180210280.0,
-        "Career Dev (K)": 73589459.0,
-        "Training (T)": 1525183.0,
-        "Fellowship (F)": 5602905.0
+      {
+        "term": "imaging marker",
+        "category": "Research",
+        "total_funding": 319776844.0,
+        "grant_count": 510
       },
-      "surrogate endpoint": {
-        "Research (R)": 522864076.0,
-        "Cooperative (U)": 410789794.0,
-        "Program/Center (P)": 59261262.0,
-        "Other": 36509215.0,
-        "Career Dev (K)": 19728456.0,
-        "Training (T)": 1351059.0,
-        "Fellowship (F)": 486070.0
+      {
+        "term": "patient selection",
+        "category": "Clinical",
+        "total_funding": 1282220953.0,
+        "grant_count": 2759
       },
-      "imaging marker": {
-        "Research (R)": 649675082.0,
-        "Cooperative (U)": 118752264.0,
-        "Program/Center (P)": 165194936.0,
-        "Other": 44132773.0,
-        "Career Dev (K)": 56190427.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 2569108.0
+      {
+        "term": "patient selection",
+        "category": "Research",
+        "total_funding": 769429606.0,
+        "grant_count": 1767
       },
-      "clinical marker": {
-        "Research (R)": 555859537.0,
-        "Cooperative (U)": 205201999.0,
-        "Program/Center (P)": 43221295.0,
-        "Other": 123423713.0,
-        "Career Dev (K)": 51652532.0,
-        "Training (T)": 3088388.0,
-        "Fellowship (F)": 3484307.0
+      {
+        "term": "predicting response",
+        "category": "Clinical",
+        "total_funding": 1682297129.0,
+        "grant_count": 3586
       },
-      "companion diagnostic": {
-        "Research (R)": 206605569.0,
-        "Cooperative (U)": 62221007.0,
-        "Program/Center (P)": 12575364.0,
-        "Other": 34828168.0,
-        "Career Dev (K)": 848262.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 33958.0
+      {
+        "term": "predicting response",
+        "category": "Research",
+        "total_funding": 1109263449.0,
+        "grant_count": 2430
       },
-      "intermediate outcome": {
-        "Research (R)": 138171079.0,
-        "Cooperative (U)": 86187168.0,
-        "Program/Center (P)": 9957531.0,
-        "Other": 22933894.0,
-        "Career Dev (K)": 2653209.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 300169.0
+      {
+        "term": "response to therapy",
+        "category": "Clinical",
+        "total_funding": 1679203603.0,
+        "grant_count": 2744
       },
-      "intermediate endpoint": {
-        "Research (R)": 40694221.0,
-        "Cooperative (U)": 23270201.0,
-        "Program/Center (P)": 16816568.0,
-        "Other": 40116988.0,
-        "Career Dev (K)": 702453.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 0.0
+      {
+        "term": "response to therapy",
+        "category": "Research",
+        "total_funding": 1420021299.0,
+        "grant_count": 2999
+      },
+      {
+        "term": "risk stratification",
+        "category": "Clinical",
+        "total_funding": 2210768296.0,
+        "grant_count": 4428
+      },
+      {
+        "term": "risk stratification",
+        "category": "Research",
+        "total_funding": 885814805.0,
+        "grant_count": 2029
+      },
+      {
+        "term": "surrogate endpoint",
+        "category": "Clinical",
+        "total_funding": 761609952.0,
+        "grant_count": 909
+      },
+      {
+        "term": "surrogate endpoint",
+        "category": "Research",
+        "total_funding": 289379980.0,
+        "grant_count": 562
+      },
+      {
+        "term": "Other (4 terms)",
+        "category": "Clinical",
+        "total_funding": 961629071.0,
+        "grant_count": 2264
+      },
+      {
+        "term": "Other (4 terms)",
+        "category": "Research",
+        "total_funding": 723218509.0,
+        "grant_count": 1629
       }
-    },
-    "counts": {
-      "biomarker": {
-        "Research (R)": 52391,
-        "Cooperative (U)": 14602,
-        "Program/Center (P)": 17982,
-        "Other": 8197,
-        "Career Dev (K)": 7711,
-        "Training (T)": 744,
-        "Fellowship (F)": 2548
-      },
-      "response to therapy": {
-        "Research (R)": 2866,
-        "Cooperative (U)": 922,
-        "Program/Center (P)": 827,
-        "Other": 473,
-        "Career Dev (K)": 462,
-        "Training (T)": 21,
-        "Fellowship (F)": 172
-      },
-      "risk stratification": {
-        "Research (R)": 3474,
-        "Cooperative (U)": 813,
-        "Program/Center (P)": 582,
-        "Other": 397,
-        "Career Dev (K)": 1039,
-        "Training (T)": 7,
-        "Fellowship (F)": 145
-      },
-      "endophenotype": {
-        "Research (R)": 2778,
-        "Cooperative (U)": 725,
-        "Program/Center (P)": 887,
-        "Other": 305,
-        "Career Dev (K)": 431,
-        "Training (T)": 25,
-        "Fellowship (F)": 160
-      },
-      "predicting response": {
-        "Research (R)": 3136,
-        "Cooperative (U)": 832,
-        "Program/Center (P)": 843,
-        "Other": 470,
-        "Career Dev (K)": 544,
-        "Training (T)": 0,
-        "Fellowship (F)": 191
-      },
-      "patient selection": {
-        "Research (R)": 2394,
-        "Cooperative (U)": 576,
-        "Program/Center (P)": 691,
-        "Other": 318,
-        "Career Dev (K)": 426,
-        "Training (T)": 9,
-        "Fellowship (F)": 112
-      },
-      "surrogate endpoint": {
-        "Research (R)": 827,
-        "Cooperative (U)": 210,
-        "Program/Center (P)": 222,
-        "Other": 81,
-        "Career Dev (K)": 114,
-        "Training (T)": 6,
-        "Fellowship (F)": 11
-      },
-      "imaging marker": {
-        "Research (R)": 911,
-        "Cooperative (U)": 125,
-        "Program/Center (P)": 287,
-        "Other": 107,
-        "Career Dev (K)": 353,
-        "Training (T)": 0,
-        "Fellowship (F)": 62
-      },
-      "clinical marker": {
-        "Research (R)": 1253,
-        "Cooperative (U)": 309,
-        "Program/Center (P)": 267,
-        "Other": 206,
-        "Career Dev (K)": 329,
-        "Training (T)": 10,
-        "Fellowship (F)": 82
-      },
-      "companion diagnostic": {
-        "Research (R)": 430,
-        "Cooperative (U)": 83,
-        "Program/Center (P)": 80,
-        "Other": 71,
-        "Career Dev (K)": 6,
-        "Training (T)": 0,
-        "Fellowship (F)": 1
-      },
-      "intermediate outcome": {
-        "Research (R)": 321,
-        "Cooperative (U)": 131,
-        "Program/Center (P)": 30,
-        "Other": 55,
-        "Career Dev (K)": 24,
-        "Training (T)": 0,
-        "Fellowship (F)": 8
-      },
-      "intermediate endpoint": {
-        "Research (R)": 74,
-        "Cooperative (U)": 26,
-        "Program/Center (P)": 14,
-        "Other": 77,
-        "Career Dev (K)": 6,
-        "Training (T)": 0,
-        "Fellowship (F)": 0
-      }
-    },
-    "r_grant_pct": {
-      "biomarker": 49.3,
-      "response to therapy": 42.2,
-      "risk stratification": 60.5,
-      "endophenotype": 50.7,
-      "predicting response": 54.9,
-      "patient selection": 52.2,
-      "surrogate endpoint": 49.7,
-      "imaging marker": 62.7,
-      "clinical marker": 56.4,
-      "companion diagnostic": 65.2,
-      "intermediate outcome": 53.1,
-      "intermediate endpoint": 33.5
-    }
+    ]
   },
-  "expanded_terms_by_mechanism": {
-    "funding": {
-      "clinical+omics": {
-        "Research (R)": 28065686130.0,
-        "Cooperative (U)": 20211990032.0,
-        "Other": 15378495366.0,
-        "Program/Center (P)": 10316303990.0,
-        "Career Dev (K)": 1961000781.0,
-        "Training (T)": 1341209778.0,
-        "Fellowship (F)": 185206857.0
+  "expanded_terms_by_category": {
+    "terms": [
+      {
+        "term": "clinical diagnostics",
+        "category": "Clinical",
+        "total_funding": 718640132.0,
+        "grant_count": 1118
       },
-      "clinical+imaging": {
-        "Research (R)": 32067829526.0,
-        "Cooperative (U)": 12189767661.0,
-        "Other": 11435783862.0,
-        "Program/Center (P)": 10376102776.0,
-        "Career Dev (K)": 1727293942.0,
-        "Training (T)": 876989839.0,
-        "Fellowship (F)": 194642121.0
+      {
+        "term": "clinical diagnostics",
+        "category": "Research",
+        "total_funding": 2090586118.0,
+        "grant_count": 1300
       },
-      "genetic marker": {
-        "Research (R)": 2832897666.0,
-        "Cooperative (U)": 1139038453.0,
-        "Other": 1562866403.0,
-        "Program/Center (P)": 444238973.0,
-        "Career Dev (K)": 146984057.0,
-        "Training (T)": 9753957.0,
-        "Fellowship (F)": 16655184.0
+      {
+        "term": "clinical predictors",
+        "category": "Clinical",
+        "total_funding": 1361442807.0,
+        "grant_count": 2853
       },
-      "clinical diagnostics": {
-        "Research (R)": 642241233.0,
-        "Cooperative (U)": 353442011.0,
-        "Other": 1702923509.0,
-        "Program/Center (P)": 80659832.0,
-        "Career Dev (K)": 26443992.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 3515673.0
+      {
+        "term": "clinical predictors",
+        "category": "Research",
+        "total_funding": 537930302.0,
+        "grant_count": 1246
       },
-      "diagnostic accuracy": {
-        "Research (R)": 1326851985.0,
-        "Cooperative (U)": 442960034.0,
-        "Other": 137958119.0,
-        "Program/Center (P)": 40596925.0,
-        "Career Dev (K)": 63568400.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 3445966.0
+      {
+        "term": "clinical+imaging",
+        "category": "Clinical",
+        "total_funding": 32110916805.0,
+        "grant_count": 60912
       },
-      "patient stratification": {
-        "Research (R)": 1016698765.0,
-        "Cooperative (U)": 607586504.0,
-        "Other": 153241404.0,
-        "Program/Center (P)": 74936584.0,
-        "Career Dev (K)": 48126703.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 6850386.0
+      {
+        "term": "clinical+imaging",
+        "category": "Research",
+        "total_funding": 36757492922.0,
+        "grant_count": 73517
       },
-      "clinical predictors": {
-        "Research (R)": 1191963665.0,
-        "Cooperative (U)": 249833039.0,
-        "Other": 268063563.0,
-        "Program/Center (P)": 84612525.0,
-        "Career Dev (K)": 98894686.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 6005631.0
+      {
+        "term": "clinical+omics",
+        "category": "Clinical",
+        "total_funding": 31831318829.0,
+        "grant_count": 56571
       },
-      "precision oncology": {
-        "Research (R)": 209910406.0,
-        "Cooperative (U)": 353087205.0,
-        "Other": 167930748.0,
-        "Program/Center (P)": 368597423.0,
-        "Career Dev (K)": 12788077.0,
-        "Training (T)": 5105480.0,
-        "Fellowship (F)": 1511226.0
+      {
+        "term": "clinical+omics",
+        "category": "Research",
+        "total_funding": 45628574105.0,
+        "grant_count": 78479
       },
-      "prognostic value": {
-        "Research (R)": 797951431.0,
-        "Cooperative (U)": 83270208.0,
-        "Other": 75874831.0,
-        "Program/Center (P)": 51988626.0,
-        "Career Dev (K)": 41037503.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 4534647.0
+      {
+        "term": "diagnostic accuracy",
+        "category": "Clinical",
+        "total_funding": 1491023122.0,
+        "grant_count": 2795
       },
-      "disease heterogeneity": {
-        "Research (R)": 377853259.0,
-        "Cooperative (U)": 349738353.0,
-        "Other": 30162199.0,
-        "Program/Center (P)": 215793032.0,
-        "Career Dev (K)": 24386809.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 3490636.0
+      {
+        "term": "diagnostic accuracy",
+        "category": "Research",
+        "total_funding": 524358307.0,
+        "grant_count": 1270
       },
-      "clinically actionable": {
-        "Research (R)": 426770362.0,
-        "Cooperative (U)": 291843669.0,
-        "Other": 23010459.0,
-        "Program/Center (P)": 95561965.0,
-        "Career Dev (K)": 27409089.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 3011769.0
+      {
+        "term": "disease heterogeneity",
+        "category": "Clinical",
+        "total_funding": 473619736.0,
+        "grant_count": 818
       },
-      "predictive signature": {
-        "Research (R)": 317696937.0,
-        "Cooperative (U)": 146566130.0,
-        "Other": 184763504.0,
-        "Program/Center (P)": 45552289.0,
-        "Career Dev (K)": 15769153.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 2243893.0
+      {
+        "term": "disease heterogeneity",
+        "category": "Research",
+        "total_funding": 527804552.0,
+        "grant_count": 752
       },
-      "theranostics": {
-        "Research (R)": 400145903.0,
-        "Cooperative (U)": 27597564.0,
-        "Other": 84650205.0,
-        "Program/Center (P)": 99525740.0,
-        "Career Dev (K)": 4502826.0,
-        "Training (T)": 5067472.0,
-        "Fellowship (F)": 1651418.0
+      {
+        "term": "genetic marker",
+        "category": "Clinical",
+        "total_funding": 3107258651.0,
+        "grant_count": 5033
       },
-      "genomic signature": {
-        "Research (R)": 274210296.0,
-        "Cooperative (U)": 153201806.0,
-        "Other": 44782481.0,
-        "Program/Center (P)": 31251908.0,
-        "Career Dev (K)": 11640489.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 1964904.0
+      {
+        "term": "genetic marker",
+        "category": "Research",
+        "total_funding": 3045176042.0,
+        "grant_count": 6492
       },
-      "personalized diagnostics": {
-        "Research (R)": 230210239.0,
-        "Cooperative (U)": 61771088.0,
-        "Other": 28527676.0,
-        "Program/Center (P)": 130944108.0,
-        "Career Dev (K)": 6453105.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 1374543.0
+      {
+        "term": "patient stratification",
+        "category": "Clinical",
+        "total_funding": 1132013047.0,
+        "grant_count": 2029
       },
-      "biosignature": {
-        "Research (R)": 203674465.0,
-        "Cooperative (U)": 216628707.0,
-        "Other": 7969548.0,
-        "Program/Center (P)": 12890108.0,
-        "Career Dev (K)": 9581024.0,
-        "Training (T)": 30550.0,
-        "Fellowship (F)": 254726.0
+      {
+        "term": "patient stratification",
+        "category": "Research",
+        "total_funding": 775427299.0,
+        "grant_count": 1621
       },
-      "proteomic signature": {
-        "Research (R)": 244124010.0,
-        "Cooperative (U)": 70797368.0,
-        "Other": 57296557.0,
-        "Program/Center (P)": 32003217.0,
-        "Career Dev (K)": 6644912.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 1210137.0
+      {
+        "term": "precision oncology",
+        "category": "Clinical",
+        "total_funding": 355752019.0,
+        "grant_count": 610
       },
-      "diagnostic sensitivity": {
-        "Research (R)": 229771539.0,
-        "Cooperative (U)": 35615837.0,
-        "Other": 19564343.0,
-        "Program/Center (P)": 0.0,
-        "Career Dev (K)": 5373315.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 421640.0
+      {
+        "term": "precision oncology",
+        "category": "Research",
+        "total_funding": 763178546.0,
+        "grant_count": 1060
       },
-      "diagnostic specificity": {
-        "Research (R)": 184099832.0,
-        "Cooperative (U)": 24594232.0,
-        "Other": 14519765.0,
-        "Program/Center (P)": 35097908.0,
-        "Career Dev (K)": 6251590.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 680653.0
+      {
+        "term": "prognostic value",
+        "category": "Clinical",
+        "total_funding": 660997995.0,
+        "grant_count": 1500
       },
-      "clinical subtypes": {
-        "Research (R)": 136230187.0,
-        "Cooperative (U)": 80573273.0,
-        "Other": 32211522.0,
-        "Program/Center (P)": 6829608.0,
-        "Career Dev (K)": 3744395.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 349502.0
+      {
+        "term": "prognostic value",
+        "category": "Research",
+        "total_funding": 393659251.0,
+        "grant_count": 1172
       },
-      "digital biomarker": {
-        "Research (R)": 104164381.0,
-        "Cooperative (U)": 70876008.0,
-        "Other": 54391057.0,
-        "Program/Center (P)": 12916368.0,
-        "Career Dev (K)": 6779822.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 0.0
+      {
+        "term": "Other (13 terms)",
+        "category": "Clinical",
+        "total_funding": 2616199462.0,
+        "grant_count": 5128
       },
-      "prognostic assays": {
-        "Research (R)": 158601707.0,
-        "Cooperative (U)": 10297198.0,
-        "Other": 10420693.0,
-        "Program/Center (P)": 38144110.0,
-        "Career Dev (K)": 4252492.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 416873.0
-      },
-      "disease stratification": {
-        "Research (R)": 43523383.0,
-        "Cooperative (U)": 15408833.0,
-        "Other": 15394117.0,
-        "Program/Center (P)": 56461022.0,
-        "Career Dev (K)": 3294854.0,
-        "Training (T)": 0.0,
-        "Fellowship (F)": 438600.0
+      {
+        "term": "Other (13 terms)",
+        "category": "Research",
+        "total_funding": 2848289516.0,
+        "grant_count": 5349
       }
-    },
-    "counts": {
-      "clinical+omics": {
-        "Research (R)": 59954,
-        "Cooperative (U)": 20469,
-        "Other": 9825,
-        "Program/Center (P)": 24966,
-        "Career Dev (K)": 11498,
-        "Training (T)": 4075,
-        "Fellowship (F)": 4263
-      },
-      "clinical+imaging": {
-        "Research (R)": 67763,
-        "Cooperative (U)": 12642,
-        "Other": 11511,
-        "Program/Center (P)": 23826,
-        "Career Dev (K)": 11052,
-        "Training (T)": 3119,
-        "Fellowship (F)": 4516
-      },
-      "genetic marker": {
-        "Research (R)": 5964,
-        "Cooperative (U)": 1359,
-        "Other": 1251,
-        "Program/Center (P)": 1515,
-        "Career Dev (K)": 1002,
-        "Training (T)": 29,
-        "Fellowship (F)": 405
-      },
-      "clinical diagnostics": {
-        "Research (R)": 1349,
-        "Cooperative (U)": 339,
-        "Other": 255,
-        "Program/Center (P)": 231,
-        "Career Dev (K)": 168,
-        "Training (T)": 0,
-        "Fellowship (F)": 76
-      },
-      "diagnostic accuracy": {
-        "Research (R)": 2631,
-        "Cooperative (U)": 355,
-        "Other": 307,
-        "Program/Center (P)": 292,
-        "Career Dev (K)": 401,
-        "Training (T)": 0,
-        "Fellowship (F)": 79
-      },
-      "patient stratification": {
-        "Research (R)": 2111,
-        "Cooperative (U)": 551,
-        "Other": 197,
-        "Program/Center (P)": 350,
-        "Career Dev (K)": 295,
-        "Training (T)": 0,
-        "Fellowship (F)": 146
-      },
-      "clinical predictors": {
-        "Research (R)": 2220,
-        "Cooperative (U)": 501,
-        "Other": 373,
-        "Program/Center (P)": 265,
-        "Career Dev (K)": 601,
-        "Training (T)": 0,
-        "Fellowship (F)": 139
-      },
-      "precision oncology": {
-        "Research (R)": 487,
-        "Cooperative (U)": 326,
-        "Other": 152,
-        "Program/Center (P)": 591,
-        "Career Dev (K)": 69,
-        "Training (T)": 14,
-        "Fellowship (F)": 31
-      },
-      "prognostic value": {
-        "Research (R)": 1683,
-        "Cooperative (U)": 195,
-        "Other": 165,
-        "Program/Center (P)": 260,
-        "Career Dev (K)": 258,
-        "Training (T)": 0,
-        "Fellowship (F)": 111
-      },
-      "disease heterogeneity": {
-        "Research (R)": 653,
-        "Cooperative (U)": 333,
-        "Other": 35,
-        "Program/Center (P)": 320,
-        "Career Dev (K)": 156,
-        "Training (T)": 0,
-        "Fellowship (F)": 73
-      },
-      "clinically actionable": {
-        "Research (R)": 794,
-        "Cooperative (U)": 299,
-        "Other": 95,
-        "Program/Center (P)": 184,
-        "Career Dev (K)": 167,
-        "Training (T)": 0,
-        "Fellowship (F)": 62
-      },
-      "predictive signature": {
-        "Research (R)": 603,
-        "Cooperative (U)": 272,
-        "Other": 117,
-        "Program/Center (P)": 172,
-        "Career Dev (K)": 88,
-        "Training (T)": 0,
-        "Fellowship (F)": 47
-      },
-      "theranostics": {
-        "Research (R)": 958,
-        "Cooperative (U)": 67,
-        "Other": 127,
-        "Program/Center (P)": 270,
-        "Career Dev (K)": 32,
-        "Training (T)": 19,
-        "Fellowship (F)": 38
-      },
-      "genomic signature": {
-        "Research (R)": 569,
-        "Cooperative (U)": 184,
-        "Other": 83,
-        "Program/Center (P)": 124,
-        "Career Dev (K)": 73,
-        "Training (T)": 0,
-        "Fellowship (F)": 35
-      },
-      "personalized diagnostics": {
-        "Research (R)": 458,
-        "Cooperative (U)": 54,
-        "Other": 37,
-        "Program/Center (P)": 133,
-        "Career Dev (K)": 43,
-        "Training (T)": 0,
-        "Fellowship (F)": 29
-      },
-      "biosignature": {
-        "Research (R)": 403,
-        "Cooperative (U)": 232,
-        "Other": 34,
-        "Program/Center (P)": 50,
-        "Career Dev (K)": 53,
-        "Training (T)": 1,
-        "Fellowship (F)": 6
-      },
-      "proteomic signature": {
-        "Research (R)": 406,
-        "Cooperative (U)": 134,
-        "Other": 61,
-        "Program/Center (P)": 57,
-        "Career Dev (K)": 42,
-        "Training (T)": 0,
-        "Fellowship (F)": 26
-      },
-      "diagnostic sensitivity": {
-        "Research (R)": 479,
-        "Cooperative (U)": 53,
-        "Other": 45,
-        "Program/Center (P)": 31,
-        "Career Dev (K)": 32,
-        "Training (T)": 0,
-        "Fellowship (F)": 12
-      },
-      "diagnostic specificity": {
-        "Research (R)": 381,
-        "Cooperative (U)": 43,
-        "Other": 44,
-        "Program/Center (P)": 107,
-        "Career Dev (K)": 41,
-        "Training (T)": 0,
-        "Fellowship (F)": 18
-      },
-      "clinical subtypes": {
-        "Research (R)": 228,
-        "Cooperative (U)": 101,
-        "Other": 63,
-        "Program/Center (P)": 23,
-        "Career Dev (K)": 26,
-        "Training (T)": 0,
-        "Fellowship (F)": 9
-      },
-      "digital biomarker": {
-        "Research (R)": 147,
-        "Cooperative (U)": 18,
-        "Other": 11,
-        "Program/Center (P)": 42,
-        "Career Dev (K)": 43,
-        "Training (T)": 0,
-        "Fellowship (F)": 0
-      },
-      "prognostic assays": {
-        "Research (R)": 349,
-        "Cooperative (U)": 38,
-        "Other": 26,
-        "Program/Center (P)": 92,
-        "Career Dev (K)": 24,
-        "Training (T)": 0,
-        "Fellowship (F)": 10
-      },
-      "disease stratification": {
-        "Research (R)": 89,
-        "Cooperative (U)": 21,
-        "Other": 13,
-        "Program/Center (P)": 48,
-        "Career Dev (K)": 23,
-        "Training (T)": 0,
-        "Fellowship (F)": 9
-      }
-    },
-    "r_grant_pct": {
-      "clinical+omics": 36.2,
-      "clinical+imaging": 46.6,
-      "genetic marker": 46.0,
-      "clinical diagnostics": 22.9,
-      "diagnostic accuracy": 65.8,
-      "patient stratification": 53.3,
-      "clinical predictors": 62.8,
-      "precision oncology": 18.8,
-      "prognostic value": 75.7,
-      "disease heterogeneity": 37.7,
-      "clinically actionable": 49.2,
-      "predictive signature": 44.6,
-      "theranostics": 64.2,
-      "genomic signature": 53.0,
-      "personalized diagnostics": 50.1,
-      "biosignature": 45.2,
-      "proteomic signature": 59.2,
-      "diagnostic sensitivity": 79.0,
-      "diagnostic specificity": 69.4,
-      "clinical subtypes": 52.4,
-      "digital biomarker": 41.8,
-      "prognostic assays": 71.4,
-      "disease stratification": 32.4
-    }
+    ]
   },
   "summary": {
     "total_grants": 344550,
@@ -1529,7 +820,7 @@
     ],
     "core_terms": 13,
     "expanded_terms": 36,
-    "renderer": "datawrapper",
+    "renderer": "seaborn",
     "unique_terms_matched": 35
   }
 }
