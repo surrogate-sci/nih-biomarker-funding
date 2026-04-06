@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'analysis/biomarker-screening/**'
+      - 'scripts/download-dataset.sh'
       - '.github/workflows/biomarker-screening.yml'
   workflow_dispatch:
 
@@ -33,14 +34,20 @@ jobs:
         DATAWRAPPER_API_TOKEN: ${{ secrets.DATAWRAPPER_API_TOKEN }}
       run: python analysis/biomarker-screening/analyze.py
 
-    - name: Commit updated charts
+    - name: Render SUMMARY.md
+      run: python analysis/biomarker-screening/render_summary.py
+
+    - name: Validate SUMMARY.md
+      run: python -m pytest analysis/biomarker-screening/test_summary.py -v
+
+    - name: Commit updated charts and summary
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add analysis/biomarker-screening/charts/
+        git add analysis/biomarker-screening/charts/ analysis/biomarker-screening/SUMMARY.md
         if git diff --cached --quiet; then
-          echo "No chart changes to commit"
+          echo "No changes to commit"
         else
-          git commit -m "analysis: auto-update biomarker screening charts"
+          git commit -m "analysis: auto-update biomarker screening charts and summary"
           git push
         fi

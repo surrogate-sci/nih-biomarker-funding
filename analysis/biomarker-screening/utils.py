@@ -48,16 +48,41 @@ def load_dataset(path: Path = DATASET_PATH) -> pd.DataFrame:
     if "PRIMARY_TERM" not in df.columns:
         df["PRIMARY_TERM"] = ""
 
-    # Fill missing PRIMARY_TERM from MATCHED_TERMS (abstract-only grants have
+    # Fill missing PRIMARY_TERM from MATCHED_TERMS (abstract-only grants may have
     # MATCHED_TERMS but not PRIMARY_TERM from the filter script)
-    mask = df["PRIMARY_TERM"].isna() | (df["PRIMARY_TERM"] == "")
-    has_matched = mask & df["MATCHED_TERMS"].notna() & (df["MATCHED_TERMS"] != "")
-    if has_matched.any():
-        df.loc[has_matched, "PRIMARY_TERM"] = df.loc[
-            has_matched, "MATCHED_TERMS"
-        ].apply(lambda mt: primary_term(mt.split(";")))
+    if "MATCHED_TERMS" in df.columns:
+        mask = df["PRIMARY_TERM"].isna() | (df["PRIMARY_TERM"] == "")
+        has_matched = mask & df["MATCHED_TERMS"].notna() & (df["MATCHED_TERMS"] != "")
+        if has_matched.any():
+            df.loc[has_matched, "PRIMARY_TERM"] = df.loc[
+                has_matched, "MATCHED_TERMS"
+            ].apply(lambda mt: primary_term(mt.split(";")))
 
     return df
+
+
+# =============================================================================
+# Grant categories — Clinical vs Research
+# Uses NIH_SPENDING_CATS tags. Edit CLINICAL_TAGS to change the split.
+# =============================================================================
+
+CLINICAL_TAGS = [
+    "Clinical Research",
+    "Clinical Trials",
+    "Clinical Trials and Supportive Activities",
+]
+
+
+def is_clinical(spending_cats) -> bool:
+    """True if any clinical tag appears in the grant's NIH_SPENDING_CATS."""
+    if pd.isna(spending_cats):
+        return False
+    return any(tag in str(spending_cats) for tag in CLINICAL_TAGS)
+
+
+def grant_category(spending_cats) -> str:
+    """Classify a grant as Clinical or Research based on NIH_SPENDING_CATS."""
+    return "Clinical" if is_clinical(spending_cats) else "Research"
 
 
 def activity_category(activity: str) -> str:

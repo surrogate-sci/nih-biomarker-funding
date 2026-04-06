@@ -1,11 +1,37 @@
+{# Biomarker Screening SUMMARY.md template — rendered by render_summary.py #}
+{# Chart registry: only analyses listed here should be produced by analyze.py #}
+{#- Color palette (enforced in charts.py):
+    COOL tones — core vs expanded distinction:
+      Core terms:     #0072B2 (strong blue)
+      Expanded terms: #56B4E9 (sky blue)
+    WARM tones — grant mechanism categories:
+      Research (R):       #D55E00 (vermillion)
+      Cooperative (U):    #E69F00 (amber)
+      Program/Center (P): #CC79A7 (mauve)
+      Career Dev (K):     #DDAA33 (gold)
+      Training (T):       #BC6C25 (sienna)
+      Fellowship (F):     #9B2226 (dark red)
+      Other:              #BBBBBB (grey)
+    CATEGORICAL — 12 pilot institutes (Okabe-Ito + extended):
+      NCI:   #0072B2    NHLBI: #D55E00    NIA:  #009E73
+      NIAID: #E69F00    NINDS: #CC79A7    NIMH: #56B4E9
+      NIDDK: #F0E442    NICHD: #882255    NIGMS:#332288
+      NIDA:  #AA4499    NIBIB: #44AA99    NIAMS:#999933
+-#}
+{%- macro dollars(val) -%}
+{%- if val >= 10e9 -%}${{ "%.1f"|format(val / 1e9) }}B
+{%- elif val >= 1e9 -%}${{ "%.2f"|format(val / 1e9) }}B
+{%- else -%}${{ "%.2f"|format(val / 1e9) }}B
+{%- endif -%}
+{%- endmacro -%}
 
 # NIH Biomarker Funding: Preliminary Keyword Analysis
 
 ## Purpose
 
 This document characterizes 20 years of NIH-funded research that mentions
-biomarker concepts, based on keyword screening of grant records from 2004 to
-2024. It is a preliminary descriptive analysis — Phase 1 of a two-phase
+biomarker concepts, based on keyword screening of grant records from {{ summary.year_range[0] }} to
+{{ summary.year_range[1] }}. It is a preliminary descriptive analysis — Phase 1 of a two-phase
 pipeline. Phase 2 will use large language models to read each grant's abstract
 and classify what kind of biomarker work was actually proposed, using a
 structured rubric (`data/RUBRIC.md`) that evaluates intended biomarker use,
@@ -21,7 +47,7 @@ biomarker concepts appear across the funding landscape.
 ## Dataset
 
 The dataset was constructed by searching all NIH grant records in the ExPORTER
-database (fiscal years 2004–2024) for 36 biomarker-related keyword terms. Grants
+database (fiscal years {{ summary.year_range[0] }}–{{ summary.year_range[1] }}) for {{ summary.expanded_terms }} biomarker-related keyword terms. Grants
 were matched if any term appeared in the project title, structured keyword fields
 (PROJECT_TERMS), or abstract text. Infrastructure sub-projects (administrative
 cores, shared resources) were excluded by title pattern, but center grants
@@ -30,25 +56,25 @@ themselves (P30, P50) were preserved.
 | Metric | Value |
 |--------|-------|
 | Dataset version | v3.1 |
-| Total grants | 344,550 |
-| Total funding | $175.2 billion |
-| Year range | Fiscal years 2004–2024 |
-| Keyword terms searched | 36 (13 core, 23 expanded) |
-| Terms with at least one match | 35 of 36 |
-| Grants matched via title or keyword fields | 276,161 (80%) |
-| Grants matched via abstract text only | 68,389 (20%) |
+| Total grants | {{ "{:,}".format(summary.total_grants) }} |
+| Total funding | ${{ "%.1f"|format(summary.total_funding_billions) }} billion |
+| Year range | Fiscal years {{ summary.year_range[0] }}–{{ summary.year_range[1] }} |
+| Keyword terms searched | {{ summary.expanded_terms }} ({{ summary.core_terms }} core, {{ summary.expanded_terms - summary.core_terms }} expanded) |
+| Terms with at least one match | {{ summary.unique_terms_matched }} of {{ summary.expanded_terms }} |
+| Grants matched via title or keyword fields | {{ "{:,}".format(summary.keyword_matched_grants) }} ({{ "%.0f"|format(100 * summary.keyword_matched_grants / summary.total_grants) }}%) |
+| Grants matched via abstract text only | {{ "{:,}".format(summary.abstract_only_grants) }} ({{ "%.0f"|format(100 * summary.abstract_only_grants / summary.total_grants) }}%) |
 
-The 13 **core terms** unambiguously indicate biomarker research: *biomarker*,
+The {{ summary.core_terms }} **core terms** unambiguously indicate biomarker research: *biomarker*,
 *clinical marker*, *surrogate endpoint*, *imaging marker*, *endophenotype*,
 *intermediate outcome*, *intermediate endpoint*, *digital endpoint*,
 *risk stratification*, *patient selection*, *companion diagnostic*,
-*predicting response*, and *response to therapy*. The 23 **expanded terms** cast
+*predicting response*, and *response to therapy*. The {{ summary.expanded_terms - summary.core_terms }} **expanded terms** cast
 a wider net, capturing grants that mention biomarker-adjacent concepts like
 *diagnostic accuracy*, *precision oncology*, *genomic signature*, or
 co-occurrence of "clinical" with "omics" or "imaging" terminology.
 
 Grants matching any core term are flagged as definite biomarker research
-(37% of grants, $61.8B). The remaining 63% matched only on expanded terms
+({{ "%.0f"|format(summary.explicit_pct) }}% of grants, {{ dollars(summary.explicit_funding_billions * 1e9) }}). The remaining {{ "%.0f"|format(100 - summary.explicit_pct) }}% matched only on expanded terms
 or abstract text and may include false positives — grants that mention
 biomarker concepts without actually studying biomarkers.
 
@@ -70,7 +96,7 @@ biomarker concepts without actually studying biomarkers.
 ![Biomarker funding over time](charts/spending_over_time.png)
 
 Total NIH biomarker-related funding grew from approximately $3 billion in
-FY2004 to $15 billion in FY2024. Core term matches (definite biomarker
+FY{{ summary.year_range[0] }} to $15 billion in FY{{ summary.year_range[1] }}. Core term matches (definite biomarker
 research, shown in blue) consistently account for about one-third of the total,
 with the remainder (sky blue) captured by broader expanded terms and abstract-text
 matches. The growth is roughly proportional — core and expanded funding grew at
@@ -82,19 +108,9 @@ similar rates over the two decades.
 
 | Institute | Total funding | Grants | Core term rate |
 |-----------|--------------|--------|----------------|
-| NCI (Cancer) | $38.8B | 84,177 | 42% |
-| NHLBI (Heart/Lung/Blood) | $17.9B | 31,751 | 35% |
-| NIA (Aging) | $17.6B | 27,341 | 58% |
-| NIAID (Allergy/Infectious) | $15.7B | 21,740 | 30% |
-| NINDS (Neurological) | $11.1B | 23,066 | 39% |
-| NIMH (Mental Health) | $10.4B | 21,558 | 34% |
-| NIDDK (Diabetes/Digestive) | $9.29B | 22,232 | 36% |
-| NICHD (Child Health) | $5.74B | 12,988 | 35% |
-| LM | $5.02B | 1,023 | 1% |
-| NIGMS (General Medical) | $4.96B | 12,989 | 25% |
-| NIDA (Drug Abuse) | $4.65B | 9,191 | 24% |
-| HG | $4.47B | 4,432 | 8% |
-
+{% for inst in institute_allocation.institutes -%}
+| {{ inst.label }} | {{ dollars(inst.total_funding) }} | {{ "{:,}".format(inst.grant_count) }} | {{ "%.0f"|format(inst.core_pct) }}% |
+{% endfor %}
 
 ### C3: Institute Funding Over Time
 
@@ -118,7 +134,7 @@ and C6.
 
 ![Core terms: clinical vs research](charts/core_terms_by_mechanism.png)
 
-Each of the 13 core biomarker terms is shown with two bars: blue for
+Each of the {{ summary.core_terms }} core biomarker terms is shown with two bars: blue for
 research funding and vermillion for clinical funding. Terms below $1 billion
 total are collapsed into an "Other" bucket. A single grant can match multiple
 terms, so the rows are not mutually exclusive.
@@ -127,7 +143,7 @@ terms, so the rows are not mutually exclusive.
 
 ![Expanded terms: clinical vs research](charts/expanded_terms_by_mechanism.png)
 
-The expanded keyword set adds 23 broader terms beyond the 13 core terms.
+The expanded keyword set adds {{ summary.expanded_terms - summary.core_terms }} broader terms beyond the 13 core terms.
 Terms below $1 billion total are collapsed into an "Other" bucket. The two
 largest expanded terms capture grants where "clinical" co-occurs with "omics"
 or "imaging" in the grant record — these co-occurrence terms identify grants
@@ -162,7 +178,7 @@ time-series charts.
 
 ### Term coverage
 
-1 of 36 keyword terms produced zero matches across the
+{{ summary.expanded_terms - summary.unique_terms_matched }} of {{ summary.expanded_terms }} keyword terms produced zero matches across the
 entire dataset. These terms may not appear in NIH grant language, or they may be
 expressed using different phrasing.
 
@@ -180,4 +196,4 @@ expressed using different phrasing.
 - **Facility screening**: Infrastructure sub-projects (administrative cores,
   shared resources, data cores, tissue procurement) are excluded by title
   pattern matching. Parent center grants (P30, P50) are preserved.
-- **Data quality years**: 2005, 2006, 2013, 2018
+- **Data quality years**: {{ summary.data_quality_years | join(', ') }}
