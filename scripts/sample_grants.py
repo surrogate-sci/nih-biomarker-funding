@@ -222,8 +222,8 @@ def main():
     parser.add_argument(
         "--min-per-stratum",
         type=int,
-        default=25,
-        help="Floor per FY stratum (default: 25)",
+        default=50,
+        help="Floor per FY stratum (default: 50)",
     )
     parser.add_argument(
         "--seed",
