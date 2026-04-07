@@ -298,7 +298,7 @@ def rubric_scorer():
 
 @task
 def biomarker_grading(
-    dataset_path: str = "data/oncology_sample_100per_year.csv",
+    dataset_path: str = "data/pilot_sample_12IC_tiered_seed42.csv",
     rubric_path: str | None = None,
 ) -> Task:
     """Inspect AI task for NIH biomarker grant classification.

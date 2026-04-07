@@ -30,6 +30,7 @@ with ~50% ambiguous classifications. This repo replaces that with a hand-designe
 - **Commit style**: imperative, scoped prefix: `grade: calibrate rubric`, `fetch: add sharder`
 - **Don't use**: `_archive/`, `../edison-benchmarks/`, old skill dirs
 - **Don't invent scientific positions** — never paraphrase domain claims or add causal language Manjari didn't provide
+- **After every `inspect eval` run** — append a row to `logs/manifest.csv` before moving on (schema: Issue #41)
 - **Visualization**: For analysis outputs and publication-quality charts, use Datawrapper (preferred, requires `DATAWRAPPER_API_TOKEN`) or Python data science libraries (seaborn, matplotlib, plotnine, bokeh). Chart.js is acceptable only for quick dev prototyping during iteration — never for analysis outputs or anything shared externally.
 
 ## Pipeline
@@ -108,21 +109,23 @@ gold-label calibration. See Issue #20 for full plan.
 | `data/RUBRIC.md` | Source of truth: classification rubric with "Assign when..." definitions |
 | `scripts/grader_prompt.py` | Loads RUBRIC.md at runtime, constructs system prompt, calls OpenRouter/OpenAI |
 | `scripts/utils.py` | Shared utilities: `load_env()`, `parse_llm_json()` |
-| `scripts/run_calibration.py` | Runs grader on calibration examples (`--model`, `--limit`, `--delay`). Being replaced by Inspect task. |
 | `scripts/abstract_loader.py` | Loads abstracts from RePORTER zip files |
-| `scripts/sample_oncology.py` | Stratified NCI sample + abstract join |
-| `scripts/run_batch_grading.py` | Batch grading with JSONL checkpoint/resume. Being replaced by Inspect eval/eval-set. |
 | `scripts/generate_review.py` | Expert review HTML generator (anti-anchoring design) |
-| `scripts/analyze_agreement.py` | Inter-model agreement analysis. Will be partially replaced by Inspect scorer metrics. |
-| `scripts/extract_disagreements.py` | Extract disagreement patterns for rubric refinement |
 | `inspect_task.py` | Inspect AI task: Dataset loader, Solver, Scorer. Parses codes from RUBRIC.md, supports gold labels, CLI-controlled config. |
+| `scripts/legacy/run_calibration.py` | (archived) Legacy calibration runner — superseded by Inspect task |
+| `scripts/legacy/run_batch_grading.py` | (archived) Legacy batch grader — superseded by Inspect eval/eval-set |
+| `scripts/legacy/analyze_agreement.py` | (archived) Inter-model agreement analysis |
+| `scripts/legacy/extract_disagreements.py` | (archived) Disagreement pattern extractor |
 | `scripts/filter_biomarker_projects.py` | Filters NIH ExPORTER CSVs by keyword term sets (core/expanded) with facility screening |
 | `scripts/keyword_terms.py` | Biomarker keyword term sets, matching logic, and facility screening (imported by filter and analysis scripts) |
 | `scripts/analyze_keyword_distribution.py` | PROJECT_TERMS distribution analysis for keyword coverage audit (issue #27) |
 | `scripts/process_all_years.py` | Batch download + filter FY2004-2024 |
 | `scripts/create_unified_dataset.py` | Merges filtered year CSVs into single dataset |
 | `data/grader_calibration_examples.csv` | 25 easy cases (explicit biomarker terms from 2012 & 2022) |
-| `data/nih_biomarker_unified_2004-2024.csv` | 344,550 grants (276K keyword + 68K abstract-only), 27 columns |
+| `data/pilot_sample_12IC_tiered_seed42.csv` | 21,424 grants across 12 ICs, tiered rates (5% CA, 7% large, 10% small), seed 42; includes ABSTRACT_TEXT |
+| `data/march-pilot-nci-2k/` | Archived March 2026 pilot: oncology sample, grading outputs, calibration results, grading visualizations |
+| `data/nih_biomarker_unified_2004-2024.csv` | 344,550 grants (276K keyword + 68K abstract-only), 30 columns, v3.1 |
+| `logs/manifest.csv` | Run manifest for all `inspect eval` calls — append after every run (schema: Issue #41) |
 
 ## Commands
 
@@ -132,24 +135,23 @@ python3 scripts/process_all_years.py --start-year 2004 --end-year 2024 --skip-do
 python3 scripts/create_unified_dataset.py
 python3 scripts/generate_summary.py
 
-# Phase 2: Sampling + LLM grading (Inspect AI — recommended)
-# Calibration (25 examples, quick turnaround)
-inspect eval inspect_task.py --model openrouter/google/gemini-2.5-flash-lite --temperature 0.0 --limit 25
-# Mid-scale pass (~10-20K grants per institute/year, direct provider APIs)
-inspect eval inspect_task.py --model google/gemini-2.5-flash-lite --temperature 0.0 --max-connections 20
-# Multi-model comparison via eval-set
-inspect eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --log-dir logs/
-# Sensitivity: self-consistency (Issue #20)
-inspect eval inspect_task.py --model google/gemini-2.5-flash-lite --temperature 0.1 --epochs 3 --limit 100
-# Full 270K production run with batch API (50% cost savings)
-inspect eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --batch --log-dir logs/production-v1
-# Browse results
-inspect view
+# Phase 2: Sampling
+python3 scripts/sample_grants.py --unified data/nih_biomarker_unified_2004-2024.csv --abs-dir ~/Downloads --seed 42
 
-# Phase 2: Sampling + LLM grading (legacy hand-rolled scripts)
-python3 scripts/sample_oncology.py --unified data/nih_biomarker_unified_2004-2024.csv --abs-dir ~/Downloads --n 100 --seed 42
-python3 scripts/run_batch_grading.py --sample data/oncology_sample_100per_year.csv --model google/gemini-2.5-flash-lite --output data/oncology_grades_gemini-2.5-flash-lite.jsonl
-python3 scripts/run_calibration.py --model google/gemini-2.5-flash-lite --limit 5
+# Phase 2: LLM grading (Inspect AI)
+# Source GEMINI_API_KEY before running: export $(grep -v '^#' .env | xargs)
+INSPECT=/Users/mnarayan/Documents/Coding/Cloud/nih-biomarker-funding/.venv/bin/inspect
+# Pipeline smoke test (5 samples)
+$INSPECT eval inspect_task.py --model google/gemini-2.5-flash-lite --temperature 0.0 --limit 5 --log-dir logs/test-pipeline/
+# NCI slice (~4.2K grants, batch API)
+$INSPECT eval inspect_task.py --model google/gemini-2.5-flash-lite -T dataset_path=data/nci_sample_v31_seed42.csv --temperature 0.0 --batch --log-dir logs/nci-v31-gemini-flash-lite/
+# Multi-model comparison via eval-set
+$INSPECT eval-set inspect_task.py --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --log-dir logs/
+# Sensitivity: self-consistency (Issue #20)
+$INSPECT eval inspect_task.py --model google/gemini-2.5-flash-lite --temperature 0.1 --epochs 3 --limit 100
+# Browse results
+$INSPECT view
+# ALWAYS after any inspect eval: append a row to logs/manifest.csv (Issue #41)
 
 # Phase 3: Analysis + Expert review
 python3 scripts/analyze_agreement.py --data-dir data/
