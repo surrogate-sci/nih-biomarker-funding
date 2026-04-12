@@ -16,11 +16,8 @@ EXPECTED_SHA="899e8e20f3f5a44d30dacc932cf39b1b7960484999c1db13ed3c10ff1b662b5b"
 PILOT_FILE="$DATA_DIR/pilot_sample_12IC_tiered_seed42.csv"
 PILOT_SHA="5824dc824a84b937be069521759339819a4b85b6a9043285a12c3c29b7356d10"
 
-NCI_FILE="$DATA_DIR/nci_sample_v31_seed42.csv"
-NCI_SHA="f5a6baa932d8812994991544547b9d16968e901762c6d90fce841ea9193953e8"
-
-if [ -f "$CSV_FILE" ] && [ -f "$PILOT_FILE" ] && [ -f "$NCI_FILE" ]; then
-    echo "All dataset files present, skipping download."
+if [ -f "$CSV_FILE" ] && [ -f "$PILOT_FILE" ]; then
+    echo "Dataset and pilot sample already present, skipping download."
     exit 0
 fi
 
@@ -94,40 +91,6 @@ if [ -f "$PILOT_FILE" ]; then
     echo "Pilot sample ready: $(wc -l < "$PILOT_FILE") rows, SHA256 verified."
 else
     echo "ERROR: Pilot sample download failed. Options:"
-    echo "  1. Set GITHUB_TOKEN env var and retry"
-    echo "  2. Run 'gh auth login' and retry"
-    echo "  3. Download manually from GitHub releases and place in $DATA_DIR/"
-    exit 1
-fi
-
-# Download NCI sample if not already present
-if [ ! -f "$NCI_FILE" ]; then
-    echo "Downloading NCI sample..."
-    if command -v gh &>/dev/null && gh auth status &>/dev/null; then
-        gh release download "$TAG" --repo "$REPO" --dir "$DATA_DIR" --pattern "nci_sample_v31_seed42.csv"
-    elif [ -n "${GITHUB_TOKEN:-}" ]; then
-        curl -L -H "Authorization: token $GITHUB_TOKEN" \
-            -o "$NCI_FILE" \
-            "https://github.com/$REPO/releases/download/$TAG/nci_sample_v31_seed42.csv"
-    else
-        curl -L -o "$NCI_FILE" \
-            "https://github.com/$REPO/releases/download/$TAG/nci_sample_v31_seed42.csv"
-    fi
-fi
-
-if [ -f "$NCI_FILE" ]; then
-    ACTUAL_NCI_SHA=$(shasum -a 256 "$NCI_FILE" 2>/dev/null || sha256sum "$NCI_FILE" 2>/dev/null)
-    ACTUAL_NCI_SHA="${ACTUAL_NCI_SHA%% *}"
-    if [ "$ACTUAL_NCI_SHA" != "$NCI_SHA" ]; then
-        echo "ERROR: NCI sample SHA256 mismatch!"
-        echo "  Expected: $NCI_SHA"
-        echo "  Got:      $ACTUAL_NCI_SHA"
-        echo "  Update NCI_SHA in this script if the NCI sample was intentionally changed."
-        exit 1
-    fi
-    echo "NCI sample ready: $(wc -l < "$NCI_FILE") rows, SHA256 verified."
-else
-    echo "ERROR: NCI sample download failed. Options:"
     echo "  1. Set GITHUB_TOKEN env var and retry"
     echo "  2. Run 'gh auth login' and retry"
     echo "  3. Download manually from GitHub releases and place in $DATA_DIR/"
