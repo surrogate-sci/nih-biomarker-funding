@@ -161,8 +161,8 @@ class TestCodeEnums(unittest.TestCase):
     """Verify code enum sets match RUBRIC.md counts."""
 
     def test_dim1_count(self):
-        """Dimension 1 has exactly 20 codes."""
-        self.assertEqual(len(VALID_DIM1), 20)
+        """Dimension 1 has exactly 21 codes."""
+        self.assertEqual(len(VALID_DIM1), 21)
 
     def test_dim2_count(self):
         """Dimension 2 has exactly 10 codes."""

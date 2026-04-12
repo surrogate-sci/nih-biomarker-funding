@@ -53,6 +53,14 @@ The key distinction is whether the grant is *providing support for* biomarker st
 
 When assigned, Dimension 2 and Dimension 3 are null — do not assign codes for research design or evidence strength.
 
+**`disease_non_biomarker`** — Assign when the grant is substantive research on a disease — studying its biology, developing treatments, optimizing therapy delivery, or preventing it — but biomarker use is neither a primary aim nor a significant component of the research methodology. The grant matched keyword screening because a molecule, assay, or measurement is mentioned incidentally, or because a studied molecule has biomarker relevance in other contexts while being investigated here purely for its mechanistic or therapeutic role.
+
+Biomarker use is a **primary or significant component** when: the grant uses biomarkers to investigate disease processes; discovers biomarkers or biomarker assay technologies; or applies a biomarker in any defined context of use (diagnosis, prognosis, prediction, monitoring, pharmacodynamics, etc.). When disease research is structured around a biomarker as a primary or significant methodological component — in any context, not limited to specific therapeutic or regulatory strategies — assign the appropriate biomarker code rather than `disease_non_biomarker`.
+
+Distinguish from `not_applicable`: `not_applicable` is for support infrastructure not itself conducting research; `disease_non_biomarker` is for grants conducting disease research in which biomarker use plays no primary or significant role.
+
+When assigned, Dimension 2 and Dimension 3 are null — do not assign codes for research design or evidence strength.
+
 ---
 
 ## Decision Hierarchy for Dimension 1
@@ -61,7 +69,11 @@ When classifying, apply these rules in order:
 
 ### Step 0: Is this grant substantively about biomarker research?
 
-If the grant's primary purpose is infrastructure, administration, cohort recruitment, health economics, or methodology with no direct biomarker measurement or validation component — assign `not_applicable`. Stop here; leave Dim2 and Dim3 null.
+First determine the primary nature of the grant:
+
+- **Infrastructure or support** (specimen banking, data distribution, coordinating administration, support cores where biomarker work is done by other investigators) → `not_applicable`. Stop here; Dim2 and Dim3 are null.
+- **Disease research without a biomarker component** (studying disease mechanisms, developing treatments, optimizing therapy, prevention, clinical outcomes where biomarker use is neither a primary aim nor a significant methodological component) → `disease_non_biomarker`. Stop here; Dim2 and Dim3 are null.
+- **Biomarker research** (primary aim or significant component is developing, discovering, validating, or applying a biomarker) → continue to Step 1.
 
 ### Step 1: Is this a methods grant?
 
