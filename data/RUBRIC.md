@@ -47,7 +47,11 @@ Based on FDA-NIH BEST framework with extensions for NIH research contexts.
 
 **`methods_correlational`** — Assign when the primary aim is developing statistical or computational methods for biomarker discovery, evaluation, or application that rely on associational evidence. Includes methods for prediction, classification, regression, feature selection, supervised machine learning, and risk scoring. Distinguish from `methods_causal` by the inferential framework: methods_correlational develops tools for association and prediction often using standard machine learning language or what Judea Pearl would call "rung 0" on his ladder of causation, whereas methods_causal more explicitly identifies when the biomarker context of use implies causal concepts on "rung 1" or "rung 2". Methods develop tools while recognizing causal identification conditions, good estimation of causal estimands and may consider what experimental designs can verify how good such methods are.
 
-**`not_applicable`** — Assign when the grant matched keyword screening but is not substantively about biomarker research. Examples: satellite or administrative cores, infrastructure supplements, cost-effectiveness or health policy analyses, cohort recruitment infrastructure without biomarker measurement or validation as a primary aim. When assigned, Dimension 2 and Dimension 3 are null — do not assign codes for research design or evidence strength.
+**`not_applicable`** — Assign when the grant matched keyword screening but is not substantively about biomarker research. Examples: satellite or administrative cores, infrastructure supplements, cost-effectiveness or health policy analyses, cohort recruitment infrastructure without biomarker measurement or validation as a primary aim.
+
+The key distinction is whether the grant is *providing support for* biomarker studies versus *conducting* them. Grants whose primary purpose is specimen banking, data distribution, coordinating infrastructure, or administrative management of a network — where the biomarker work is done by other investigators using the resources — assign `not_applicable`. Grants that conduct actual biomarker research, including technology or measurement development to develop or validate biomarkers (e.g., developing and validating quantitative imaging methods as biomarkers, even when funded through a shared-resource mechanism), do NOT assign `not_applicable`.
+
+When assigned, Dimension 2 and Dimension 3 are null — do not assign codes for research design or evidence strength.
 
 ---
 
