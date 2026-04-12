@@ -14,10 +14,10 @@ TAG="dataset-release-v3.1"
 EXPECTED_SHA="899e8e20f3f5a44d30dacc932cf39b1b7960484999c1db13ed3c10ff1b662b5b"
 
 PILOT_FILE="$DATA_DIR/pilot_sample_12IC_tiered_seed42.csv"
-PILOT_SHA="3db257e5776bdf35176837e0dc4d2edb29d736e9845362b78d67b49b86add6c6"
+PILOT_SHA="5824dc824a84b937be069521759339819a4b85b6a9043285a12c3c29b7356d10"
 
 NCI_FILE="$DATA_DIR/nci_sample_v31_seed42.csv"
-NCI_SHA="<TO_BE_FILLED_AFTER_UPLOAD>"
+NCI_SHA="f5a6baa932d8812994991544547b9d16968e901762c6d90fce841ea9193953e8"
 
 if [ -f "$CSV_FILE" ] && [ -f "$PILOT_FILE" ] && [ -f "$NCI_FILE" ]; then
     echo "All dataset files present, skipping download."

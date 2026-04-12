@@ -122,7 +122,8 @@ gold-label calibration. See Issue #20 for full plan.
 | `scripts/process_all_years.py` | Batch download + filter FY2004-2024 |
 | `scripts/create_unified_dataset.py` | Merges filtered year CSVs into single dataset |
 | `data/grader_calibration_examples.csv` | 25 easy cases (explicit biomarker terms from 2012 & 2022) |
-| `data/pilot_sample_12IC_tiered_seed42.csv` | 21,424 grants across 12 ICs, tiered rates (5% CA, 7% large, 10% small), seed 42; includes ABSTRACT_TEXT |
+| `data/pilot_sample_12IC_tiered_seed42.csv` | 20,644 grants across 12 ICs, tiered rates (5% CA, 7% large, 10% small), seed 42; includes ABSTRACT_TEXT; P30 excluded unless NIH_SPENDING_CATS contains 'clinical' |
+| `data/nci_sample_v31_seed42.csv` | 3,770 CA grants — CA subset of pilot_sample_12IC, on GitHub release dataset-release-v3.1 |
 | `data/march-pilot-nci-2k/` | Archived March 2026 pilot: oncology sample, grading outputs, calibration results, grading visualizations |
 | `data/nih_biomarker_unified_2004-2024.csv` | 344,550 grants (276K keyword + 68K abstract-only), 30 columns, v3.1 |
 | `logs/manifest.csv` | Run manifest for all `inspect eval` calls — append after every run (schema: Issue #41) |
