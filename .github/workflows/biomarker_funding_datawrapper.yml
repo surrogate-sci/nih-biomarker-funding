@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - data/filtered/SUMMARY.md
       - scripts/plot_public_figures.py
 
 jobs:
