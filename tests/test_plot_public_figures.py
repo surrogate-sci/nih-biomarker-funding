@@ -71,11 +71,11 @@ def test_cumulative_monotone():
 
 
 def test_cumulative_final_totals():
-    """Spot-check known totals from SUMMARY.md."""
+    """Spot-check known totals from dataset v3.0."""
     core_cum = cumulative(CORE_ANNUAL_B)
     ext_cum = cumulative(EXPANDED_ANNUAL_B)
-    assert abs(core_cum[-1] - 35.77) < 0.01, f"Core total {core_cum[-1]} ≠ 35.77"
-    assert abs(ext_cum[-1] - 134.48) < 0.01, f"Expanded total {ext_cum[-1]} ≠ 134.48"
+    assert abs(core_cum[-1] - 61.84) < 0.01, f"Core total {core_cum[-1]} ≠ 61.84"
+    assert abs(ext_cum[-1] - 175.21) < 0.01, f"Expanded total {ext_cum[-1]} ≠ 175.21"
 
 
 # ---------------------------------------------------------------------------
