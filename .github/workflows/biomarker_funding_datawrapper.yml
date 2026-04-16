@@ -1,0 +1,107 @@
+name: Update Datawrapper — Biomarker Funding
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - data/filtered/SUMMARY.md
+      - scripts/plot_public_figures.py
+
+jobs:
+  update-datawrapper:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests pytest
+
+      - name: Run tests
+        env:
+          DATAWRAPPER_API_TOKEN: ${{ secrets.DATAWRAPPER_API_TOKEN }}
+        run: python -m pytest tests/test_plot_public_figures.py -v
+
+      - name: Update Datawrapper and export PNGs
+        env:
+          DATAWRAPPER_API_TOKEN: ${{ secrets.DATAWRAPPER_API_TOKEN }}
+        run: python scripts/plot_public_figures.py
+
+      - name: Push PNGs to surrogate-sci/biomarker-funding
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          gh auth status
+
+          REPO="surrogate-sci/biomarker-funding"
+
+          push_png() {
+            local src="$1"
+            local dest="$2"
+            local msg="$3"
+
+            SHA=$(gh api repos/$REPO/contents/$dest --jq '.sha' 2>/dev/null || echo "")
+            B64=$(base64 -w 0 "$src")
+
+            if [ -n "$SHA" ]; then
+              gh api --method PUT repos/$REPO/contents/$dest \
+                --field message="$msg" \
+                --field content="$B64" \
+                --field sha="$SHA"
+            else
+              gh api --method PUT repos/$REPO/contents/$dest \
+                --field message="$msg" \
+                --field content="$B64"
+            fi
+          }
+
+          push_png \
+            visualizations/annual_biomarker_funding_2024dollars.png \
+            data/fig-1/annual_biomarker_funding_2024dollars.png \
+            "ci: update annual (2024\$) funding figure"
+
+          push_png \
+            visualizations/cumulative_biomarker_funding_2024dollars.png \
+            data/fig-1/cumulative_biomarker_funding_2024dollars.png \
+            "ci: update cumulative (2024\$) funding figure"
+
+          push_csv() {
+            local src="$1"
+            local dest="$2"
+            local msg="$3"
+
+            SHA=$(gh api repos/$REPO/contents/$dest --jq '.sha' 2>/dev/null || echo "")
+            B64=$(base64 -w 0 "$src")
+
+            if [ -n "$SHA" ]; then
+              gh api --method PUT repos/$REPO/contents/$dest \
+                --field message="$msg" \
+                --field content="$B64" \
+                --field sha="$SHA"
+            else
+              gh api --method PUT repos/$REPO/contents/$dest \
+                --field message="$msg" \
+                --field content="$B64"
+            fi
+          }
+
+          push_csv \
+            data/biomarker_cumulative_funding_by_year.csv \
+            data/fig-1/biomarker_cumulative_funding_by_year.csv \
+            "ci: update core term set CSV"
+
+          push_csv \
+            data/extended_biomarker_cumulative_funding_by_year.csv \
+            data/fig-1/extended_biomarker_cumulative_funding_by_year.csv \
+            "ci: update expanded term set CSV"
+
+          push_csv \
+            data/biomarker_funding_2004_2024_with_cpi_adjustment.csv \
+            data/fig-1/biomarker_funding_2004_2024_with_cpi_adjustment.csv \
+            "ci: update combined CPI-adjusted CSV"
