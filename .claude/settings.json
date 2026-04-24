@@ -10,5 +10,27 @@
         ]
       }
     ]
-  }
+  },
+  "PreToolUse": [
+    {
+      "matcher": "Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-rubric.sh"
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/ruff-format.sh"
+        }
+      ]
+    }
+  ]
 }
