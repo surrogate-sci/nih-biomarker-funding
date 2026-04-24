@@ -1,6 +1,7 @@
 """Tests for the Inspect AI biomarker grading task."""
 
 import json
+import unittest
 
 from inspect_ai import Task
 from inspect_ai.dataset import Sample
@@ -25,7 +26,7 @@ from scripts.grader_prompt import USER_PROMPT_TEMPLATE, build_system_prompt, loa
 # ---------------------------------------------------------------------------
 
 
-class TestRecordToSample:
+class TestRecordToSample(unittest.TestCase):
     """Tests for the dataset loader."""
 
     def test_oncology_format(self):
@@ -44,17 +45,17 @@ class TestRecordToSample:
         }
         sample = record_to_sample(record)
 
-        assert isinstance(sample, Sample)
-        assert sample.id == "12345"
-        assert "Biomarker study" in sample.input
-        assert "This study examines biomarkers." in sample.input
-        assert sample.metadata["fy"] == "2020"
-        assert sample.metadata["ic"] == "CA"
-        assert sample.metadata["ic_name"] == "NATIONAL CANCER INSTITUTE"
-        assert sample.metadata["activity"] == "R01"
-        assert sample.metadata["total_cost"] == "500000.0"
-        assert sample.metadata["explicit_biomarker"] is True
-        assert sample.metadata["has_abstract"] is True
+        self.assertIsInstance(sample, Sample)
+        self.assertEqual(sample.id, "12345")
+        self.assertIn("Biomarker study", sample.input)
+        self.assertIn("This study examines biomarkers.", sample.input)
+        self.assertEqual(sample.metadata["fy"], "2020")
+        self.assertEqual(sample.metadata["ic"], "CA")
+        self.assertEqual(sample.metadata["ic_name"], "NATIONAL CANCER INSTITUTE")
+        self.assertEqual(sample.metadata["activity"], "R01")
+        self.assertEqual(sample.metadata["total_cost"], "500000.0")
+        self.assertTrue(sample.metadata["explicit_biomarker"])
+        self.assertTrue(sample.metadata["has_abstract"])
 
     def test_calibration_format(self):
         """Calibration CSV row maps correctly to Sample."""
@@ -70,16 +71,16 @@ class TestRecordToSample:
         }
         sample = record_to_sample(record)
 
-        assert isinstance(sample, Sample)
-        assert sample.id == "8303985"
-        assert "Genome-wide DNA Methylation" in sample.input
-        assert "This study identifies biomarkers for AML." in sample.input
-        assert sample.metadata["fy"] == "2012"
-        assert sample.metadata["matched_terms"] == "pharmacodynamic biomarker"
+        self.assertIsInstance(sample, Sample)
+        self.assertEqual(sample.id, "8303985")
+        self.assertIn("Genome-wide DNA Methylation", sample.input)
+        self.assertIn("This study identifies biomarkers for AML.", sample.input)
+        self.assertEqual(sample.metadata["fy"], "2012")
+        self.assertEqual(sample.metadata["matched_terms"], "pharmacodynamic biomarker")
         # Calibration CSVs lack HAS_ABSTRACT — should fall back to bool(abstract.strip())
-        assert sample.metadata["has_abstract"] is True
+        self.assertTrue(sample.metadata["has_abstract"])
         # Calibration CSVs lack EXPLICIT_BIOMARKER — should default to False
-        assert sample.metadata["explicit_biomarker"] is False
+        self.assertFalse(sample.metadata["explicit_biomarker"])
 
     def test_missing_abstract(self):
         """Sample is created even when abstract is empty."""
@@ -90,20 +91,20 @@ class TestRecordToSample:
         }
         sample = record_to_sample(record)
 
-        assert isinstance(sample, Sample)
-        assert sample.id == "99999"
-        assert "Title only grant" in sample.input
+        self.assertIsInstance(sample, Sample)
+        self.assertEqual(sample.id, "99999")
+        self.assertIn("Title only grant", sample.input)
         # The abstract portion should be empty but the template still renders
-        assert "**Title:**" in sample.input
-        assert "**Abstract:**" in sample.input
+        self.assertIn("**Title:**", sample.input)
+        self.assertIn("**Abstract:**", sample.input)
         # No HAS_ABSTRACT column and no abstract text → has_abstract is False
-        assert sample.metadata["has_abstract"] is False
+        self.assertFalse(sample.metadata["has_abstract"])
         # No EXPLICIT_BIOMARKER column → explicit_biomarker is False
-        assert sample.metadata["explicit_biomarker"] is False
+        self.assertFalse(sample.metadata["explicit_biomarker"])
 
     def test_input_template_matches_grader_prompt(self):
         """_INPUT_TEMPLATE in inspect_task.py is the same as USER_PROMPT_TEMPLATE."""
-        assert _INPUT_TEMPLATE == USER_PROMPT_TEMPLATE
+        self.assertEqual(_INPUT_TEMPLATE, USER_PROMPT_TEMPLATE)
 
     def test_gold_labels_set_target(self):
         """When GOLD_DIM* columns are present, Sample.target is set."""
@@ -117,11 +118,11 @@ class TestRecordToSample:
             "GOLD_DIM3": "correlational",
         }
         sample = record_to_sample(record)
-        assert sample.target is not None
+        self.assertIsNotNone(sample.target)
         target = json.loads(sample.target)
-        assert target["dim1"] == "diagnostic"
-        assert target["dim2"] == "observational_cohort"
-        assert target["dim3"] == "correlational"
+        self.assertEqual(target["dim1"], "diagnostic")
+        self.assertEqual(target["dim2"], "observational_cohort")
+        self.assertEqual(target["dim3"], "correlational")
 
     def test_no_gold_labels_target_is_empty(self):
         """Without GOLD_DIM* columns, Sample.target is empty string."""
@@ -132,7 +133,7 @@ class TestRecordToSample:
             "ABSTRACT_TEXT": "Abstract.",
         }
         sample = record_to_sample(record)
-        assert sample.target == ""
+        self.assertEqual(sample.target, "")
 
     def test_partial_gold_labels(self):
         """Partial gold labels (only some dimensions) still set target."""
@@ -144,11 +145,11 @@ class TestRecordToSample:
             "GOLD_DIM1": "diagnostic",
         }
         sample = record_to_sample(record)
-        assert sample.target is not None
+        self.assertIsNotNone(sample.target)
         target = json.loads(sample.target)
-        assert target["dim1"] == "diagnostic"
-        assert "dim2" not in target
-        assert "dim3" not in target
+        self.assertEqual(target["dim1"], "diagnostic")
+        self.assertNotIn("dim2", target)
+        self.assertNotIn("dim3", target)
 
 
 # ---------------------------------------------------------------------------
@@ -156,42 +157,42 @@ class TestRecordToSample:
 # ---------------------------------------------------------------------------
 
 
-class TestCodeEnums:
+class TestCodeEnums(unittest.TestCase):
     """Verify code enum sets match RUBRIC.md counts."""
 
     def test_dim1_count(self):
-        """Dimension 1 has exactly 17 codes."""
-        assert len(VALID_DIM1) == 17
+        """Dimension 1 has exactly 21 codes."""
+        self.assertEqual(len(VALID_DIM1), 21)
 
     def test_dim2_count(self):
         """Dimension 2 has exactly 10 codes."""
-        assert len(VALID_DIM2) == 10
+        self.assertEqual(len(VALID_DIM2), 10)
 
     def test_dim3_count(self):
         """Dimension 3 has exactly 5 codes."""
-        assert len(VALID_DIM3) == 5
+        self.assertEqual(len(VALID_DIM3), 5)
 
     def test_parse_rubric_codes_returns_three_dimensions(self):
         """parse_rubric_codes returns codes for dimensions 1, 2, and 3."""
         codes = parse_rubric_codes()
-        assert set(codes.keys()) == {1, 2, 3}
+        self.assertEqual(set(codes.keys()), {1, 2, 3})
 
     def test_parsed_codes_match_module_level_sets(self):
         """Module-level VALID_DIM* sets match what parse_rubric_codes returns."""
         codes = parse_rubric_codes()
-        assert codes[1] == VALID_DIM1
-        assert codes[2] == VALID_DIM2
-        assert codes[3] == VALID_DIM3
+        self.assertEqual(codes[1], VALID_DIM1)
+        self.assertEqual(codes[2], VALID_DIM2)
+        self.assertEqual(codes[3], VALID_DIM3)
 
     def test_specific_codes_present(self):
         """Spot-check that well-known codes are present in each dimension."""
-        assert "diagnostic" in VALID_DIM1
-        assert "surrogate_endpoint" in VALID_DIM1
-        assert "methods_causal" in VALID_DIM1
-        assert "experimental_rct" in VALID_DIM2
-        assert "observational_cohort" in VALID_DIM2
-        assert "correlational" in VALID_DIM3
-        assert "causal_clinical" in VALID_DIM3
+        self.assertIn("diagnostic", VALID_DIM1)
+        self.assertIn("surrogate_endpoint", VALID_DIM1)
+        self.assertIn("methods_causal", VALID_DIM1)
+        self.assertIn("experimental_rct", VALID_DIM2)
+        self.assertIn("observational_cohort", VALID_DIM2)
+        self.assertIn("correlational", VALID_DIM3)
+        self.assertIn("causal_clinical", VALID_DIM3)
 
 
 # ---------------------------------------------------------------------------
@@ -199,13 +200,13 @@ class TestCodeEnums:
 # ---------------------------------------------------------------------------
 
 
-class TestRubricSolver:
+class TestRubricSolver(unittest.TestCase):
     """Tests for the rubric solver."""
 
     def test_solver_is_callable(self):
         """rubric_solver() returns a callable Solver."""
         s = rubric_solver()
-        assert callable(s)
+        self.assertTrue(callable(s))
 
     def test_system_prompt_contains_rubric_codes(self):
         """The built system prompt includes key rubric codes."""
@@ -213,22 +214,24 @@ class TestRubricSolver:
         prompt = build_system_prompt(rubric_text)
 
         # Check a sampling of codes from each dimension
-        assert "susceptibility_risk" in prompt
-        assert "predictive_optimal" in prompt
-        assert "methods_correlational" in prompt
-        assert "observational_retrospective" in prompt
-        assert "experimental_rct" in prompt
-        assert "methods_secondary_analysis" in prompt
-        assert "correlational" in prompt
-        assert "causal_clinical" in prompt
-        assert "methods_for_causal" in prompt
+        self.assertIn("susceptibility_risk", prompt)
+        self.assertIn("predictive_optimal", prompt)
+        self.assertIn("methods_correlational", prompt)
+        self.assertIn("observational_retrospective", prompt)
+        self.assertIn("experimental_rct", prompt)
+        self.assertIn("methods_secondary_analysis", prompt)
+        self.assertIn("correlational", prompt)
+        self.assertIn("causal_clinical", prompt)
+        self.assertIn("methods_for_causal", prompt)
 
     def test_system_prompt_excludes_references(self):
         """The system prompt strips the References section."""
         rubric_text = load_rubric()
         prompt = build_system_prompt(rubric_text)
-        assert "## References" not in prompt
-        assert "FDA-NIH BEST" not in prompt or "SOURCE OF TRUTH" not in prompt
+        self.assertNotIn("## References", prompt)
+        self.assertTrue(
+            "FDA-NIH BEST" not in prompt or "SOURCE OF TRUTH" not in prompt
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -236,7 +239,7 @@ class TestRubricSolver:
 # ---------------------------------------------------------------------------
 
 
-class TestParseClassification:
+class TestParseClassification(unittest.TestCase):
     """Tests for the classification parser."""
 
     def test_valid_json(self):
@@ -259,12 +262,12 @@ class TestParseClassification:
         raw = json.dumps(payload)
         result = _parse_classification(raw)
 
-        assert result is not None
-        assert result["biomarker_use"]["primary"] == "diagnostic"
-        assert result["research_design"]["primary"] == "observational_cohort"
-        assert result["evidence_strength"]["code"] == "correlational"
-        assert result["valid"] is True
-        assert result["invalid_codes"] == []
+        self.assertIsNotNone(result)
+        self.assertEqual(result["biomarker_use"]["primary"], "diagnostic")
+        self.assertEqual(result["research_design"]["primary"], "observational_cohort")
+        self.assertEqual(result["evidence_strength"]["code"], "correlational")
+        self.assertTrue(result["valid"])
+        self.assertEqual(result["invalid_codes"], [])
 
     def test_markdown_fenced_json(self):
         """JSON wrapped in markdown code fences parses correctly."""
@@ -286,9 +289,9 @@ class TestParseClassification:
         raw = f"```json\n{json.dumps(payload)}\n```"
         result = _parse_classification(raw)
 
-        assert result is not None
-        assert result["biomarker_use"]["primary"] == "monitoring"
-        assert result["valid"] is True
+        self.assertIsNotNone(result)
+        self.assertEqual(result["biomarker_use"]["primary"], "monitoring")
+        self.assertTrue(result["valid"])
 
     def test_bare_fenced_json(self):
         """JSON wrapped in bare ``` fences parses correctly."""
@@ -310,20 +313,20 @@ class TestParseClassification:
         raw = f"```\n{json.dumps(payload)}\n```"
         result = _parse_classification(raw)
 
-        assert result is not None
-        assert result["biomarker_use"]["primary"] == "safety"
-        assert result["valid"] is True
+        self.assertIsNotNone(result)
+        self.assertEqual(result["biomarker_use"]["primary"], "safety")
+        self.assertTrue(result["valid"])
 
     def test_malformed_json(self):
         """Malformed JSON returns None."""
         raw = "This is not JSON at all {broken"
         result = _parse_classification(raw)
-        assert result is None
+        self.assertIsNone(result)
 
     def test_non_dict_json(self):
         """Valid JSON that is not a dict returns None."""
         result = _parse_classification("[1, 2, 3]")
-        assert result is None
+        self.assertIsNone(result)
 
     def test_invalid_codes_reports_which_dimensions(self):
         """JSON with invalid codes parses but reports invalid dimensions."""
@@ -346,11 +349,11 @@ class TestParseClassification:
         result = _parse_classification(raw)
 
         # Parsing succeeds but validation flags all three dimensions
-        assert result is not None
-        assert result["valid"] is False
-        assert "dim1" in result["invalid_codes"]
-        assert "dim2" in result["invalid_codes"]
-        assert "dim3" in result["invalid_codes"]
+        self.assertIsNotNone(result)
+        self.assertFalse(result["valid"])
+        self.assertIn("dim1", result["invalid_codes"])
+        self.assertIn("dim2", result["invalid_codes"])
+        self.assertIn("dim3", result["invalid_codes"])
 
     def test_validate_codes_valid(self):
         """Valid codes return an empty invalid list."""
@@ -362,7 +365,7 @@ class TestParseClassification:
             "research_design": {"primary": "experimental_rct", "secondary": None},
             "evidence_strength": {"code": "causal_clinical"},
         }
-        assert _validate_codes(parsed) == []
+        self.assertEqual(_validate_codes(parsed), [])
 
     def test_validate_codes_invalid_dim1(self):
         """Invalid dim1 code is reported."""
@@ -372,9 +375,9 @@ class TestParseClassification:
             "evidence_strength": {"code": "correlational"},
         }
         result = _validate_codes(parsed)
-        assert "dim1" in result
-        assert "dim2" not in result
-        assert "dim3" not in result
+        self.assertIn("dim1", result)
+        self.assertNotIn("dim2", result)
+        self.assertNotIn("dim3", result)
 
     def test_validate_codes_invalid_dim2(self):
         """Invalid dim2 code is reported."""
@@ -384,8 +387,8 @@ class TestParseClassification:
             "evidence_strength": {"code": "correlational"},
         }
         result = _validate_codes(parsed)
-        assert "dim2" in result
-        assert "dim1" not in result
+        self.assertIn("dim2", result)
+        self.assertNotIn("dim1", result)
 
     def test_validate_codes_invalid_dim3(self):
         """Invalid dim3 code is reported."""
@@ -395,9 +398,9 @@ class TestParseClassification:
             "evidence_strength": {"code": "not_real"},
         }
         result = _validate_codes(parsed)
-        assert "dim3" in result
-        assert "dim1" not in result
-        assert "dim2" not in result
+        self.assertIn("dim3", result)
+        self.assertNotIn("dim1", result)
+        self.assertNotIn("dim2", result)
 
     def test_validate_codes_invalid_secondary(self):
         """Invalid secondary code is reported for dim1."""
@@ -407,7 +410,7 @@ class TestParseClassification:
             "evidence_strength": {"code": "correlational"},
         }
         result = _validate_codes(parsed)
-        assert "dim1" in result
+        self.assertIn("dim1", result)
 
 
 # ---------------------------------------------------------------------------
@@ -415,27 +418,31 @@ class TestParseClassification:
 # ---------------------------------------------------------------------------
 
 
-class TestBiomarkerGrading:
+class TestBiomarkerGrading(unittest.TestCase):
     """Tests for the task definition."""
 
     def test_returns_task_instance(self):
         """biomarker_grading() returns a Task."""
         t = biomarker_grading()
-        assert isinstance(t, Task)
+        self.assertIsInstance(t, Task)
 
     def test_task_has_solver(self):
         """The task has a solver list."""
         t = biomarker_grading()
-        assert t.solver is not None
+        self.assertIsNotNone(t.solver)
 
     def test_task_has_scorer(self):
         """The task has a scorer."""
         t = biomarker_grading()
-        assert t.scorer is not None
+        self.assertIsNotNone(t.scorer)
 
     def test_task_config_no_hardcoded_defaults(self):
         """The task does not hardcode temperature or max_tokens."""
         t = biomarker_grading()
         # These should be None (CLI-controlled), not hardcoded values
-        assert t.config.temperature is None
-        assert t.config.max_tokens is None
+        self.assertIsNone(t.config.temperature)
+        self.assertIsNone(t.config.max_tokens)
+
+
+if __name__ == "__main__":
+    unittest.main()

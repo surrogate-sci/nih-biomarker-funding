@@ -196,12 +196,14 @@ def _validate_codes(parsed: dict) -> list[str]:
         invalid.append("dim1")
     if dim1_secondary and dim1_secondary not in VALID_DIM1 and "dim1" not in invalid:
         invalid.append("dim1")
-    if dim2_primary not in VALID_DIM2:
-        invalid.append("dim2")
-    if dim2_secondary and dim2_secondary not in VALID_DIM2 and "dim2" not in invalid:
-        invalid.append("dim2")
-    if dim3_code not in VALID_DIM3:
-        invalid.append("dim3")
+    # When not_applicable, Dim2 and Dim3 are expected to be null — skip validation
+    if dim1_primary != "not_applicable":
+        if dim2_primary not in VALID_DIM2:
+            invalid.append("dim2")
+        if dim2_secondary and dim2_secondary not in VALID_DIM2 and "dim2" not in invalid:
+            invalid.append("dim2")
+        if dim3_code not in VALID_DIM3:
+            invalid.append("dim3")
 
     return invalid
 
@@ -298,7 +300,7 @@ def rubric_scorer():
 
 @task
 def biomarker_grading(
-    dataset_path: str = "data/oncology_sample_100per_year.csv",
+    dataset_path: str = "data/pilot_sample_12IC_tiered_seed42.csv",
     rubric_path: str | None = None,
 ) -> Task:
     """Inspect AI task for NIH biomarker grant classification.

@@ -1,3 +1,4 @@
 inspect-ai>=0.3.200
+google-genai  # required by inspect-ai for Google/Gemini providers
 openai  # required by inspect-ai for OpenRouter/OpenAI providers
 ruff

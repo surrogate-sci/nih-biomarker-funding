@@ -13,8 +13,11 @@ REPO="surrogate-sci/nih-biomarker-funding"
 TAG="dataset-release-v3.1"
 EXPECTED_SHA="899e8e20f3f5a44d30dacc932cf39b1b7960484999c1db13ed3c10ff1b662b5b"
 
-if [ -f "$CSV_FILE" ]; then
-    echo "Dataset already present at $CSV_FILE, skipping download."
+PILOT_FILE="$DATA_DIR/pilot_sample_12IC_tiered_seed42.csv"
+PILOT_SHA="5824dc824a84b937be069521759339819a4b85b6a9043285a12c3c29b7356d10"
+
+if [ -f "$CSV_FILE" ] && [ -f "$PILOT_FILE" ]; then
+    echo "Dataset and pilot sample already present, skipping download."
     exit 0
 fi
 
@@ -54,6 +57,40 @@ if [ -f "$CSV_FILE" ]; then
     echo "Dataset ready: $(wc -l < "$CSV_FILE") rows, SHA256 verified."
 else
     echo "ERROR: Dataset download failed. Options:"
+    echo "  1. Set GITHUB_TOKEN env var and retry"
+    echo "  2. Run 'gh auth login' and retry"
+    echo "  3. Download manually from GitHub releases and place in $DATA_DIR/"
+    exit 1
+fi
+
+# Download pilot sample if not already present
+if [ ! -f "$PILOT_FILE" ]; then
+    echo "Downloading pilot sample..."
+    if command -v gh &>/dev/null && gh auth status &>/dev/null; then
+        gh release download "$TAG" --repo "$REPO" --dir "$DATA_DIR" --pattern "pilot_sample_12IC_tiered_seed42.csv"
+    elif [ -n "${GITHUB_TOKEN:-}" ]; then
+        curl -L -H "Authorization: token $GITHUB_TOKEN" \
+            -o "$PILOT_FILE" \
+            "https://github.com/$REPO/releases/download/$TAG/pilot_sample_12IC_tiered_seed42.csv"
+    else
+        curl -L -o "$PILOT_FILE" \
+            "https://github.com/$REPO/releases/download/$TAG/pilot_sample_12IC_tiered_seed42.csv"
+    fi
+fi
+
+if [ -f "$PILOT_FILE" ]; then
+    ACTUAL_PILOT_SHA=$(shasum -a 256 "$PILOT_FILE" 2>/dev/null || sha256sum "$PILOT_FILE" 2>/dev/null)
+    ACTUAL_PILOT_SHA="${ACTUAL_PILOT_SHA%% *}"
+    if [ "$ACTUAL_PILOT_SHA" != "$PILOT_SHA" ]; then
+        echo "ERROR: Pilot sample SHA256 mismatch!"
+        echo "  Expected: $PILOT_SHA"
+        echo "  Got:      $ACTUAL_PILOT_SHA"
+        echo "  Update PILOT_SHA in this script if the pilot sample was intentionally changed."
+        exit 1
+    fi
+    echo "Pilot sample ready: $(wc -l < "$PILOT_FILE") rows, SHA256 verified."
+else
+    echo "ERROR: Pilot sample download failed. Options:"
     echo "  1. Set GITHUB_TOKEN env var and retry"
     echo "  2. Run 'gh auth login' and retry"
     echo "  3. Download manually from GitHub releases and place in $DATA_DIR/"

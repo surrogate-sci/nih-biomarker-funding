@@ -84,14 +84,27 @@ def stratified_sample(
 
 
 def load_grants(csv_path: Path, ics: list[str]) -> list[dict]:
-    """Load unified dataset and filter to specified ICs."""
+    """Load unified dataset and filter to specified ICs.
+
+    P30 grants (Cancer Center Core Grants) are excluded unless
+    NIH_SPENDING_CATS contains 'clinical'.
+    """
     ic_set = set(ics)
     rows = []
+    n_p30_excluded = 0
     with open(csv_path, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            if row.get("ADMINISTERING_IC", "").strip() in ic_set:
-                rows.append(row)
+            if row.get("ADMINISTERING_IC", "").strip() not in ic_set:
+                continue
+            if row.get("ACTIVITY", "").strip() == "P30":
+                spending_cats = row.get("NIH_SPENDING_CATS", "").lower()
+                if "clinical" not in spending_cats:
+                    n_p30_excluded += 1
+                    continue
+            rows.append(row)
+    if n_p30_excluded:
+        print(f"  Excluded {n_p30_excluded:,} P30 grants without clinical spending category")
     return rows
 
 
@@ -222,8 +235,8 @@ def main():
     parser.add_argument(
         "--min-per-stratum",
         type=int,
-        default=25,
-        help="Floor per FY stratum (default: 25)",
+        default=50,
+        help="Floor per FY stratum (default: 50)",
     )
     parser.add_argument(
         "--seed",
