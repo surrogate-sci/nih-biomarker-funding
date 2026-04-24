@@ -12,7 +12,6 @@ Created the NCI-only sample, ran verification, and launched both grading runs in
 ## Corrections received
 - Invoked `brainstorming` skill for an execution task → wrong skill, no design work needed
 - Committed NCI sample, was corrected → then over-corrected by reverting (which deleted file) → reset both commits, recreated file, then committed correctly with `git add -f`
-- Wrote session notes to main repo checkout instead of worktree → caused merge conflicts on main
 
 ## Open questions
 - Manifest rows for both grading runs still need to be appended once runs complete
