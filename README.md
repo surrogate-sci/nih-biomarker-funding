@@ -1,6 +1,6 @@
 # Project Goals
 
-How much money has been spent on different parts of biomarker research (technology development, clinical biomarker discovery, biomarker translation,  clinical validation (however that is operationalized). Eventually some biomarkers are evaluated by regulatory agencies or by the medical decision making community for effectiveness. 
+The goal of this analysis to answer how much money has been spent on different parts of biomarker research, and whether that is aligned with the scientific needs of each biomarker context of use The scope of analysis includes technology development, clinical biomarker discovery, biomarker translation,  clinical validation (however that is operationalized). Eventually some biomarkers are evaluated by regulatory agencies or by the medical decision making community for effectiveness. 
 
 
 ## Purpose of the repository
