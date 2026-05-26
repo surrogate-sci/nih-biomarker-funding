@@ -83,7 +83,9 @@ def normalize_row(row: dict, source: str) -> dict:
         "EXPLICIT_BIOMARKER": row.get("EXPLICIT_BIOMARKER", ""),
         "PROJECT_TITLE": row.get("PROJECT_TITLE", ""),
         "ABSTRACT_TEXT": abstract,
-        "HAS_ABSTRACT": row.get("HAS_ABSTRACT", "True" if abstract.strip() else "False"),
+        "HAS_ABSTRACT": row.get(
+            "HAS_ABSTRACT", "True" if abstract.strip() else "False"
+        ),
         "MATCHED_TERMS": row.get("MATCHED_TERMS", ""),
         "GOLD_DIM1": row.get("GOLD_DIM1", ""),
         "GOLD_DIM2": row.get("GOLD_DIM2", ""),
@@ -222,24 +224,44 @@ def load_disagreement_rows(
     if not candidates:
         return []
     take = min(n, len(candidates))
-    return [normalize_row(r, source="disagreement") for r in rng.sample(candidates, take)]
+    return [
+        normalize_row(r, source="disagreement") for r in rng.sample(candidates, take)
+    ]
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--nci-sample", type=Path, default=Path("data/nci_sample_v31_seed42.csv"))
-    p.add_argument("--calibration", type=Path, default=Path("data/grader_calibration_examples.csv"))
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument(
+        "--nci-sample", type=Path, default=Path("data/nci_sample_v31_seed42.csv")
+    )
+    p.add_argument(
+        "--calibration", type=Path, default=Path("data/grader_calibration_examples.csv")
+    )
     p.add_argument("--out", type=Path, default=Path("data/selective_v1_nci.csv"))
     p.add_argument("--n-random", type=int, default=50)
-    p.add_argument("--seed", type=int, default=4242, help="Sub-seed for random block (distinct from production seed 42)")
+    p.add_argument(
+        "--seed",
+        type=int,
+        default=4242,
+        help="Sub-seed for random block (distinct from production seed 42)",
+    )
     p.add_argument("--include-disagreements", action="store_true")
-    p.add_argument("--gemini-eval-dir", type=Path, default=Path("logs/nci-v31-gemini-flash-lite/"))
-    p.add_argument("--gpt-eval-dir", type=Path, default=Path("logs/nci-v31-gpt-oss-120b/"))
+    p.add_argument(
+        "--gemini-eval-dir", type=Path, default=Path("logs/nci-v31-gemini-flash-lite/")
+    )
+    p.add_argument(
+        "--gpt-eval-dir", type=Path, default=Path("logs/nci-v31-gpt-oss-120b/")
+    )
     p.add_argument("--n-disagreement", type=int, default=30)
     args = p.parse_args()
 
     if not args.nci_sample.exists():
-        print(f"ERROR: {args.nci_sample} not found. Run bash scripts/download-dataset.sh first.", file=sys.stderr)
+        print(
+            f"ERROR: {args.nci_sample} not found. Run bash scripts/download-dataset.sh first.",
+            file=sys.stderr,
+        )
         return 1
     if not args.calibration.exists():
         print(f"ERROR: {args.calibration} not found.", file=sys.stderr)
@@ -256,7 +278,9 @@ def main() -> int:
     print(f"  {len(nci)} NCI rows with abstracts", file=sys.stderr)
 
     gold_ids = {r["APPLICATION_ID"] for r in gold}
-    nci_for_sampling = [r for r in nci if str(r.get("APPLICATION_ID", "")) not in gold_ids]
+    nci_for_sampling = [
+        r for r in nci if str(r.get("APPLICATION_ID", "")) not in gold_ids
+    ]
 
     random_rows = stratified_sample(nci_for_sampling, args.n_random, rng)
     print(f"  {len(random_rows)} random rows", file=sys.stderr)
@@ -265,9 +289,15 @@ def main() -> int:
     if args.include_disagreements:
         print("Loading disagreement rows from prior .eval files", file=sys.stderr)
         sampled_ids = {r["APPLICATION_ID"] for r in random_rows} | gold_ids
-        nci_for_disagree = [r for r in nci if str(r.get("APPLICATION_ID", "")) not in sampled_ids]
+        nci_for_disagree = [
+            r for r in nci if str(r.get("APPLICATION_ID", "")) not in sampled_ids
+        ]
         disagreement_rows = load_disagreement_rows(
-            nci_for_disagree, args.gemini_eval_dir, args.gpt_eval_dir, args.n_disagreement, rng
+            nci_for_disagree,
+            args.gemini_eval_dir,
+            args.gpt_eval_dir,
+            args.n_disagreement,
+            rng,
         )
         print(f"  {len(disagreement_rows)} disagreement rows", file=sys.stderr)
 
