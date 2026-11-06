@@ -43,6 +43,8 @@ Based on FDA-NIH BEST framework with extensions for NIH research contexts.
 
 **`stratification_ambiguous`** — Assign when the abstract describes stratification, subtyping, or patient classification goals but does not specify whether the purpose is treatment assignment or disease understanding. Default when stratification language is present but the downstream intent is unclear.
 
+**`assay_technology_unspecified`** — Assign when the grant develops biomarker assay technology without any determinable intended use. This is typically rare; usually there is an implicit diagnostic purpose at the very least. If the purpose is implicitly diagnostic, stratification, or any of the other Dimension 1 uses, assign that code instead. Only if no intended use can be determined, assign `assay_technology_unspecified`. Discovery of candidate biomarkers is classified by its implicit intended purpose, not with this code.
+
 **`methods_causal`** — Assign when the primary aim is developing statistical, computational, or experimental methods for biomarker validation or evaluation with explicitly identification of causal questions, assumptions in the biomarker use case. Includes methods for causal inference that use Pearl, Hernan-Robins potential outcomes or structural causal models, treatment effect estimation, biomarker × treatment interaction testing, and quasi-experimental or RCT design for biomarker studies. Assign even if the methods are applied to a specific biomarker domain (e.g., surrogate validation in oncology), as long as the methodological contribution is the primary aim, and the methods explicitly aim to expand some school of causal inference methodology.
 
 **`methods_correlational`** — Assign when the primary aim is developing statistical or computational methods for biomarker discovery, evaluation, or application that rely on associational evidence. Includes methods for prediction, classification, regression, feature selection, supervised machine learning, and risk scoring. Distinguish from `methods_causal` by the inferential framework: methods_correlational develops tools for association and prediction often using standard machine learning language or what Judea Pearl would call "rung 0" on his ladder of causation, whereas methods_causal more explicitly identifies when the biomarker context of use implies causal concepts on "rung 1" or "rung 2". Methods develop tools while recognizing causal identification conditions, good estimation of causal estimands and may consider what experimental designs can verify how good such methods are.
@@ -64,6 +66,8 @@ When assigned, Dimension 2 and Dimension 3 are null — do not assign codes for 
 ---
 
 ## Decision Hierarchy for Dimension 1
+
+This hierarchy is meant to separate risk biomarkers into `prognostic_risk` vs. `susceptibility_risk`, since both fall into clinical prediction models. Other Dim1 codes are assigned by their own "Assign when..." definitions.
 
 When classifying, apply these rules in order:
 
@@ -156,7 +160,7 @@ Document uncertainty in notes or explanation, what features or ambiguity makes i
 
 **`causal_preclinical`** — Assign when the biomarker's causal role in a disease or treatment pathway is validated using in vitro experiments or animal models. The causal evidence is being evaluated in non-human or pre-RCTs.
 
-**`causal_clinical`** — Assign when the biomarker is validated in human studies via appropriate biomarker guided RCT designs: Prentice surrogacy criteria (antiquated and not typical anymore), causal meta-analysis across multiple RCTs, biomarker-guided or adaptive trial designs where the biomarker drives treatment decisions, causal mediation analysis within an RCT or quasi-experiment, or (for risk biomarkers) counterfactual risk prediction or causal transportability analysis. Tag as `causal_clinical` if using causal machine learning or causal inference with well defended assumptions and identifiability requirements. If Baron-Kenny style SEMs or causal mediation is invoked, please tag this as `correlational`, not `causal_clinical`.
+**`causal_clinical`** — Assign when the biomarker is validated in human studies via appropriate biomarker guided RCT designs: Prentice surrogacy criteria (antiquated and not typical anymore), causal meta-analysis across multiple RCTs, biomarker-guided or adaptive trial designs where the biomarker drives treatment decisions, causal mediation analysis within an RCT or quasi-experiment, or (for risk biomarkers) counterfactual risk prediction or causal transportability analysis. Tag as `causal_clinical` if using causal machine learning or causal inference with well defended assumptions and identifiability requirements. If Baron-Kenny style SEMs are invoked, please tag this as `correlational`, not `causal_clinical`. Formal causal mediation counts as `causal_clinical`, at least in its intent.
 
 **`methods_for_causal`** — Assign when the study develops statistical or computational methods that enable biomarker causal validation. The contribution is methodological, not direct validation of a specific biomarker.
 
