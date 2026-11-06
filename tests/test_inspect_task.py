@@ -479,6 +479,55 @@ class TestParseClassification(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertEqual(result["research_design"]["primary"], "observational_crosssectional")
 
+    def test_truncated_response_is_parse_failure(self):
+        """A cut-off answer must not return a nested inner object (reviewer #1)."""
+        raw = (
+            '{"biomarker_use": {"primary": "diagnostic"}, '
+            '"research_design": {"primary": "experimental_rct"}, '
+            '"evidence_strength": {"code": "corr'
+        )
+        self.assertIsNone(_parse_classification(raw))
+
+    def test_stray_object_after_answer_is_ignored(self):
+        """A later non-classification object or an echoed schema template does not win."""
+        answer = json.dumps(
+            {
+                "biomarker_use": {"primary": "diagnostic"},
+                "research_design": {"primary": "experimental_rct"},
+                "evidence_strength": {"code": "correlational"},
+            }
+        )
+        for tail in (
+            '\nNote: e.g. {"primary": "prognostic_risk"}',
+            '\nSchema was: {"biomarker_use": {"primary": "<code from Dimension 1>"}}',
+        ):
+            result = _parse_classification(answer + tail)
+            self.assertEqual(result["biomarker_use"]["primary"], "diagnostic", tail)
+
+    def test_trailing_comma_inside_string_is_preserved(self):
+        """Comma cleanup must not alter quoted text (key_phrases must stay exact)."""
+        raw = (
+            '{"biomarker_use": {"primary": "diagnostic"}, '
+            '"research_design": {"primary": "experimental_rct"}, '
+            '"evidence_strength": {"code": "correlational"}, '
+            '"key_phrases": ["uses [a, ] and x, }"], }'
+        )
+        result = _parse_classification(raw)
+        self.assertEqual(result["key_phrases"], ["uses [a, ] and x, }"])
+
+    def test_non_dict_dimension_is_invalid_not_error(self):
+        """A bare string where an object is expected is an invalid code, not a crash."""
+        raw = json.dumps(
+            {
+                "biomarker_use": "diagnostic",
+                "research_design": {"primary": "experimental_rct"},
+                "evidence_strength": {"code": "correlational"},
+            }
+        )
+        result = _parse_classification(raw)
+        self.assertFalse(result["valid"])
+        self.assertIn("dim1", result["invalid_codes"])
+
     def test_parse_json_with_surrounding_prose(self):
         """Unfenced JSON surrounded by prose still parses."""
         raw = (

@@ -23,7 +23,7 @@ ENV_FILE="$REPO_ROOT/.env"
 MODEL=""
 DATASET="data/nci_sample_v31_seed42.csv"
 LOG_DIR=""
-TEMPERATURE="0.0"
+TEMPERATURE=""   # omit for Claude 5.5 models (they reject --temperature)
 
 usage() {
     echo "Usage: $0 --model <model> [--dataset <path>] [--log-dir <dir>] [--temperature <float>]"
@@ -69,10 +69,13 @@ echo "  Dataset:  $DATASET"
 echo "  Log dir:  $LOG_DIR"
 echo "  Log file: $LOG_FILE"
 
+TEMP_ARGS=()
+if [ -n "$TEMPERATURE" ]; then TEMP_ARGS=(--temperature "$TEMPERATURE"); fi
+
 nohup "$INSPECT" eval "$REPO_ROOT/inspect_task.py" \
     --model "$MODEL" \
     -T "dataset_path=$DATASET" \
-    --temperature "$TEMPERATURE" \
+    ${TEMP_ARGS[@]+"${TEMP_ARGS[@]}"} \
     --log-dir "$LOG_DIR" \
     >> "$LOG_FILE" 2>&1 &
 

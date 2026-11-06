@@ -2,7 +2,6 @@
 
 import json
 import os
-import re
 from pathlib import Path
 
 
@@ -18,37 +17,96 @@ def load_env():
                     os.environ[key.strip()] = value.strip().strip("\"'")
 
 
-def parse_llm_json(content: str) -> dict:
-    """Strip markdown code fences and parse JSON from LLM response.
+def _strip_trailing_commas(text: str) -> str:
+    """Remove commas directly before a closing } or ], ignoring JSON string contents."""
+    out, in_str, esc = [], False, False
+    for i, ch in enumerate(text):
+        if in_str:
+            out.append(ch)
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch == ",":
+            j = i + 1
+            while j < len(text) and text[j] in " \t\r\n":
+                j += 1
+            if j < len(text) and text[j] in "}]":
+                continue
+        out.append(ch)
+    return "".join(out)
 
-    Handles ```json ... ```, bare ``` ... ```, and plain JSON.
-    Raises json.JSONDecodeError on malformed JSON.
+
+def _top_level_object_spans(text: str) -> list[str]:
+    """Return substrings of balanced top-level {...} blocks (string-aware).
+
+    An unterminated block (truncated output) is not returned, so nested inner
+    objects of a truncated answer are never mistaken for the answer.
     """
-    if "```json" in content:
+    spans, depth, start, in_str, esc = [], 0, -1, False, False
+    for i, ch in enumerate(text):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = depth > 0
+        elif ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}" and depth > 0:
+            depth -= 1
+            if depth == 0:
+                spans.append(text[start : i + 1])
+    return spans
+
+
+def _is_placeholder_echo(obj: dict) -> bool:
+    """True for an echoed schema template such as {"primary": "<code from Dimension 1>"}."""
+    primary = (obj.get("biomarker_use") or {}) if isinstance(obj.get("biomarker_use"), dict) else {}
+    value = primary.get("primary")
+    return isinstance(value, str) and value.strip().startswith("<")
+
+
+def parse_llm_json(content: str, required_key: str = "biomarker_use") -> dict:
+    """Parse the classification JSON object from an LLM response.
+
+    1. A single fenced block or the whole response parses as-is: return it.
+    2. Otherwise scan the full response for balanced top-level objects, strip
+       trailing commas outside strings, keep dicts containing ``required_key``
+       that are not echoed schema templates, and return the LAST one (Sonnet
+       5.5 sometimes emits a "Correction: ... Corrected JSON:" second object).
+
+    A truncated answer yields no balanced top-level object and raises.
+    Raises json.JSONDecodeError (or ValueError) when no classification is found.
+    """
+    if content.count("```json") == 1:
         fenced = content.split("```json")[1].split("```")[0]
-    elif "```" in content:
+    elif content.count("```") == 2:
         fenced = content.split("```")[1].split("```")[0]
     else:
         fenced = content
     try:
         return json.loads(fenced.strip())
     except json.JSONDecodeError as first_error:
-        # Fallback: scan for top-level JSON objects in the full response (prose
-        # around them, trailing commas, or a self-correction that emits a second
-        # "Corrected JSON" object). Return the LAST complete object — the
-        # model's final answer.
-        cleaned = re.sub(r",\s*([}\]])", r"\1", content)
-        decoder = json.JSONDecoder()
-        objects, i = [], cleaned.find("{")
-        while i != -1:
+        candidates = []
+        for span in _top_level_object_spans(content):
             try:
-                obj, end = decoder.raw_decode(cleaned, i)
-            except json.JSONDecodeError:
-                i = cleaned.find("{", i + 1)
+                obj = json.loads(_strip_trailing_commas(span))
+            except (json.JSONDecodeError, RecursionError):
                 continue
-            if isinstance(obj, dict):
-                objects.append(obj)
-            i = cleaned.find("{", end)
-        if not objects:
+            if isinstance(obj, dict) and required_key in obj and not _is_placeholder_echo(obj):
+                candidates.append(obj)
+        if not candidates:
             raise first_error
-        return objects[-1]
+        return candidates[-1]

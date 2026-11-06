@@ -182,6 +182,11 @@ def rubric_solver(rubric_path: str | None = None):
 NULL_DIM23_CODES: set[str] = {"not_applicable", "disease_non_biomarker"}
 
 
+def _as_dict(value) -> dict:
+    """Return value if it is a dict, else {} (models occasionally emit a bare string)."""
+    return value if isinstance(value, dict) else {}
+
+
 def _null_str(value):
     """Normalize the string "null"/"none"/"" to None (models sometimes quote null)."""
     if isinstance(value, str) and value.strip().lower() in {"null", "none", ""}:
@@ -224,9 +229,9 @@ def _validate_codes(parsed: dict) -> list[str]:
     """
     invalid: list[str] = []
 
-    dim1 = parsed.get("biomarker_use") or {}
-    dim2 = parsed.get("research_design") or {}
-    dim3 = parsed.get("evidence_strength") or {}
+    dim1 = _as_dict(parsed.get("biomarker_use"))
+    dim2 = _as_dict(parsed.get("research_design"))
+    dim3 = _as_dict(parsed.get("evidence_strength"))
     dim1_primary = _null_str(dim1.get("primary")) or ""
     dim1_secondary = _null_str(dim1.get("secondary"))
     dim2_primary = _null_str(dim2.get("primary")) or ""
@@ -304,21 +309,21 @@ def rubric_scorer():
         invalid_codes = parsed["invalid_codes"]
 
         # Extract classification details for metadata
-        dim1 = parsed.get("biomarker_use") or {}
-        dim2 = parsed.get("research_design") or {}
-        dim3 = parsed.get("evidence_strength") or {}
+        dim1 = _as_dict(parsed.get("biomarker_use"))
+        dim2 = _as_dict(parsed.get("research_design"))
+        dim3 = _as_dict(parsed.get("evidence_strength"))
 
         score_metadata = {
             "invalid_codes": invalid_codes,
             "code_aliases_applied": parsed.get("code_aliases_applied", []),
-            "dim1_primary": dim1.get("primary"),
-            "dim1_secondary": dim1.get("secondary"),
+            "dim1_primary": _null_str(dim1.get("primary")),
+            "dim1_secondary": _null_str(dim1.get("secondary")),
             "dim1_confidence": dim1.get("confidence"),
-            "dim2_primary": dim2.get("primary"),
-            "dim2_secondary": dim2.get("secondary"),
-            "dim2_confidence": dim2.get("confidence"),
-            "dim3_code": dim3.get("code"),
-            "dim3_confidence": dim3.get("confidence"),
+            "dim2_primary": _null_str(dim2.get("primary")),
+            "dim2_secondary": _null_str(dim2.get("secondary")),
+            "dim2_confidence": _null_str(dim2.get("confidence")),
+            "dim3_code": _null_str(dim3.get("code")),
+            "dim3_confidence": _null_str(dim3.get("confidence")),
             "key_phrases": parsed.get("key_phrases"),
             "reasoning": parsed.get("reasoning"),
         }
