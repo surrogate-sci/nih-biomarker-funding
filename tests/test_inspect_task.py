@@ -432,6 +432,53 @@ class TestParseClassification(unittest.TestCase):
         }
         self.assertEqual(_validate_codes(parsed), ["dim2", "dim3"])
 
+    def test_parse_json_trailing_comma(self):
+        """A trailing comma before the closing brace (seen from Sonnet 5.5) still parses."""
+        raw = (
+            '{"biomarker_use": {"primary": "diagnostic"}, '
+            '"research_design": {"primary": "experimental_rct"}, '
+            '"evidence_strength": {"code": "correlational"}, "reasoning": "x", }'
+        )
+        result = _parse_classification(raw)
+        self.assertIsNotNone(result)
+        self.assertTrue(result["valid"])
+
+    def test_crosssectional_separator_variants_are_aliased(self):
+        """Hyphen/underscore spellings map to observational_crosssectional; others stay invalid."""
+        for variant in ("observational_cross-sectional", "observational_cross_sectional"):
+            raw = json.dumps(
+                {
+                    "biomarker_use": {"primary": "diagnostic"},
+                    "research_design": {"primary": "experimental_rct", "secondary": variant},
+                    "evidence_strength": {"code": "correlational"},
+                }
+            )
+            result = _parse_classification(raw)
+            self.assertTrue(result["valid"], variant)
+            self.assertEqual(result["research_design"]["secondary"], "observational_crosssectional")
+            self.assertEqual(len(result["code_aliases_applied"]), 1)
+        raw = json.dumps(
+            {
+                "biomarker_use": {"primary": "diagnostic"},
+                "research_design": {"primary": "observational_cross_sectional_placeholder"},
+                "evidence_strength": {"code": "correlational"},
+            }
+        )
+        self.assertFalse(_parse_classification(raw)["valid"])
+
+    def test_parse_json_self_correction_takes_last_object(self):
+        """Sonnet 5.5 sometimes emits a JSON, then 'Correction: ... Corrected JSON:' and a second one."""
+        bad = {
+            "biomarker_use": {"primary": "diagnostic"},
+            "research_design": {"primary": "observational_cross_sectional_placeholder"},
+            "evidence_strength": {"code": "correlational"},
+        }
+        good = {**bad, "research_design": {"primary": "observational_crosssectional"}}
+        raw = f"{json.dumps(bad)}\n\nCorrection: use a defined code. Corrected JSON:\n\n{json.dumps(good)}"
+        result = _parse_classification(raw)
+        self.assertTrue(result["valid"])
+        self.assertEqual(result["research_design"]["primary"], "observational_crosssectional")
+
     def test_parse_json_with_surrounding_prose(self):
         """Unfenced JSON surrounded by prose still parses."""
         raw = (

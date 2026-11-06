@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from pathlib import Path
 
 
@@ -31,9 +32,23 @@ def parse_llm_json(content: str) -> dict:
         fenced = content
     try:
         return json.loads(fenced.strip())
-    except json.JSONDecodeError:
-        # Fallback: prose around an unfenced object — slice first "{" to last "}".
-        start, end = content.find("{"), content.rfind("}")
-        if start == -1 or end <= start:
-            raise
-        return json.loads(content[start : end + 1])
+    except json.JSONDecodeError as first_error:
+        # Fallback: scan for top-level JSON objects in the full response (prose
+        # around them, trailing commas, or a self-correction that emits a second
+        # "Corrected JSON" object). Return the LAST complete object — the
+        # model's final answer.
+        cleaned = re.sub(r",\s*([}\]])", r"\1", content)
+        decoder = json.JSONDecoder()
+        objects, i = [], cleaned.find("{")
+        while i != -1:
+            try:
+                obj, end = decoder.raw_decode(cleaned, i)
+            except json.JSONDecodeError:
+                i = cleaned.find("{", i + 1)
+                continue
+            if isinstance(obj, dict):
+                objects.append(obj)
+            i = cleaned.find("{", end)
+        if not objects:
+            raise first_error
+        return objects[-1]

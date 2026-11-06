@@ -189,6 +189,33 @@ def _null_str(value):
     return value
 
 
+# Unambiguous spelling variants models produce for rubric codes -> canonical code.
+# Only separator variants of an existing code belong here; anything else stays invalid.
+CODE_ALIASES: dict[str, str] = {
+    "observational_cross-sectional": "observational_crosssectional",
+    "observational_cross_sectional": "observational_crosssectional",
+}
+
+
+def _apply_code_aliases(parsed: dict) -> list[str]:
+    """Rewrite aliased codes in place; return a list of "raw->canonical" applied."""
+    applied: list[str] = []
+    for dim, fields in (
+        ("biomarker_use", ("primary", "secondary")),
+        ("research_design", ("primary", "secondary")),
+        ("evidence_strength", ("code",)),
+    ):
+        block = parsed.get(dim)
+        if not isinstance(block, dict):
+            continue
+        for field in fields:
+            raw = block.get(field)
+            if isinstance(raw, str) and raw in CODE_ALIASES:
+                block[field] = CODE_ALIASES[raw]
+                applied.append(f"{raw}->{CODE_ALIASES[raw]}")
+    return applied
+
+
 def _validate_codes(parsed: dict) -> list[str]:
     """Check dimension codes in the parsed classification against enum sets.
 
@@ -240,6 +267,7 @@ def _parse_classification(raw: str) -> dict | None:
     if parsed is None or not isinstance(parsed, dict):
         return None
 
+    parsed["code_aliases_applied"] = _apply_code_aliases(parsed)
     invalid_codes = _validate_codes(parsed)
     parsed["valid"] = len(invalid_codes) == 0
     parsed["invalid_codes"] = invalid_codes
@@ -282,6 +310,7 @@ def rubric_scorer():
 
         score_metadata = {
             "invalid_codes": invalid_codes,
+            "code_aliases_applied": parsed.get("code_aliases_applied", []),
             "dim1_primary": dim1.get("primary"),
             "dim1_secondary": dim1.get("secondary"),
             "dim1_confidence": dim1.get("confidence"),
