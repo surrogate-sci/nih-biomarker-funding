@@ -15,9 +15,10 @@ from pathlib import Path
 
 _SYSTEM_PROMPT_PREAMBLE = (
     "You are an expert biomedical research methodologist classifying "
-    "NIH-funded biomarker research projects.\n\n"
+    "NIH-funded research projects that matched a biomarker keyword screen.\n\n"
     "Your task is to classify each project on THREE dimensions based on "
-    "the title and abstract."
+    "the title and abstract. Abstracts describe proposed research; classify "
+    "the work as proposed."
 )
 
 _SYSTEM_PROMPT_OUTPUT_FORMAT = """
@@ -33,13 +34,13 @@ You MUST respond with valid JSON matching this exact schema:
     "confidence": "<high|medium|low>"
   },
   "research_design": {
-    "primary": "<code from Dimension 2>",
+    "primary": "<code from Dimension 2, or null if biomarker_use.primary is not_applicable or disease_non_biomarker>",
     "secondary": "<code from Dimension 2 or null>",
-    "confidence": "<high|medium|low>"
+    "confidence": "<high|medium|low, or null>"
   },
   "evidence_strength": {
-    "code": "<code from Dimension 3>",
-    "confidence": "<high|medium|low>"
+    "code": "<code from Dimension 3, or null if biomarker_use.primary is not_applicable or disease_non_biomarker>",
+    "confidence": "<high|medium|low, or null>"
   },
   "key_phrases": [
     "<exact quote from abstract supporting biomarker_use classification>",
@@ -52,7 +53,8 @@ You MUST respond with valid JSON matching this exact schema:
 
 IMPORTANT:
 - Use ONLY codes defined in the rubric above
-- key_phrases must be EXACT quotes from the abstract
+- key_phrases must be EXACT quotes from the abstract; when Dimension 2 and Dimension 3 are null, give only the quote supporting biomarker_use
+- Respond with the JSON object only, with no text before or after it
 - If uncertain between categories, use the more conservative code (correlational > causal, prognostic_risk > prognostic_efficacy, predictive_ambiguous > predictive_enrichment > predictive_optimal)
 """
 
@@ -114,7 +116,7 @@ def build_system_prompt(rubric_text: str) -> str:
 # Prompt templates and construction
 # ---------------------------------------------------------------------------
 
-USER_PROMPT_TEMPLATE = """Classify this NIH biomarker research project:
+USER_PROMPT_TEMPLATE = """Classify this NIH-funded project, which matched a biomarker keyword screen:
 
 **Title:** {title}
 

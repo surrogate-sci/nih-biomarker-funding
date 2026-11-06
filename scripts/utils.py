@@ -24,7 +24,16 @@ def parse_llm_json(content: str) -> dict:
     Raises json.JSONDecodeError on malformed JSON.
     """
     if "```json" in content:
-        content = content.split("```json")[1].split("```")[0]
+        fenced = content.split("```json")[1].split("```")[0]
     elif "```" in content:
-        content = content.split("```")[1].split("```")[0]
-    return json.loads(content.strip())
+        fenced = content.split("```")[1].split("```")[0]
+    else:
+        fenced = content
+    try:
+        return json.loads(fenced.strip())
+    except json.JSONDecodeError:
+        # Fallback: prose around an unfenced object — slice first "{" to last "}".
+        start, end = content.find("{"), content.rfind("}")
+        if start == -1 or end <= start:
+            raise
+        return json.loads(content[start : end + 1])

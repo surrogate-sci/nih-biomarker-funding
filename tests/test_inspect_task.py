@@ -161,8 +161,9 @@ class TestCodeEnums(unittest.TestCase):
     """Verify code enum sets match RUBRIC.md counts."""
 
     def test_dim1_count(self):
-        """Dimension 1 has exactly 21 codes."""
-        self.assertEqual(len(VALID_DIM1), 21)
+        """Dimension 1 has exactly 22 codes (incl. assay_technology_unspecified)."""
+        self.assertEqual(len(VALID_DIM1), 22)
+        self.assertIn("assay_technology_unspecified", VALID_DIM1)
 
     def test_dim2_count(self):
         """Dimension 2 has exactly 10 codes."""
@@ -411,6 +412,36 @@ class TestParseClassification(unittest.TestCase):
         }
         result = _validate_codes(parsed)
         self.assertIn("dim1", result)
+
+    def test_step0_exit_codes_allow_null_dim2_dim3(self):
+        """not_applicable and disease_non_biomarker accept null Dim2/Dim3 (incl. JSON null objects)."""
+        for code in ("not_applicable", "disease_non_biomarker"):
+            parsed = {
+                "biomarker_use": {"primary": code, "secondary": "null"},
+                "research_design": None,
+                "evidence_strength": {"code": None},
+            }
+            self.assertEqual(_validate_codes(parsed), [], code)
+
+    def test_biomarker_code_still_requires_dim2_dim3(self):
+        """A substantive biomarker code with null Dim2/Dim3 is invalid."""
+        parsed = {
+            "biomarker_use": {"primary": "assay_technology_unspecified"},
+            "research_design": None,
+            "evidence_strength": None,
+        }
+        self.assertEqual(_validate_codes(parsed), ["dim2", "dim3"])
+
+    def test_parse_json_with_surrounding_prose(self):
+        """Unfenced JSON surrounded by prose still parses."""
+        raw = (
+            'Here is the classification:\n{"biomarker_use": {"primary": "diagnostic"}, '
+            '"research_design": {"primary": "experimental_rct"}, '
+            '"evidence_strength": {"code": "correlational"}}\nDone.'
+        )
+        result = _parse_classification(raw)
+        self.assertIsNotNone(result)
+        self.assertTrue(result["valid"])
 
 
 # ---------------------------------------------------------------------------

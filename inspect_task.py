@@ -178,6 +178,17 @@ def rubric_solver(rubric_path: str | None = None):
 # ---------------------------------------------------------------------------
 
 
+# Dim1 codes for which RUBRIC.md says Dimension 2 and Dimension 3 are null.
+NULL_DIM23_CODES: set[str] = {"not_applicable", "disease_non_biomarker"}
+
+
+def _null_str(value):
+    """Normalize the string "null"/"none"/"" to None (models sometimes quote null)."""
+    if isinstance(value, str) and value.strip().lower() in {"null", "none", ""}:
+        return None
+    return value
+
+
 def _validate_codes(parsed: dict) -> list[str]:
     """Check dimension codes in the parsed classification against enum sets.
 
@@ -186,18 +197,21 @@ def _validate_codes(parsed: dict) -> list[str]:
     """
     invalid: list[str] = []
 
-    dim1_primary = parsed.get("biomarker_use", {}).get("primary", "")
-    dim1_secondary = parsed.get("biomarker_use", {}).get("secondary")
-    dim2_primary = parsed.get("research_design", {}).get("primary", "")
-    dim2_secondary = parsed.get("research_design", {}).get("secondary")
-    dim3_code = parsed.get("evidence_strength", {}).get("code", "")
+    dim1 = parsed.get("biomarker_use") or {}
+    dim2 = parsed.get("research_design") or {}
+    dim3 = parsed.get("evidence_strength") or {}
+    dim1_primary = _null_str(dim1.get("primary")) or ""
+    dim1_secondary = _null_str(dim1.get("secondary"))
+    dim2_primary = _null_str(dim2.get("primary")) or ""
+    dim2_secondary = _null_str(dim2.get("secondary"))
+    dim3_code = _null_str(dim3.get("code")) or ""
 
     if dim1_primary not in VALID_DIM1:
         invalid.append("dim1")
     if dim1_secondary and dim1_secondary not in VALID_DIM1 and "dim1" not in invalid:
         invalid.append("dim1")
-    # When not_applicable, Dim2 and Dim3 are expected to be null — skip validation
-    if dim1_primary != "not_applicable":
+    # Step 0 exit codes: Dim2 and Dim3 are expected to be null — skip validation
+    if dim1_primary not in NULL_DIM23_CODES:
         if dim2_primary not in VALID_DIM2:
             invalid.append("dim2")
         if dim2_secondary and dim2_secondary not in VALID_DIM2 and "dim2" not in invalid:
@@ -262,9 +276,9 @@ def rubric_scorer():
         invalid_codes = parsed["invalid_codes"]
 
         # Extract classification details for metadata
-        dim1 = parsed.get("biomarker_use", {})
-        dim2 = parsed.get("research_design", {})
-        dim3 = parsed.get("evidence_strength", {})
+        dim1 = parsed.get("biomarker_use") or {}
+        dim2 = parsed.get("research_design") or {}
+        dim3 = parsed.get("evidence_strength") or {}
 
         score_metadata = {
             "invalid_codes": invalid_codes,
@@ -319,10 +333,11 @@ def biomarker_grading(
         Path to RUBRIC.md. None uses the default location.
     """
     return Task(
+        # Grants with no abstract cannot be classified from text (no quotable phrases).
         dataset=csv_dataset(
             csv_file=dataset_path,
             sample_fields=record_to_sample,
-        ),
+        ).filter(lambda s: bool((s.metadata or {}).get("has_abstract"))),
         solver=[rubric_solver(rubric_path=rubric_path), generate()],
         scorer=rubric_scorer(),
         config=GenerateConfig(),
