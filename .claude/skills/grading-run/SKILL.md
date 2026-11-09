@@ -53,9 +53,11 @@ spends more than a few dollars.
 6. **Re-score after a scorer or parser change** (no API calls). Never overwrite the original log:
    ```bash
    .venv/bin/inspect score <original.eval> --scorer inspect_task.py@rubric_scorer \
-     --action overwrite --output-file logs/<YYYY-MM-DD_what_rescored-why>/<original.eval name>
+     --action overwrite --output-file logs/<YYYY-MM-DD_what_rescored-why>/<original.eval name> </dev/null
    ```
    `--scorer` is required; without it Inspect cannot load the scorer from the recorded task file.
+   Always write to a new, empty folder. If the output file already exists, Inspect asks
+   "Overwrite … or create new file?" and a background run waits forever (this stalled a re-score for two days). `</dev/null` keeps it from waiting on input.
 
 7. **Extract from each resulting `.eval` filename:** `run_id`, `log_path`, `timestamp`.
 
