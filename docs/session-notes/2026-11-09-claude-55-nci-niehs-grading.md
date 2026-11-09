@@ -84,7 +84,11 @@ No answer in any run was cut off at a token limit.
 - How should the code-to-estimand mapping be defined for the blog post's hypothesis? (researcher judgment)
 - Should NIEHS also be graded on Opus with the next credit allotment? (researcher judgment)
 
+- **Rubric wording provenance (raised Nov 9; issue #52).** Manjari stated that `disease_non_biomarker` (added Apr 12, 2026, commit `8de20d3`) was drafted by a Claude Code agent under her guidance without her full review, and was not properly vetted. As written, it cannot separate a biomarker used within mechanistic toxicology from research that is not biomarker-oriented. Her example: improving sequencing technologies or multiplexed barcoding to enable genomics measurements is not biomarker-oriented research, even though it might be a precursor to studying some biological process. Its 17 gold examples in `data/grader_calibration_examples.csv` are all NCI grants. The Nov 6 additions in commit `11d47af` also contain agent-drafted sentences (the `assay_technology_unspecified` definition sentence and the second hierarchy-scope sentence); the issue comment lists them. All agent-drafted rubric wording needs the author's review. (researcher judgment)
+
 ## Next steps
+
+- Vet `disease_non_biomarker` and the agent-drafted Nov 6 wording (issue #52) before relying on those codes in analysis.
 
 - Implement issue #49: build an Inspect `response_schema` from the rubric's code lists so models can only write exact codes; check how each provider handles it before the next paid run.
 - Update `scripts/analyze_eval_results.py` to read zstd-compressed logs with `inspect_ai.log.read_eval_log`.
