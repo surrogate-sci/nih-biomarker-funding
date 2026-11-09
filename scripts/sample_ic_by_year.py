@@ -38,10 +38,16 @@ def parse_per_year(specs: list[str]) -> dict[int, int]:
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--unified", type=Path, default=Path("data/nih_biomarker_unified_2004-2024.csv"))
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument(
+        "--unified", type=Path, default=Path("data/nih_biomarker_unified_2004-2024.csv")
+    )
     p.add_argument("--ic", required=True)
-    p.add_argument("--per-year", action="append", required=True, help="START-END:N, repeatable")
+    p.add_argument(
+        "--per-year", action="append", required=True, help="START-END:N, repeatable"
+    )
     p.add_argument("--abs-dir", type=Path, default=Path.home() / "Downloads")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--out", type=Path, required=True)

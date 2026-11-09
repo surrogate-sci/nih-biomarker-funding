@@ -194,11 +194,17 @@ def _null_str(value):
     return value
 
 
-# Unambiguous spelling variants models produce for rubric codes -> canonical code.
-# Only separator variants of an existing code belong here; anything else stays invalid.
+# Spelling variants models produce for rubric codes -> canonical code.
+# Only variants of an existing code that Claude 5.5 runs actually emitted belong here;
+# anything else stays invalid. Sonnet 5.5 stumbles on the triple-s "crosssectional"
+# and sometimes appends "_placeholder" (Nov 2026 runs). Constrained output (Issue #49)
+# should make these unnecessary for future runs.
 CODE_ALIASES: dict[str, str] = {
     "observational_cross-sectional": "observational_crosssectional",
     "observational_cross_sectional": "observational_crosssectional",
+    "observational_cross_sectional_placeholder": "observational_crosssectional",
+    "observational_cross-sectional_placeholder": "observational_crosssectional",
+    "observational_cross_sectional_placeholder_removed": "observational_crosssectional",
 }
 
 
@@ -246,7 +252,11 @@ def _validate_codes(parsed: dict) -> list[str]:
     if dim1_primary not in NULL_DIM23_CODES:
         if dim2_primary not in VALID_DIM2:
             invalid.append("dim2")
-        if dim2_secondary and dim2_secondary not in VALID_DIM2 and "dim2" not in invalid:
+        if (
+            dim2_secondary
+            and dim2_secondary not in VALID_DIM2
+            and "dim2" not in invalid
+        ):
             invalid.append("dim2")
         if dim3_code not in VALID_DIM3:
             invalid.append("dim3")

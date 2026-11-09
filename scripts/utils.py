@@ -73,7 +73,11 @@ def _top_level_object_spans(text: str) -> list[str]:
 
 def _is_placeholder_echo(obj: dict) -> bool:
     """True for an echoed schema template such as {"primary": "<code from Dimension 1>"}."""
-    primary = (obj.get("biomarker_use") or {}) if isinstance(obj.get("biomarker_use"), dict) else {}
+    primary = (
+        (obj.get("biomarker_use") or {})
+        if isinstance(obj.get("biomarker_use"), dict)
+        else {}
+    )
     value = primary.get("primary")
     return isinstance(value, str) and value.strip().startswith("<")
 
@@ -105,7 +109,11 @@ def parse_llm_json(content: str, required_key: str = "biomarker_use") -> dict:
                 obj = json.loads(_strip_trailing_commas(span))
             except (json.JSONDecodeError, RecursionError):
                 continue
-            if isinstance(obj, dict) and required_key in obj and not _is_placeholder_echo(obj):
+            if (
+                isinstance(obj, dict)
+                and required_key in obj
+                and not _is_placeholder_echo(obj)
+            ):
                 candidates.append(obj)
         if not candidates:
             raise first_error

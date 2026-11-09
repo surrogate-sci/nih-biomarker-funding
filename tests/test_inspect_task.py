@@ -230,9 +230,7 @@ class TestRubricSolver(unittest.TestCase):
         rubric_text = load_rubric()
         prompt = build_system_prompt(rubric_text)
         self.assertNotIn("## References", prompt)
-        self.assertTrue(
-            "FDA-NIH BEST" not in prompt or "SOURCE OF TRUTH" not in prompt
-        )
+        self.assertTrue("FDA-NIH BEST" not in prompt or "SOURCE OF TRUTH" not in prompt)
 
 
 # ---------------------------------------------------------------------------
@@ -444,23 +442,34 @@ class TestParseClassification(unittest.TestCase):
         self.assertTrue(result["valid"])
 
     def test_crosssectional_separator_variants_are_aliased(self):
-        """Hyphen/underscore spellings map to observational_crosssectional; others stay invalid."""
-        for variant in ("observational_cross-sectional", "observational_cross_sectional"):
+        """Observed spellings map to observational_crosssectional; others stay invalid."""
+        for variant in (
+            "observational_cross-sectional",
+            "observational_cross_sectional",
+            "observational_cross_sectional_placeholder",
+            "observational_cross-sectional_placeholder",
+            "observational_cross_sectional_placeholder_removed",
+        ):
             raw = json.dumps(
                 {
                     "biomarker_use": {"primary": "diagnostic"},
-                    "research_design": {"primary": "experimental_rct", "secondary": variant},
+                    "research_design": {
+                        "primary": "experimental_rct",
+                        "secondary": variant,
+                    },
                     "evidence_strength": {"code": "correlational"},
                 }
             )
             result = _parse_classification(raw)
             self.assertTrue(result["valid"], variant)
-            self.assertEqual(result["research_design"]["secondary"], "observational_crosssectional")
+            self.assertEqual(
+                result["research_design"]["secondary"], "observational_crosssectional"
+            )
             self.assertEqual(len(result["code_aliases_applied"]), 1)
         raw = json.dumps(
             {
                 "biomarker_use": {"primary": "diagnostic"},
-                "research_design": {"primary": "observational_cross_sectional_placeholder"},
+                "research_design": {"primary": "observational_cohort_placeholder"},
                 "evidence_strength": {"code": "correlational"},
             }
         )
@@ -470,14 +479,16 @@ class TestParseClassification(unittest.TestCase):
         """Sonnet 5.5 sometimes emits a JSON, then 'Correction: ... Corrected JSON:' and a second one."""
         bad = {
             "biomarker_use": {"primary": "diagnostic"},
-            "research_design": {"primary": "observational_cross_sectional_placeholder"},
+            "research_design": {"primary": "observational_cohort_placeholder"},
             "evidence_strength": {"code": "correlational"},
         }
         good = {**bad, "research_design": {"primary": "observational_crosssectional"}}
         raw = f"{json.dumps(bad)}\n\nCorrection: use a defined code. Corrected JSON:\n\n{json.dumps(good)}"
         result = _parse_classification(raw)
         self.assertTrue(result["valid"])
-        self.assertEqual(result["research_design"]["primary"], "observational_crosssectional")
+        self.assertEqual(
+            result["research_design"]["primary"], "observational_crosssectional"
+        )
 
     def test_truncated_response_is_parse_failure(self):
         """A cut-off answer must not return a nested inner object (reviewer #1)."""
