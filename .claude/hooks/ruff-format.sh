@@ -6,8 +6,10 @@ INPUT=$(cat)
 FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""')
 
 if [[ "$FILE" == *.py ]]; then
-  ruff format "$FILE" 2>/dev/null || true
-  ruff check --fix "$FILE" 2>/dev/null || true
+  RUFF="$CLAUDE_PROJECT_DIR/.venv/bin/ruff"
+  [[ -x "$RUFF" ]] || RUFF=ruff
+  "$RUFF" format "$FILE" 2>/dev/null || true
+  "$RUFF" check --fix "$FILE" 2>/dev/null || true
 fi
 
 exit 0
