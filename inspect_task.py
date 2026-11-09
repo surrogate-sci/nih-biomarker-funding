@@ -178,6 +178,55 @@ def rubric_solver(rubric_path: str | None = None):
 # ---------------------------------------------------------------------------
 
 
+# Dim1 codes for which RUBRIC.md says Dimension 2 and Dimension 3 are null.
+NULL_DIM23_CODES: set[str] = {"not_applicable", "disease_non_biomarker"}
+
+
+def _as_dict(value) -> dict:
+    """Return value if it is a dict, else {} (models occasionally emit a bare string)."""
+    return value if isinstance(value, dict) else {}
+
+
+def _null_str(value):
+    """Normalize the string "null"/"none"/"" to None (models sometimes quote null)."""
+    if isinstance(value, str) and value.strip().lower() in {"null", "none", ""}:
+        return None
+    return value
+
+
+# Spelling variants models produce for rubric codes -> canonical code.
+# Only variants of an existing code that Claude 5.5 runs actually emitted belong here;
+# anything else stays invalid. Sonnet 5.5 stumbles on the triple-s "crosssectional"
+# and sometimes appends "_placeholder" (Nov 2026 runs). Constrained output (Issue #49)
+# should make these unnecessary for future runs.
+CODE_ALIASES: dict[str, str] = {
+    "observational_cross-sectional": "observational_crosssectional",
+    "observational_cross_sectional": "observational_crosssectional",
+    "observational_cross_sectional_placeholder": "observational_crosssectional",
+    "observational_cross-sectional_placeholder": "observational_crosssectional",
+    "observational_cross_sectional_placeholder_removed": "observational_crosssectional",
+}
+
+
+def _apply_code_aliases(parsed: dict) -> list[str]:
+    """Rewrite aliased codes in place; return a list of "raw->canonical" applied."""
+    applied: list[str] = []
+    for dim, fields in (
+        ("biomarker_use", ("primary", "secondary")),
+        ("research_design", ("primary", "secondary")),
+        ("evidence_strength", ("code",)),
+    ):
+        block = parsed.get(dim)
+        if not isinstance(block, dict):
+            continue
+        for field in fields:
+            raw = block.get(field)
+            if isinstance(raw, str) and raw in CODE_ALIASES:
+                block[field] = CODE_ALIASES[raw]
+                applied.append(f"{raw}->{CODE_ALIASES[raw]}")
+    return applied
+
+
 def _validate_codes(parsed: dict) -> list[str]:
     """Check dimension codes in the parsed classification against enum sets.
 
@@ -186,21 +235,28 @@ def _validate_codes(parsed: dict) -> list[str]:
     """
     invalid: list[str] = []
 
-    dim1_primary = parsed.get("biomarker_use", {}).get("primary", "")
-    dim1_secondary = parsed.get("biomarker_use", {}).get("secondary")
-    dim2_primary = parsed.get("research_design", {}).get("primary", "")
-    dim2_secondary = parsed.get("research_design", {}).get("secondary")
-    dim3_code = parsed.get("evidence_strength", {}).get("code", "")
+    dim1 = _as_dict(parsed.get("biomarker_use"))
+    dim2 = _as_dict(parsed.get("research_design"))
+    dim3 = _as_dict(parsed.get("evidence_strength"))
+    dim1_primary = _null_str(dim1.get("primary")) or ""
+    dim1_secondary = _null_str(dim1.get("secondary"))
+    dim2_primary = _null_str(dim2.get("primary")) or ""
+    dim2_secondary = _null_str(dim2.get("secondary"))
+    dim3_code = _null_str(dim3.get("code")) or ""
 
     if dim1_primary not in VALID_DIM1:
         invalid.append("dim1")
     if dim1_secondary and dim1_secondary not in VALID_DIM1 and "dim1" not in invalid:
         invalid.append("dim1")
-    # When not_applicable, Dim2 and Dim3 are expected to be null — skip validation
-    if dim1_primary != "not_applicable":
+    # Step 0 exit codes: Dim2 and Dim3 are expected to be null — skip validation
+    if dim1_primary not in NULL_DIM23_CODES:
         if dim2_primary not in VALID_DIM2:
             invalid.append("dim2")
-        if dim2_secondary and dim2_secondary not in VALID_DIM2 and "dim2" not in invalid:
+        if (
+            dim2_secondary
+            and dim2_secondary not in VALID_DIM2
+            and "dim2" not in invalid
+        ):
             invalid.append("dim2")
         if dim3_code not in VALID_DIM3:
             invalid.append("dim3")
@@ -226,6 +282,7 @@ def _parse_classification(raw: str) -> dict | None:
     if parsed is None or not isinstance(parsed, dict):
         return None
 
+    parsed["code_aliases_applied"] = _apply_code_aliases(parsed)
     invalid_codes = _validate_codes(parsed)
     parsed["valid"] = len(invalid_codes) == 0
     parsed["invalid_codes"] = invalid_codes
@@ -262,20 +319,21 @@ def rubric_scorer():
         invalid_codes = parsed["invalid_codes"]
 
         # Extract classification details for metadata
-        dim1 = parsed.get("biomarker_use", {})
-        dim2 = parsed.get("research_design", {})
-        dim3 = parsed.get("evidence_strength", {})
+        dim1 = _as_dict(parsed.get("biomarker_use"))
+        dim2 = _as_dict(parsed.get("research_design"))
+        dim3 = _as_dict(parsed.get("evidence_strength"))
 
         score_metadata = {
             "invalid_codes": invalid_codes,
-            "dim1_primary": dim1.get("primary"),
-            "dim1_secondary": dim1.get("secondary"),
+            "code_aliases_applied": parsed.get("code_aliases_applied", []),
+            "dim1_primary": _null_str(dim1.get("primary")),
+            "dim1_secondary": _null_str(dim1.get("secondary")),
             "dim1_confidence": dim1.get("confidence"),
-            "dim2_primary": dim2.get("primary"),
-            "dim2_secondary": dim2.get("secondary"),
-            "dim2_confidence": dim2.get("confidence"),
-            "dim3_code": dim3.get("code"),
-            "dim3_confidence": dim3.get("confidence"),
+            "dim2_primary": _null_str(dim2.get("primary")),
+            "dim2_secondary": _null_str(dim2.get("secondary")),
+            "dim2_confidence": _null_str(dim2.get("confidence")),
+            "dim3_code": _null_str(dim3.get("code")),
+            "dim3_confidence": _null_str(dim3.get("confidence")),
             "key_phrases": parsed.get("key_phrases"),
             "reasoning": parsed.get("reasoning"),
         }
@@ -319,10 +377,11 @@ def biomarker_grading(
         Path to RUBRIC.md. None uses the default location.
     """
     return Task(
+        # Grants with no abstract cannot be classified from text (no quotable phrases).
         dataset=csv_dataset(
             csv_file=dataset_path,
             sample_fields=record_to_sample,
-        ),
+        ).filter(lambda s: bool((s.metadata or {}).get("has_abstract"))),
         solver=[rubric_solver(rubric_path=rubric_path), generate()],
         scorer=rubric_scorer(),
         config=GenerateConfig(),

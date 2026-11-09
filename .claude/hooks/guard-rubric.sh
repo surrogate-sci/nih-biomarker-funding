@@ -4,7 +4,7 @@
 # without explicit direction from Manjari.
 
 INPUT=$(cat)
-FILE=$(echo "$INPUT" | jq -r '.file_path // ""')
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""')
 
 if [[ "$FILE" == */data/RUBRIC.md ]]; then
   echo "RUBRIC.md is protected scientific content. Do not modify definitions without explicit direction." >&2

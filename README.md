@@ -114,50 +114,29 @@ python3 scripts/sample_oncology.py \
 
 **6. LLM Grading via Inspect AI** (`inspect_task.py`) — **recommended**
 
-Single entry point that replaces `run_batch_grading.py` and `run_calibration.py`. Built on [UK AISI Inspect AI](https://inspect.aisi.org.uk/) for structured logging, multi-model comparison, and batch API support.
+Single entry point for all grading, built on [UK AISI Inspect AI](https://inspect.aisi.org.uk/) for structured logging, multi-model comparison, retry/resume, and re-scoring. The pre-Inspect scripts are archived in `scripts/legacy/`.
 
 ```bash
-# Calibration (25 examples, quick turnaround via OpenRouter)
-inspect eval inspect_task.py --model openrouter/google/gemini-2.5-flash-lite --temperature 0.0 --limit 25
+set -a; . ./.env; set +a   # API keys
 
-# Mid-scale grading (direct provider API)
-inspect eval inspect_task.py \
-  --model google/gemini-2.5-flash-lite \
-  --temperature 0.0 --max-connections 20
-
-# Multi-model comparison
-inspect eval-set inspect_task.py \
-  --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite --log-dir logs/
-
-# Production run with batch API (50% cost savings)
-inspect eval-set inspect_task.py \
-  --model openai/gpt-4.1-mini,google/gemini-2.5-flash-lite \
-  --batch --log-dir logs/production-v1
+# Two models on the NCI sample in one run (one .eval log per model)
+.venv/bin/inspect eval-set inspect_task.py \
+  --model anthropic/claude-opus-5-5,anthropic/claude-sonnet-5-5 \
+  -T dataset_path=data/nci_sample_v31_seed42.csv \
+  --log-dir logs/2026-11-06_nci-3718_opus-sonnet-5.5/
 
 # Browse results in web UI
-inspect view
+.venv/bin/inspect view
 ```
 
 **Features:**
 - Code enums parsed from `data/RUBRIC.md` at runtime — rubric edits auto-propagate
-- `temperature`, `max_tokens` controlled via CLI (not hardcoded)
+- Generation settings controlled via CLI (not hardcoded); Claude 5.5 models take no `--temperature`
 - Gold-label support: add `GOLD_DIM1/DIM2/DIM3` columns to CSV for expert-label scoring
+- Saved outputs can be re-scored with `inspect score` after a scorer change, without new API calls
 - `.eval` structured logs for post-hoc analysis with HiBayES, CJE, or custom scripts
 
-**Output:** `.eval` log files in `logs/` with per-grant classifications, model outputs, and scorer metadata. View with `inspect view`.
-
-**6a. Batch LLM Grading** (`scripts/run_batch_grading.py`) — **legacy, being replaced**
-
-Grade grants using LLM ensemble with checkpoint/resume:
-
-```bash
-python3 scripts/run_batch_grading.py \
-  --sample data/oncology_sample_100per_year.csv \
-  --model google/gemini-2.5-flash-lite \
-  --output data/oncology_grades_gemini-2.5-flash-lite.jsonl
-```
-
-**Output:** JSONL with per-grant classifications on 3 dimensions. Supports `--limit` for smoke tests, resume on restart.
+**Output:** `.eval` log files in `logs/<date>_<sample>-<n>_<models>/`, with each run recorded in `logs/manifest.csv`. The full run procedure (naming, refusal retries, re-scoring, manifest) is in `.claude/skills/grading-run/SKILL.md`; agent instructions are in `AGENTS.md`.
 
 **7. Expert Review** (`scripts/generate_review.py`)
 
@@ -171,13 +150,13 @@ python3 scripts/generate_review.py \
 
 **Output:** `data/expert_review.html` — expert grades before seeing model outputs, localStorage persistence, CSV export.
 
-**8. Agreement Analysis** (`scripts/analyze_agreement.py`, `scripts/extract_disagreements.py`)
+**8. Agreement Analysis** (`scripts/legacy/analyze_agreement.py`, `scripts/legacy/extract_disagreements.py`) — archived, pre-Inspect JSONL format
 
 Analyze inter-model agreement and extract disagreement patterns:
 
 ```bash
-python3 scripts/analyze_agreement.py --data-dir data/
-python3 scripts/extract_disagreements.py --data-dir data/
+python3 scripts/legacy/analyze_agreement.py --data-dir data/
+python3 scripts/legacy/extract_disagreements.py --data-dir data/
 ```
 
 ### Analysis & Visualization Scripts
