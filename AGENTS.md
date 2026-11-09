@@ -95,7 +95,7 @@ RUBRIC.md ──parse_rubric_codes()──→ code enum sets (22 + 10 + 5)
 
 **Runs to date** (details and costs in `logs/manifest.csv`):
 - Apr 2026: Gemini 2.5 Flash Lite and GPT-OSS-120B on the NCI sample (rubric before `disease_non_biomarker`), released as `grading-v0.1-prelim`
-- Nov 6, 2026: Opus 5.5 + Sonnet 5.5 on the NCI sample (3,718 with abstracts); Sonnet 5.5 on NIEHS 300 + 20 grants from `grant_abstracts_v31.csv`. Use the re-scored logs in `logs/2026-11-09_claude-runs_rescored-with-placeholder-aliases/`.
+- Nov 6, 2026: Opus 5.5 + Sonnet 5.5 on the NCI sample (3,718 with abstracts); Sonnet 5.5 on NIEHS 300 + 20 grants from `grant_abstracts_v31.csv`. Use `logs/2026-11-09_nci-3718-niehs-320_opus-sonnet-5.5_consolidated/` (one `.eval` per model and sample; Opus refusal retries merged in).
 
 - Abstracts from `~/Downloads/RePORTER_PRJABS_C_FY*.zip` (FY2016 present)
 
